@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>星际旅行 · Interstellar Travel</title>
+  <!-- tide-interstellar: globe-moon-v1 -->
+<title>星际旅行 · Interstellar Travel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Noto+Serif:wght@500;600;700&display=swap" rel="stylesheet" />
@@ -825,7 +826,47 @@ function makeBodyMesh(def) {
 /* Standalone Earth for globe phase (closer, richer) */
 const globeEarth = makeBodyMesh({ id: "earth", zh: "地球", en: "Earth", radius: 1.6, dist: 0, color: COLORS.earth, period: 1 });
 globeEarth.position.set(0, 0, 0);
+globeEarth.visible = false;
 scene.add(globeEarth);
+
+/* Globe-phase Moon: system moon is under systemRoot (hidden during 审视地球 / return-to-Earth).
+   Keep a twin beside globeEarth so the Moon stays visible throughout the Earth globe sequence. */
+const GLOBE_EARTH_R = 1.6;
+const SYS_EARTH_R = 0.9;
+const GLOBE_SCALE = GLOBE_EARTH_R / SYS_EARTH_R;
+const moonDef = BODIES.find((b) => b.id === "moon") || { radius: 0.28, orbitRadius: 1.85, period: 0.074 };
+const globeMoon = makeBodyMesh({
+  id: "moon", zh: "月球", en: "Moon",
+  radius: (moonDef.radius || 0.28) * GLOBE_SCALE,
+  dist: null, parent: "earth",
+  orbitRadius: (moonDef.orbitRadius || 1.85) * GLOBE_SCALE,
+  color: COLORS.moon, period: moonDef.period || 0.074,
+});
+globeMoon.userData.angle = Math.PI * 0.55;
+globeMoon.userData.orbitRadius = (moonDef.orbitRadius || 1.85) * GLOBE_SCALE;
+globeMoon.visible = false;
+scene.add(globeMoon);
+
+function setGlobeMoonVisible(on) {
+  if (!globeMoon) return;
+  globeMoon.visible = !!on;
+  if (on) updateGlobeMoonOrbit(0, false);
+}
+
+function updateGlobeMoonOrbit(dt, advance) {
+  if (!globeMoon || !globeEarth) return;
+  const orbitR = globeMoon.userData.orbitRadius || 3.3;
+  if (advance) {
+    const period = (moonDef && moonDef.period) || 0.074;
+    const speed = 0.1 / Math.max(period, 0.05);
+    globeMoon.userData.angle = (globeMoon.userData.angle || 0) + dt * speed;
+  }
+  const a = globeMoon.userData.angle || 0;
+  globeMoon.position.copy(globeEarth.position).add(
+    new THREE.Vector3(Math.cos(a) * orbitR, Math.sin(a) * 0.15 * orbitR, Math.sin(a) * orbitR)
+  );
+  if (advance) globeMoon.rotation.y += dt * 0.06;
+}
 
 BODIES.forEach((def) => {
   // Sun-orbiting planets only (satellites like Moon skip heliocentric orbit rings)
@@ -930,6 +971,7 @@ async function enterGlobe() {
   controls.update();
   globeEarth.visible = true;
   systemRoot.visible = false;
+  setGlobeMoonVisible(true);
   globeKey.intensity = 1.35;
   sunLight.intensity = 0.55;
   if (typeof sunLightWarm !== "undefined") sunLightWarm.intensity = 0.2;
@@ -947,6 +989,7 @@ async function enterSystem() {
   setPhaseDots(phase);
   setHintForPhase();
   globeEarth.visible = false;
+  setGlobeMoonVisible(false);
   systemRoot.visible = true;
   globeKey.intensity = 0.15;
   sunLight.intensity = 2.4;
@@ -1076,8 +1119,24 @@ canvas.addEventListener("pointerdown", (ev) => {
   if (transitionLock) return;
   const canPick =
     phase === "system" ||
+    phase === "globe" ||
     (phase === "inspect" && (inspectId === "earth" || inspectId === "moon"));
   if (!canPick) return;
+
+  // Globe Earth view: pick the always-visible globeMoon twin
+  if (phase === "globe" && globeMoon && globeMoon.visible) {
+    const dMoon = screenDistToBody(ev.clientX, ev.clientY, globeMoon);
+    const dEarth = screenDistToBody(ev.clientX, ev.clientY, globeEarth);
+    if (dMoon < 56 && dMoon <= dEarth + 12) {
+      // Open moon science using system moon panel content; keep globe view
+      fillPanel("moon");
+      sidePanel.classList.add("open");
+      sidePanel.setAttribute("aria-hidden", "false");
+      try { controls.target.copy(globeMoon.position); } catch (_) {}
+      return;
+    }
+    return; // globe: only moon soft-pick for now (Earth stays navigable)
+  }
 
   // While inspecting Earth: if click is near the Moon on screen, open Moon science
   // (Earth is closer in 3D so raycast alone always eats Moon clicks.)
@@ -1218,6 +1277,7 @@ async function returnToEarthGlobe() {
   setPhaseDots(phase);
   systemRoot.visible = false;
   globeEarth.visible = true;
+  setGlobeMoonVisible(true);
   canvas.classList.add("active");
   const mapEl = document.getElementById("map");
   if (mapEl) mapEl.classList.add("fade-out");
@@ -1258,6 +1318,7 @@ function goBackToTideMap() {
   setPhaseDots(phase);
   systemRoot.visible = false;
   globeEarth.visible = false;
+  setGlobeMoonVisible(false);
   canvas.classList.remove("active");
   const mapEl = document.getElementById("map");
   mapEl.classList.remove("fade-out");
@@ -1449,6 +1510,7 @@ window.addEventListener("resize", () => {
   map.invalidateSize();
 });
 
+
 /* Animate loop */
 const clock = new THREE.Clock();
 function tick() {
@@ -1456,9 +1518,15 @@ function tick() {
   const dt = clock.getDelta();
   const tsec = clock.elapsedTime;
 
-  if (globeEarth.visible) {
+  if (globeEarth.visible && phase === "globe") {
     globeEarth.rotation.y += dt * 0.05;
     if (globeEarth.userData.clouds) globeEarth.userData.clouds.rotation.y += dt * 0.07;
+    if (globeMoon) {
+      setGlobeMoonVisible(true);
+      updateGlobeMoonOrbit(dt, true);
+    }
+  } else if (globeMoon && phase !== "globe") {
+    globeMoon.visible = false;
   }
 
   if (systemRoot.visible && (phase === "system" || phase === "fly")) {
