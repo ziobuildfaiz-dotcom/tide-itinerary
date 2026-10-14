@@ -477,11 +477,9 @@
       font-size: 11px; color: var(--teal); letter-spacing: 0.06em;
       font-family: "Noto Serif SC", "Noto Serif", serif; margin-bottom: 8px;
     }
+    /* tide-budget-layout: stacked-rows-v1 — trip + lodging each on full-width row */
     .budget-row {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;
-    }
-    @media (max-width: 420px) {
-      .budget-row { grid-template-columns: 1fr; }
+      display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 10px;
     }
     .budget-field label {
       display: block; font-size: 11px; color: var(--sand); opacity: 0.85; margin-bottom: 4px;
@@ -710,6 +708,7 @@
       </button>
     </div>
 
+    <!-- tide-budget-layout: stacked-rows-v1 -->
     <div class="budget-panel show" id="tideBudgetPanel">
       <div class="budget-heading" id="budgetHeading">Budget</div>
       <div class="budget-row">
