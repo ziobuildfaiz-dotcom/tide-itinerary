@@ -6,7 +6,8 @@
   <!-- tide-nearby: 50km-local-v2 -->
   <!-- tide-photos: geo-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
-  <!-- tide-live-pois: overpass-v2 -->
+  <!-- tide-live-pois: overpass-v3-fast -->
+  <!-- tide-plan-speed: parallel-v1 -->
   <!-- tide-pinch-handoff: touch-v1 -->
   <!-- tide-chrome: brand-zoom-sep-v1 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -2482,16 +2483,18 @@
 
 
   /* ---------- Live local POIs via Overpass (within ~50 km of click) ---------- */
-  /* tide-live-pois: overpass-v2 progressive 12/30/50km split lodging|food|attractions */
+  /* tide-live-pois: overpass-v3-fast progressive 12/30/50km split lodging|food|attractions */
+  /* Prefer historically responsive mirror first; race mirrors fail-fast */
   const OVERPASS_ENDPOINTS = [
-    "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass-api.de/api/interpreter",
     "https://overpass.osm.ch/api/interpreter",
   ];
   const poiMemCache = Object.create(null);
   const POI_CACHE_TTL_MS = 5 * 60 * 1000;
   const POI_EMPTY_CACHE_TTL_MS = 45 * 1000;
-  const OVERPASS_CLIENT_TIMEOUT_MS = 25000;
+  const OVERPASS_CLIENT_TIMEOUT_MS = 4500;
+  const OVERPASS_WALL_BUDGET_MS = 7500;
   const OVERPASS_PROGRESSIVE_RADII_M = [12000, 30000, 50000];
 
   function haversineKm(lat1, lng1, lat2, lng2) {
@@ -2655,7 +2658,7 @@
   }
 
   function buildOverpassQueryForKind(lat, lng, radiusM, kind) {
-    /* tide-live-pois: overpass-v2 split lodging|food|attractions */
+    /* tide-live-pois: overpass-v3-fast split lodging|food|attractions */
     const r = Math.max(1000, Math.min(50000, Math.round(radiusM || 50000)));
     const around = "(around:" + r + "," + lat + "," + lng + ")";
     let body = "";
@@ -2680,7 +2683,7 @@
         "  node[\"natural\"~\"^(peak|beach|waterfall|spring)$\"]" + around + ";\n" +
         "  way[\"natural\"~\"^(peak|beach|waterfall|spring)$\"]" + around + ";\n";
     }
-    return "[out:json][timeout:20];\n(\n" + body + ");\nout center tags 50;";
+    return "[out:json][timeout:8];\n(\n" + body + ");\nout center tags 50;";
   }
 
   /* legacy single-query builder kept as thin wrapper for any external refs */
@@ -2688,27 +2691,43 @@
     return buildOverpassQueryForKind(lat, lng, radiusM, "attractions");
   }
 
-  async function postOverpassQuery(query) {
-    for (let i = 0; i < OVERPASS_ENDPOINTS.length; i++) {
-      const endpoint = OVERPASS_ENDPOINTS[i];
-      try {
-        const ctrl = new AbortController();
-        const tmo = setTimeout(function () { ctrl.abort(); }, OVERPASS_CLIENT_TIMEOUT_MS);
-        const res = await fetch(endpoint, {
-          method: "POST",
-          signal: ctrl.signal,
-          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8", Accept: "application/json" },
-          body: "data=" + encodeURIComponent(query),
-        });
-        clearTimeout(tmo);
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (data && Array.isArray(data.elements)) return data;
-      } catch (_) {
-        /* try next endpoint */
-      }
+  async function fetchOverpassEndpoint(endpoint, query, timeoutMs) {
+    const ctrl = new AbortController();
+    const tmo = setTimeout(function () { ctrl.abort(); }, timeoutMs);
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        signal: ctrl.signal,
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8", Accept: "application/json" },
+        body: "data=" + encodeURIComponent(query),
+      });
+      if (!res.ok) throw new Error("overpass http " + res.status);
+      const data = await res.json();
+      if (!data || !Array.isArray(data.elements)) throw new Error("overpass bad payload");
+      return data;
+    } finally {
+      clearTimeout(tmo);
     }
-    return null;
+  }
+
+  async function postOverpassQuery(query, timeoutMs) {
+    const tmo = Math.max(800, Math.min(OVERPASS_CLIENT_TIMEOUT_MS,
+      timeoutMs == null ? OVERPASS_CLIENT_TIMEOUT_MS : timeoutMs));
+    const tasks = OVERPASS_ENDPOINTS.map(function (endpoint) {
+      return fetchOverpassEndpoint(endpoint, query, tmo);
+    });
+    try {
+      if (typeof Promise.any === "function") {
+        return await Promise.any(tasks);
+      }
+      const settled = await Promise.allSettled(tasks);
+      for (let i = 0; i < settled.length; i++) {
+        if (settled[i].status === "fulfilled" && settled[i].value) return settled[i].value;
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
   }
 
   function parseOverpassElements(elements, lat, lng, radiusM, forceKind) {
@@ -2761,12 +2780,14 @@
     };
   }
 
-  async function fetchLocalPoisAtRadius(lat, lng, radiusM) {
+  async function fetchLocalPoisAtRadius(lat, lng, radiusM, budgetMs) {
     const kinds = ["lodging", "food", "attractions"];
+    const perReq = Math.max(800, Math.min(OVERPASS_CLIENT_TIMEOUT_MS,
+      budgetMs == null ? OVERPASS_CLIENT_TIMEOUT_MS : budgetMs));
     const queries = kinds.map(function (k) {
       return buildOverpassQueryForKind(lat, lng, radiusM, k === "attractions" ? "attractions" : k);
     });
-    const results = await Promise.all(queries.map(function (q) { return postOverpassQuery(q); }));
+    const results = await Promise.all(queries.map(function (q) { return postOverpassQuery(q, perReq); }));
     const merged = { attractions: [], lodging: [], food: [] };
     const forceMap = ["lodging", "food", "attraction"];
     for (let i = 0; i < results.length; i++) {
@@ -2791,7 +2812,7 @@
 
   async function fetchLocalPois(lat, lng, radiusM) {
     const maxR = Math.max(1000, Math.min(50000, Math.round(radiusM == null ? 50000 : radiusM)));
-    const cacheKey = Math.round(lat * 100) + "," + Math.round(lng * 100) + ":v2:" + Math.round(maxR / 1000);
+    const cacheKey = Math.round(lat * 100) + "," + Math.round(lng * 100) + ":v3:" + Math.round(maxR / 1000);
     const cached = poiMemCache[cacheKey];
     if (cached) {
       const ttl = (cached.data && cached.data.ok && usableLodgeFoodCount(cached.data) > 0)
@@ -2805,10 +2826,16 @@
     if (!radii.length || radii[radii.length - 1] !== maxR) {
       if (maxR >= 1000) radii.push(maxR);
     }
+    const wallStart = Date.now();
     for (let ri = 0; ri < radii.length; ri++) {
+      const remaining = OVERPASS_WALL_BUDGET_MS - (Date.now() - wallStart);
+      /* Abort further expansion if wall budget exhausted */
+      if (remaining < 800) break;
+      /* Expand beyond 12km only when lodging+food usable < 3 */
+      if (ri > 0 && usableLodgeFoodCount(best) >= 3) break;
       const r = radii[ri];
       try {
-        const parsed = await fetchLocalPoisAtRadius(lat, lng, r);
+        const parsed = await fetchLocalPoisAtRadius(lat, lng, r, remaining);
         const result = {
           attractions: parsed.attractions,
           lodging: parsed.lodging,
@@ -2827,7 +2854,7 @@
           break;
         }
       } catch (_) {
-        /* try next radius */
+        /* try next radius if wall time remains */
       }
     }
     if (!best.ok) {
@@ -3004,9 +3031,11 @@
       ? (place.nameEn || place.name || cityKey)
       : ((place._cityRef && place._cityRef.nameEn) || place.nameEn || place.name || cityKey);
 
-    /* Always fetch live POIs around click coords (not curated city DB) */
-    const pois = await fetchLocalPois(lat, lng, 50000);
-    const photos = await resolveCityPhotos(cityKey, searchName, Math.max(9, days * 3), lat, lng);
+    /* Always fetch live POIs around click coords (not curated city DB); parallel with photos */
+    const [pois, photos] = await Promise.all([
+      fetchLocalPois(lat, lng, 50000),
+      resolveCityPhotos(cityKey, searchName, Math.max(9, days * 3), lat, lng),
+    ]);
 
     const lodgings = liveLodgingsFromPois(pois, lodgeNight, 5).map(function (h) {
       return {
@@ -3424,7 +3453,7 @@
     const planPromise = buildPlan(currentPlace, lat, lng, selectedDays, lastTideSalt, {
       total: tideTotalBudget, lodge: tideLodgeBudget,
     });
-    await new Promise((r) => setTimeout(r, 900 + Math.random() * 500));
+    await new Promise((r) => setTimeout(r, 120));
     lastTidePlan = await planPromise;
     clearInterval(hintTimer);
     btnGen.classList.remove("spinning");
@@ -3982,7 +4011,7 @@
     const sheetBody = document.querySelector(".sheet-body");
     if (sheetBody) sheetBody.scrollTop = 0;
     const planPromise = buildMultiCityPlanAsync();
-    await new Promise((r) => setTimeout(r, 1000 + Math.random() * 500));
+    await new Promise((r) => setTimeout(r, 120));
     lastPlaneParts = await planPromise;
     renderMultiCityPlan(lastPlaneParts);
     planeLoading.classList.remove("show");
