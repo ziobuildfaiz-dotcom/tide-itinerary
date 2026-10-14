@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="tide-build" content="pdf-print-light-v13" />
   <!-- tide-nearby: 50km-local-v2 -->
+  <!-- tide-photos: geo-v1 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tide Itinerary</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -1310,7 +1311,7 @@
 
   /* ---------- Budget · Lodging · Food · Photos ---------- */
   const CNY_PER_USD = 7.2;
-  const PHOTO_CACHE_PREFIX = "tide-photos-v1:";
+  const PHOTO_CACHE_PREFIX = "tide-photos-v2:";
   const photoMemCache = Object.create(null);
 
   const BUDGET_TOTAL_PRESETS = {
@@ -1603,6 +1604,34 @@
     try { sessionStorage.setItem(PHOTO_CACHE_PREFIX + key, JSON.stringify(val)); } catch (_) {}
   }
 
+  function parseWikimediaPages(pages, qTag) {
+    const out = [];
+    Object.keys(pages || {}).forEach(function (id) {
+      const p = pages[id];
+      const ii = (p.imageinfo && p.imageinfo[0]) || null;
+      if (!ii) return;
+      const mime = ii.mime || "";
+      if (mime.indexOf("image/") !== 0) return;
+      if (mime.indexOf("svg") !== -1) return;
+      const w = ii.thumbwidth || ii.width || 0;
+      if (w && w < 200) return;
+      const meta = ii.extmetadata || {};
+      const artist = stripHtmlMeta((meta.Artist && meta.Artist.value) || "Wikimedia Commons");
+      const license = stripHtmlMeta((meta.LicenseShortName && meta.LicenseShortName.value) || (meta.License && meta.License.value) || "CC");
+      const thumb = ii.thumburl || ii.url;
+      if (!thumb) return;
+      out.push({
+        url: thumb,
+        artist: artist.slice(0, 80),
+        license: license.slice(0, 40),
+        source: ii.descriptionurl || ("https://commons.wikimedia.org/wiki/" + encodeURIComponent(p.title || "")),
+        q: qTag || "",
+        title: p.title || "",
+      });
+    });
+    return out;
+  }
+
   async function fetchWikimediaPhotos(query, limit) {
     limit = limit || 6;
     const cacheKey = "wm:" + query + ":" + limit;
@@ -1620,29 +1649,37 @@
       if (!res.ok) throw new Error("wm http");
       const data = await res.json();
       const pages = (data.query && data.query.pages) || {};
-      const out = [];
-      Object.keys(pages).forEach(function (id) {
-        const p = pages[id];
-        const ii = (p.imageinfo && p.imageinfo[0]) || null;
-        if (!ii) return;
-        const mime = ii.mime || "";
-        if (mime.indexOf("image/") !== 0) return;
-        if (mime.indexOf("svg") !== -1) return;
-        const w = ii.thumbwidth || ii.width || 0;
-        if (w && w < 200) return;
-        const meta = ii.extmetadata || {};
-        const artist = stripHtmlMeta((meta.Artist && meta.Artist.value) || "Wikimedia Commons");
-        const license = stripHtmlMeta((meta.LicenseShortName && meta.LicenseShortName.value) || (meta.License && meta.License.value) || "CC");
-        const thumb = ii.thumburl || ii.url;
-        if (!thumb) return;
-        out.push({
-          url: thumb,
-          artist: artist.slice(0, 80),
-          license: license.slice(0, 40),
-          source: ii.descriptionurl || ("https://commons.wikimedia.org/wiki/" + encodeURIComponent(p.title || "")),
-          q: query,
-        });
-      });
+      const out = parseWikimediaPages(pages, query);
+      cacheSet(cacheKey, out);
+      return out;
+    } catch (_) {
+      cacheSet(cacheKey, []);
+      return [];
+    }
+  }
+
+  /* Coordinate geosearch (~30–50km) — prefer place-local images over city-name text search */
+  async function fetchWikimediaGeosearch(lat, lng, limit) {
+    limit = limit || 20;
+    const latN = Number(lat), lngN = Number(lng);
+    if (!isFinite(latN) || !isFinite(lngN)) return [];
+    const coordKey = latN.toFixed(4) + "|" + lngN.toFixed(4);
+    const cacheKey = "geo:" + coordKey + ":" + limit;
+    const hit = cacheGet(cacheKey);
+    if (hit) return hit;
+    const url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*" +
+      "&generator=geosearch&ggscoord=" + encodeURIComponent(latN + "|" + lngN) +
+      "&ggsradius=30000&ggslimit=" + limit + "&ggsnamespace=6" +
+      "&prop=imageinfo&iiprop=url|size|mime|extmetadata&iiurlwidth=800";
+    try {
+      const ctrl = new AbortController();
+      const tmo = setTimeout(function () { ctrl.abort(); }, 5000);
+      const res = await fetch(url, { signal: ctrl.signal });
+      clearTimeout(tmo);
+      if (!res.ok) throw new Error("wm geo http");
+      const data = await res.json();
+      const pages = (data.query && data.query.pages) || {};
+      const out = parseWikimediaPages(pages, "geosearch:" + coordKey);
       cacheSet(cacheKey, out);
       return out;
     } catch (_) {
@@ -1652,40 +1689,72 @@
   }
 
   function fallbackPhotos(cityKey, need) {
-    const base = (PHOTO_FALLBACK[cityKey] || PHOTO_FALLBACK["Beijing"] || []).slice();
+    /* Only use curated list when cityKey exactly matches a PHOTO_FALLBACK key.
+       Never fall back to Beijing (or any other city) for local:/missing keys. */
+    const base = (cityKey && PHOTO_FALLBACK[cityKey] ? PHOTO_FALLBACK[cityKey] : []).slice();
     if (!base.length) return [];
     const out = [];
     for (let i = 0; i < need; i++) out.push(base[i % base.length]);
     return out;
   }
 
-  async function resolveCityPhotos(cityKey, searchName, count) {
+  function mergePhotosUnique(target, arr) {
+    (arr || []).forEach(function (p) {
+      if (!p || !p.url) return;
+      if (!target.some(function (x) { return x.url === p.url; })) target.push(p);
+    });
+    return target;
+  }
+
+  async function resolveCityPhotos(cityKey, searchName, count, lat, lng) {
     count = count || 9;
-    const cacheKey = "city:" + (cityKey || searchName) + ":" + count;
+    const latN = Number(lat), lngN = Number(lng);
+    const hasCoord = isFinite(latN) && isFinite(lngN);
+    const coordPart = hasCoord ? (":" + latN.toFixed(4) + "," + lngN.toFixed(4)) : "";
+    const cacheKey = "city:" + (cityKey || searchName || "place") + ":" + count + coordPart;
     const hit = cacheGet(cacheKey);
     if (hit && hit.length) return hit;
-    const q1 = (searchName || cityKey || "travel") + " landmark";
-    const q2 = (searchName || cityKey || "travel") + " food";
-    const q3 = (searchName || cityKey || "travel") + " street";
+
     let photos = [];
-    const batches = await Promise.all([
-      fetchWikimediaPhotos(q1, 6),
-      fetchWikimediaPhotos(q2, 4),
-      fetchWikimediaPhotos(q3, 4),
-    ]);
-    batches.forEach(function (arr) {
-      arr.forEach(function (p) {
-        if (!photos.some(function (x) { return x.url === p.url; })) photos.push(p);
-      });
-    });
-    if (photos.length < count) {
-      fallbackPhotos(cityKey, count).forEach(function (p) {
-        if (!photos.some(function (x) { return x.url === p.url; })) photos.push(p);
-      });
+
+    /* 1) Geosearch by click/stop coordinates first */
+    if (hasCoord) {
+      const geo = await fetchWikimediaGeosearch(latN, lngN, Math.max(20, count));
+      mergePhotosUnique(photos, geo);
     }
+
+    /* 2) Text search by local display name (Nominatim / place name), not nearest curated city */
+    const textName = (searchName || cityKey || "").trim();
+    if (photos.length < count && textName && textName.indexOf("local:") !== 0) {
+      const q1 = textName + " landmark";
+      const q2 = textName + " food";
+      const q3 = textName + " street";
+      const batches = await Promise.all([
+        fetchWikimediaPhotos(q1, 6),
+        fetchWikimediaPhotos(q2, 4),
+        fetchWikimediaPhotos(q3, 4),
+      ]);
+      batches.forEach(function (arr) { mergePhotosUnique(photos, arr); });
+    }
+
+    /* 3) City-specific PHOTO_FALLBACK only if key exactly matches */
+    if (photos.length < count) {
+      mergePhotosUnique(photos, fallbackPhotos(cityKey, count));
+    }
+
+    /* 4) Else leave shorter / empty — never inject Beijing for other places */
     photos = photos.slice(0, Math.max(count, 6));
     cacheSet(cacheKey, photos);
     return photos;
+  }
+
+  async function resolvePlacePhotos(place, lat, lng, count) {
+    const cityKey = (place && (place.cityKey || place.nameEn || place.name)) || "place";
+    const far = !!(place && (place.approx || !place._cityRef));
+    const searchName = far
+      ? ((place && (place.nameEn || place.name)) || cityKey)
+      : ((place && place._cityRef && place._cityRef.nameEn) || (place && (place.nameEn || place.name)) || cityKey);
+    return resolveCityPhotos(cityKey, searchName, count || 9, lat, lng);
   }
 
   function pickSlotPhoto(pool, slot, dayIndex, salt) {
@@ -2336,7 +2405,7 @@
     const searchName = farFromCurated
       ? (place.nameEn || place.name || cityKey)
       : ((place._cityRef && place._cityRef.nameEn) || place.nameEn || place.name || cityKey);
-    const photos = await resolveCityPhotos(cityKey, searchName, Math.max(9, days * 3));
+    const photos = await resolveCityPhotos(cityKey, searchName, Math.max(9, days * 3), lat, lng);
     const lodgings = pickLodgings(cityKey, lodgeNight, 3).map(function (h) {
       return {
         name: lang === "zh" ? h.nameZh : h.nameEn,
@@ -3127,8 +3196,11 @@
     const photoByStop = {};
     await Promise.all(planeStops.map(async function (stop) {
       const ck = stop.cityKey || stop.nameEn || stop.name;
-      const sn = (stop._cityRef && stop._cityRef.nameEn) || stop.nameEn || stop.name;
-      photoByStop[ck] = await resolveCityPhotos(ck, sn, 9);
+      /* Prefer local place name when no curated _cityRef (nearby chip unset) */
+      const sn = stop._cityRef
+        ? (stop._cityRef.nameEn || stop.nameEn || stop.name)
+        : (stop.nameEn || stop.name || ck);
+      photoByStop[ck] = await resolveCityPhotos(ck, sn, 9, stop.lat, stop.lng);
     }));
 
     let dayNum = 1;
