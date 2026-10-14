@@ -6,7 +6,7 @@
   <!-- tide-nearby: 50km-local-v2 -->
   <!-- tide-photos: geo-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
-  <!-- tide-live-pois: overpass-v1 -->
+  <!-- tide-live-pois: overpass-v2 -->
   <!-- tide-pinch-handoff: touch-v1 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tide Itinerary</title>
@@ -2476,12 +2476,17 @@
 
 
   /* ---------- Live local POIs via Overpass (within ~50 km of click) ---------- */
+  /* tide-live-pois: overpass-v2 progressive 12/30/50km split lodging|food|attractions */
   const OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
+    "https://overpass.osm.ch/api/interpreter",
   ];
   const poiMemCache = Object.create(null);
   const POI_CACHE_TTL_MS = 5 * 60 * 1000;
+  const POI_EMPTY_CACHE_TTL_MS = 45 * 1000;
+  const OVERPASS_CLIENT_TIMEOUT_MS = 25000;
+  const OVERPASS_PROGRESSIVE_RADII_M = [12000, 30000, 50000];
 
   function haversineKm(lat1, lng1, lat2, lng2) {
     const R = 6371;
@@ -2519,7 +2524,8 @@
       return "lodging";
     }
     if (amenity === "restaurant" || amenity === "cafe" || amenity === "fast_food" ||
-        amenity === "food_court" || shop === "bakery") {
+        amenity === "food_court" || amenity === "ice_cream" || amenity === "pub" ||
+        shop === "bakery") {
       return "food";
     }
     if (tour === "attraction" || tour === "museum" || tour === "viewpoint" ||
@@ -2550,7 +2556,8 @@
       peak: "山峰", beach: "海滩", waterfall: "瀑布", spring: "泉眼",
       hotel: "酒店", guest_house: "客栈", hostel: "青旅", motel: "汽车旅馆",
       apartment: "公寓", restaurant: "餐厅", cafe: "咖啡馆", fast_food: "快餐",
-      food_court: "美食广场", bakery: "面包店", place: "本地地点",
+      food_court: "美食广场", bakery: "面包店", ice_cream: "冰淇淋", pub: "酒吧餐吧",
+      place: "本地地点",
     };
     const mapEn = {
       attraction: "attraction", museum: "museum", viewpoint: "viewpoint", artwork: "artwork",
@@ -2558,17 +2565,36 @@
       peak: "peak", beach: "beach", waterfall: "waterfall", spring: "spring",
       hotel: "hotel", guest_house: "guesthouse", hostel: "hostel", motel: "motel",
       apartment: "apartment", restaurant: "restaurant", cafe: "café", fast_food: "fast food",
-      food_court: "food court", bakery: "bakery", place: "local place",
+      food_court: "food court", bakery: "bakery", ice_cream: "ice cream", pub: "pub",
+      place: "local place",
     };
     return langZh ? (mapZh[key] || key) : (mapEn[key] || key);
   }
 
   function poiDisplayName(tags, lat, lng) {
     if (!tags) return null;
-    const n = tags.name || tags["name:en"] || tags["name:zh"] || tags["name:zh-Hans"] ||
+    const n = tags.name || tags["name:zh"] || tags["name:zh-Hans"] || tags["name:en"] ||
       tags["alt_name"] || tags["loc_name"];
     if (n && String(n).trim()) return String(n).trim();
     return null;
+  }
+
+  function synthesizePoiLabels(tags, distKm, kind) {
+    const d = Math.round((Number(distKm) || 0) * 10) / 10;
+    let typeZh = poiTypeNote(tags, true);
+    let typeEn = poiTypeNote(tags, false);
+    if (kind === "lodging" && (typeZh === "本地地点" || typeEn === "local place")) {
+      typeZh = "酒店";
+      typeEn = "hotel";
+    }
+    if (kind === "food" && (typeZh === "本地地点" || typeEn === "local place")) {
+      typeZh = "餐厅";
+      typeEn = "restaurant";
+    }
+    return {
+      nameZh: typeZh + " · " + d + " km",
+      nameEn: typeEn.charAt(0).toUpperCase() + typeEn.slice(1) + " · " + d + " km",
+    };
   }
 
   function estimateLodgePriceFromTags(tags, lodgeBudget) {
@@ -2590,8 +2616,8 @@
     const amenity = (tags && tags.amenity) || "";
     const shop = (tags && tags.shop) || "";
     let base;
-    if (amenity === "fast_food" || shop === "bakery") base = 30;
-    else if (amenity === "cafe" || amenity === "food_court") base = 55;
+    if (amenity === "fast_food" || shop === "bakery" || amenity === "ice_cream") base = 30;
+    else if (amenity === "cafe" || amenity === "food_court" || amenity === "pub") base = 55;
     else if (amenity === "restaurant") base = 110;
     else base = 80;
     const perMeal = Math.max(20, (Number(mealBudget) || 150) / 3);
@@ -2622,42 +2648,46 @@
     return out;
   }
 
-  function buildOverpassQuery(lat, lng, radiusM) {
+  function buildOverpassQueryForKind(lat, lng, radiusM, kind) {
+    /* tide-live-pois: overpass-v2 split lodging|food|attractions */
     const r = Math.max(1000, Math.min(50000, Math.round(radiusM || 50000)));
     const around = "(around:" + r + "," + lat + "," + lng + ")";
-    return "[out:json][timeout:10];\n(\n" +
-      "  node[\"tourism\"~\"^(attraction|museum|viewpoint|artwork|gallery|zoo|theme_park)$\"]" + around + ";\n" +
-      "  way[\"tourism\"~\"^(attraction|museum|viewpoint|artwork|gallery|zoo|theme_park)$\"]" + around + ";\n" +
-      "  node[\"historic\"]" + around + ";\n" +
-      "  way[\"historic\"]" + around + ";\n" +
-      "  node[\"natural\"~\"^(peak|beach|waterfall|spring)$\"]" + around + ";\n" +
-      "  way[\"natural\"~\"^(peak|beach|waterfall|spring)$\"]" + around + ";\n" +
-      "  node[\"tourism\"~\"^(hotel|guest_house|hostel|motel|apartment)$\"]" + around + ";\n" +
-      "  way[\"tourism\"~\"^(hotel|guest_house|hostel|motel|apartment)$\"]" + around + ";\n" +
-      "  node[\"amenity\"=\"hotel\"]" + around + ";\n" +
-      "  way[\"amenity\"=\"hotel\"]" + around + ";\n" +
-      "  node[\"amenity\"~\"^(restaurant|cafe|fast_food|food_court)$\"]" + around + ";\n" +
-      "  way[\"amenity\"~\"^(restaurant|cafe|fast_food|food_court)$\"]" + around + ";\n" +
-      "  node[\"shop\"=\"bakery\"]" + around + ";\n" +
-      "  way[\"shop\"=\"bakery\"]" + around + ";\n" +
-      ");\nout center tags 120;";
+    let body = "";
+    if (kind === "lodging") {
+      body =
+        "  node[\"tourism\"~\"^(hotel|guest_house|hostel|motel|apartment)$\"]" + around + ";\n" +
+        "  way[\"tourism\"~\"^(hotel|guest_house|hostel|motel|apartment)$\"]" + around + ";\n" +
+        "  node[\"amenity\"=\"hotel\"]" + around + ";\n" +
+        "  way[\"amenity\"=\"hotel\"]" + around + ";\n";
+    } else if (kind === "food") {
+      body =
+        "  node[\"amenity\"~\"^(restaurant|cafe|fast_food|food_court|ice_cream|pub)$\"]" + around + ";\n" +
+        "  way[\"amenity\"~\"^(restaurant|cafe|fast_food|food_court|ice_cream|pub)$\"]" + around + ";\n" +
+        "  node[\"shop\"=\"bakery\"]" + around + ";\n" +
+        "  way[\"shop\"=\"bakery\"]" + around + ";\n";
+    } else {
+      body =
+        "  node[\"tourism\"~\"^(attraction|museum|viewpoint|artwork|gallery|zoo|theme_park)$\"]" + around + ";\n" +
+        "  way[\"tourism\"~\"^(attraction|museum|viewpoint|artwork|gallery|zoo|theme_park)$\"]" + around + ";\n" +
+        "  node[\"historic\"]" + around + ";\n" +
+        "  way[\"historic\"]" + around + ";\n" +
+        "  node[\"natural\"~\"^(peak|beach|waterfall|spring)$\"]" + around + ";\n" +
+        "  way[\"natural\"~\"^(peak|beach|waterfall|spring)$\"]" + around + ";\n";
+    }
+    return "[out:json][timeout:20];\n(\n" + body + ");\nout center tags 50;";
   }
 
-  async function fetchLocalPois(lat, lng, radiusM) {
-    radiusM = radiusM == null ? 50000 : radiusM;
-    const cacheKey = Math.round(lat * 100) + "," + Math.round(lng * 100) + ":" + Math.round(radiusM / 1000);
-    const cached = poiMemCache[cacheKey];
-    if (cached && (Date.now() - cached.at) < POI_CACHE_TTL_MS) {
-      return cached.data;
-    }
-    const empty = { attractions: [], lodging: [], food: [], sparse: true, ok: false };
-    const query = buildOverpassQuery(lat, lng, radiusM);
-    let data = null;
+  /* legacy single-query builder kept as thin wrapper for any external refs */
+  function buildOverpassQuery(lat, lng, radiusM) {
+    return buildOverpassQueryForKind(lat, lng, radiusM, "attractions");
+  }
+
+  async function postOverpassQuery(query) {
     for (let i = 0; i < OVERPASS_ENDPOINTS.length; i++) {
       const endpoint = OVERPASS_ENDPOINTS[i];
       try {
         const ctrl = new AbortController();
-        const tmo = setTimeout(function () { ctrl.abort(); }, 10000);
+        const tmo = setTimeout(function () { ctrl.abort(); }, OVERPASS_CLIENT_TIMEOUT_MS);
         const res = await fetch(endpoint, {
           method: "POST",
           signal: ctrl.signal,
@@ -2666,59 +2696,150 @@
         });
         clearTimeout(tmo);
         if (!res.ok) continue;
-        data = await res.json();
-        break;
+        const data = await res.json();
+        if (data && Array.isArray(data.elements)) return data;
       } catch (_) {
         /* try next endpoint */
       }
     }
-    if (!data || !Array.isArray(data.elements)) {
-      poiMemCache[cacheKey] = { at: Date.now(), data: empty };
-      return empty;
-    }
+    return null;
+  }
+
+  function parseOverpassElements(elements, lat, lng, radiusM, forceKind) {
     const attractions = [];
     const lodging = [];
     const food = [];
-    data.elements.forEach(function (el) {
+    (elements || []).forEach(function (el) {
       const tags = el.tags || {};
-      const kind = classifyOverpassTags(tags);
+      /* Category-scoped queries pass forceKind; otherwise classify from tags */
+      const kind = forceKind || classifyOverpassTags(tags);
       if (!kind) return;
       const coords = overpassElementCoords(el);
       if (!coords) return;
-      const name = poiDisplayName(tags, coords.lat, coords.lng);
-      if (!name) return; /* skip unnamed — avoid inventing labels */
       const distKm = haversineKm(lat, lng, coords.lat, coords.lng);
       if (distKm > (radiusM / 1000) + 0.5) return;
+      const realName = poiDisplayName(tags, coords.lat, coords.lng);
+      let name = realName;
+      let nameZh = realName;
+      let nameEn = realName;
+      if (!realName) {
+        if (kind === "attraction") return; /* attractions still prefer named */
+        const syn = synthesizePoiLabels(tags, distKm, kind);
+        name = syn.nameZh;
+        nameZh = syn.nameZh;
+        nameEn = syn.nameEn;
+      }
       const areaHint = tags["addr:suburb"] || tags["addr:district"] || tags["addr:neighbourhood"] ||
         tags["addr:city"] || tags["addr:town"] || tags["addr:village"] || "";
       const item = {
         name: name,
+        nameZh: nameZh,
+        nameEn: nameEn,
         lat: coords.lat,
         lng: coords.lng,
         distKm: distKm,
         typeKey: poiTypeKey(tags),
         tags: tags,
         areaHint: areaHint,
+        unnamed: !realName,
       };
       if (kind === "attraction") attractions.push(item);
       else if (kind === "lodging") lodging.push(item);
       else if (kind === "food") food.push(item);
     });
     const byDist = function (a, b) { return a.distKm - b.distKm; };
-    const result = {
+    return {
       attractions: dedupePois(attractions).sort(byDist),
       lodging: dedupePois(lodging).sort(byDist),
       food: dedupePois(food).sort(byDist),
-      sparse: false,
-      ok: true,
     };
-    result.sparse = result.attractions.length < 2 && result.lodging.length < 1 && result.food.length < 1;
-    poiMemCache[cacheKey] = { at: Date.now(), data: result };
-    return result;
+  }
+
+  async function fetchLocalPoisAtRadius(lat, lng, radiusM) {
+    const kinds = ["lodging", "food", "attractions"];
+    const queries = kinds.map(function (k) {
+      return buildOverpassQueryForKind(lat, lng, radiusM, k === "attractions" ? "attractions" : k);
+    });
+    const results = await Promise.all(queries.map(function (q) { return postOverpassQuery(q); }));
+    const merged = { attractions: [], lodging: [], food: [] };
+    const forceMap = ["lodging", "food", "attraction"];
+    for (let i = 0; i < results.length; i++) {
+      const data = results[i];
+      if (!data || !Array.isArray(data.elements)) continue;
+      const parsed = parseOverpassElements(data.elements, lat, lng, radiusM, forceMap[i]);
+      merged.attractions = merged.attractions.concat(parsed.attractions);
+      merged.lodging = merged.lodging.concat(parsed.lodging);
+      merged.food = merged.food.concat(parsed.food);
+    }
+    const byDist = function (a, b) { return a.distKm - b.distKm; };
+    return {
+      attractions: dedupePois(merged.attractions).sort(byDist),
+      lodging: dedupePois(merged.lodging).sort(byDist),
+      food: dedupePois(merged.food).sort(byDist),
+    };
+  }
+
+  function usableLodgeFoodCount(pois) {
+    return ((pois && pois.lodging) || []).length + ((pois && pois.food) || []).length;
+  }
+
+  async function fetchLocalPois(lat, lng, radiusM) {
+    const maxR = Math.max(1000, Math.min(50000, Math.round(radiusM == null ? 50000 : radiusM)));
+    const cacheKey = Math.round(lat * 100) + "," + Math.round(lng * 100) + ":v2:" + Math.round(maxR / 1000);
+    const cached = poiMemCache[cacheKey];
+    if (cached) {
+      const ttl = (cached.data && cached.data.ok && usableLodgeFoodCount(cached.data) > 0)
+        ? POI_CACHE_TTL_MS
+        : POI_EMPTY_CACHE_TTL_MS;
+      if ((Date.now() - cached.at) < ttl) return cached.data;
+    }
+    const empty = { attractions: [], lodging: [], food: [], sparse: true, ok: false, radiusUsedM: 0 };
+    let best = empty;
+    const radii = OVERPASS_PROGRESSIVE_RADII_M.filter(function (r) { return r <= maxR; });
+    if (!radii.length || radii[radii.length - 1] !== maxR) {
+      if (maxR >= 1000) radii.push(maxR);
+    }
+    for (let ri = 0; ri < radii.length; ri++) {
+      const r = radii[ri];
+      try {
+        const parsed = await fetchLocalPoisAtRadius(lat, lng, r);
+        const result = {
+          attractions: parsed.attractions,
+          lodging: parsed.lodging,
+          food: parsed.food,
+          sparse: false,
+          ok: true,
+          radiusUsedM: r,
+        };
+        result.sparse = result.attractions.length < 2 && result.lodging.length < 1 && result.food.length < 1;
+        if (!result.sparse || usableLodgeFoodCount(result) > usableLodgeFoodCount(best)) {
+          best = result;
+        }
+        /* progressive: stop when lodging+food combined >= 3 usable */
+        if (usableLodgeFoodCount(result) >= 3) {
+          best = result;
+          break;
+        }
+      } catch (_) {
+        /* try next radius */
+      }
+    }
+    if (!best.ok) {
+      poiMemCache[cacheKey] = { at: Date.now(), data: empty };
+      return empty;
+    }
+    if (usableLodgeFoodCount(best) === 0 && best.attractions.length === 0) {
+      best.ok = false;
+      best.sparse = true;
+      poiMemCache[cacheKey] = { at: Date.now(), data: best };
+      return best;
+    }
+    poiMemCache[cacheKey] = { at: Date.now(), data: best };
+    return best;
   }
 
   function liveLodgingsFromPois(pois, lodgePerNight, count) {
-    count = count || 3;
+    count = count || 5;
     const budget = Number(lodgePerNight) || 400;
     let list = (pois.lodging || []).map(function (p) {
       const price = estimateLodgePriceFromTags(p.tags, budget);
@@ -2728,7 +2849,7 @@
       const areaEn = p.areaHint || (Math.round(p.distKm * 10) / 10 + " km from pin");
       const areaZh = p.areaHint || ("距标注点约 " + (Math.round(p.distKm * 10) / 10) + " km");
       return {
-        nameEn: p.name, nameZh: p.name,
+        nameEn: p.nameEn || p.name, nameZh: p.nameZh || p.name,
         areaEn: areaEn, areaZh: areaZh,
         vibeEn: typeNote + " · OSM local", vibeZh: typeNoteZh + " · 实时本地",
         price: price, tier: tier, distKm: p.distKm,
@@ -2755,7 +2876,7 @@
   }
 
   function liveFoodsFromPois(pois, mealBudgetPerDay, count) {
-    count = count || 3;
+    count = count || 5;
     const perMeal = Math.max(20, (Number(mealBudgetPerDay) || 150) / 3);
     let list = (pois.food || []).map(function (p) {
       const price = estimateFoodPriceFromTags(p.tags, mealBudgetPerDay);
@@ -2764,7 +2885,7 @@
       const areaEn = p.areaHint || (Math.round(p.distKm * 10) / 10 + " km from pin");
       const areaZh = p.areaHint || ("距标注点约 " + (Math.round(p.distKm * 10) / 10) + " km");
       return {
-        nameEn: p.name, nameZh: p.name,
+        nameEn: p.nameEn || p.name, nameZh: p.nameZh || p.name,
         areaEn: areaEn, areaZh: areaZh,
         whyEn: typeNote + " nearby", whyZh: "附近" + typeNoteZh,
         price: price, distKm: p.distKm,
@@ -2881,7 +3002,7 @@
     const pois = await fetchLocalPois(lat, lng, 50000);
     const photos = await resolveCityPhotos(cityKey, searchName, Math.max(9, days * 3), lat, lng);
 
-    const lodgings = liveLodgingsFromPois(pois, lodgeNight, 3).map(function (h) {
+    const lodgings = liveLodgingsFromPois(pois, lodgeNight, 5).map(function (h) {
       return {
         name: lang === "zh" ? h.nameZh : h.nameEn,
         area: lang === "zh" ? h.areaZh : h.areaEn,
@@ -2889,7 +3010,7 @@
         price: h.price,
       };
     });
-    const foods = liveFoodsFromPois(pois, mealPerDay, 3).map(function (f) {
+    const foods = liveFoodsFromPois(pois, mealPerDay, 5).map(function (f) {
       return {
         name: lang === "zh" ? f.nameZh : f.nameEn,
         area: lang === "zh" ? f.areaZh : f.areaEn,
@@ -3729,10 +3850,10 @@
         });
         dayNum++;
       }
-      const lodgings = liveLodgingsFromPois(pois, lodgeNight, 2).map(function (h) {
+      const lodgings = liveLodgingsFromPois(pois, lodgeNight, 5).map(function (h) {
         return { name: lang === "zh" ? h.nameZh : h.nameEn, area: lang === "zh" ? h.areaZh : h.areaEn, vibe: lang === "zh" ? h.vibeZh : h.vibeEn, price: h.price };
       });
-      const foods = liveFoodsFromPois(pois, mealPerDay, 2).map(function (f) {
+      const foods = liveFoodsFromPois(pois, mealPerDay, 5).map(function (f) {
         return { name: lang === "zh" ? f.nameZh : f.nameEn, area: lang === "zh" ? f.areaZh : f.areaEn, why: lang === "zh" ? f.whyZh : f.whyEn, price: f.price };
       });
       if (i === 0) {
