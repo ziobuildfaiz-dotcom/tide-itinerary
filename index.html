@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="tide-build" content="pdf-print-light-v13" />
   <!-- tide-nearby: 50km-local-v2 -->
-  <!-- tide-photos: geo-v1 -->
+  <!-- tide-photos: geo-v2-nodocs -->
   <!-- tide-approx: no-near-label-v1 -->
   <!-- tide-live-pois: overpass-v3-fast -->
   <!-- tide-plan-speed: parallel-v1 -->
@@ -1320,7 +1320,7 @@
 
   /* ---------- Budget · Lodging · Food · Photos ---------- */
   const CNY_PER_USD = 7.2;
-  const PHOTO_CACHE_PREFIX = "tide-photos-v2:";
+  const PHOTO_CACHE_PREFIX = "tide-photos-v3:";
   const photoMemCache = Object.create(null);
 
   const BUDGET_TOTAL_PRESETS = {
@@ -1613,6 +1613,18 @@
     try { sessionStorage.setItem(PHOTO_CACHE_PREFIX + key, JSON.stringify(val)); } catch (_) {}
   }
 
+  /* Reject Commons document scans / non-travel files (e.g. CADAL 南京糧食調查.djvu page thumbs) */
+  function isTravelPhotoCandidate(p) {
+    const title = String((p && (p.title || p.source || p.url)) || "");
+    if (/\.(djvu|pdf|svg|webm|ogv|tiff?|tif|gif)(\b|$)/i.test(title)) return false;
+    if (/CADAL|SSID-/i.test(title)) return false;
+    if (/調查|调查|統計|统计|年鑒|年鉴|黨綱|党纲|報告書|报告书/.test(title)) return false;
+    if (/\b(survey|yearbook|census)\b/i.test(title)) return false;
+    const mime = String((p && p.mime) || "");
+    if (mime && mime.indexOf("svg") !== -1) return false;
+    return true;
+  }
+
   function parseWikimediaPages(pages, qTag) {
     const out = [];
     Object.keys(pages || {}).forEach(function (id) {
@@ -1622,6 +1634,7 @@
       const mime = ii.mime || "";
       if (mime.indexOf("image/") !== 0) return;
       if (mime.indexOf("svg") !== -1) return;
+      if (!isTravelPhotoCandidate({ title: p.title || "", mime: mime, url: ii.url || "", source: ii.descriptionurl || "" })) return;
       const w = ii.thumbwidth || ii.width || 0;
       if (w && w < 200) return;
       const meta = ii.extmetadata || {};
@@ -1735,16 +1748,22 @@
     /* 2) Text search by local display name (Nominatim / place name), not nearest curated city */
     const textName = (searchName || cityKey || "").trim();
     if (photos.length < count && textName && textName.indexOf("local:") !== 0) {
+      /* Prefer tourism terms — bare " food" matches grain/diet surveys on Commons */
       const q1 = textName + " landmark";
-      const q2 = textName + " food";
-      const q3 = textName + " street";
+      const q2 = textName + " restaurant";
+      const q3 = textName + " street food";
+      const q4 = textName + " cuisine";
       const batches = await Promise.all([
         fetchWikimediaPhotos(q1, 6),
         fetchWikimediaPhotos(q2, 4),
         fetchWikimediaPhotos(q3, 4),
+        fetchWikimediaPhotos(q4, 3),
       ]);
       batches.forEach(function (arr) { mergePhotosUnique(photos, arr); });
     }
+
+    /* Drop any document-scan leftovers after merge (geo + text) */
+    photos = photos.filter(isTravelPhotoCandidate);
 
     /* 3) City-specific PHOTO_FALLBACK only if key exactly matches */
     if (photos.length < count) {
@@ -1752,7 +1771,7 @@
     }
 
     /* 4) Else leave shorter / empty — never inject Beijing for other places */
-    photos = photos.slice(0, Math.max(count, 6));
+    photos = photos.filter(isTravelPhotoCandidate).slice(0, Math.max(count, 6));
     cacheSet(cacheKey, photos);
     return photos;
   }
