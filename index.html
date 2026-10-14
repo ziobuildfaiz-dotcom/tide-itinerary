@@ -6,6 +6,7 @@
   <!-- tide-nearby: 50km-local-v2 -->
   <!-- tide-photos: geo-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
+  <!-- tide-live-pois: overpass-v1 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tide Itinerary</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -2384,10 +2385,388 @@
     return t(key) + " " + (baseTransport || "");
   }
 
+
+  /* ---------- Live local POIs via Overpass (within ~50 km of click) ---------- */
+  const OVERPASS_ENDPOINTS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+  ];
+  const poiMemCache = Object.create(null);
+  const POI_CACHE_TTL_MS = 5 * 60 * 1000;
+
+  function haversineKm(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const toRad = function (d) { return d * Math.PI / 180; };
+    const dLat = toRad(lat2 - lat1);
+    const dLng = toRad(lng2 - lng1);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  function overpassElementCoords(el) {
+    if (el.type === "node" && typeof el.lat === "number" && typeof el.lon === "number") {
+      return { lat: el.lat, lng: el.lon };
+    }
+    if (el.center && typeof el.center.lat === "number" && typeof el.center.lon === "number") {
+      return { lat: el.center.lat, lng: el.center.lon };
+    }
+    if (typeof el.lat === "number" && typeof el.lon === "number") {
+      return { lat: el.lat, lng: el.lon };
+    }
+    return null;
+  }
+
+  function classifyOverpassTags(tags) {
+    if (!tags) return null;
+    const tour = tags.tourism || "";
+    const amenity = tags.amenity || "";
+    const natural = tags.natural || "";
+    const historic = tags.historic;
+    const shop = tags.shop || "";
+    if (tour === "hotel" || tour === "guest_house" || tour === "hostel" ||
+        tour === "motel" || tour === "apartment" || amenity === "hotel") {
+      return "lodging";
+    }
+    if (amenity === "restaurant" || amenity === "cafe" || amenity === "fast_food" ||
+        amenity === "food_court" || shop === "bakery") {
+      return "food";
+    }
+    if (tour === "attraction" || tour === "museum" || tour === "viewpoint" ||
+        tour === "artwork" || tour === "gallery" || tour === "zoo" ||
+        tour === "theme_park" || historic ||
+        natural === "peak" || natural === "beach" || natural === "waterfall" ||
+        natural === "spring") {
+      return "attraction";
+    }
+    return null;
+  }
+
+  function poiTypeKey(tags) {
+    if (!tags) return "place";
+    if (tags.tourism) return String(tags.tourism);
+    if (tags.historic) return "historic";
+    if (tags.natural) return String(tags.natural);
+    if (tags.amenity) return String(tags.amenity);
+    if (tags.shop) return String(tags.shop);
+    return "place";
+  }
+
+  function poiTypeNote(tags, langZh) {
+    const key = poiTypeKey(tags);
+    const mapZh = {
+      attraction: "景点", museum: "博物馆", viewpoint: "观景点", artwork: "公共艺术",
+      gallery: "画廊", zoo: "动物园", theme_park: "主题乐园", historic: "历史遗迹",
+      peak: "山峰", beach: "海滩", waterfall: "瀑布", spring: "泉眼",
+      hotel: "酒店", guest_house: "客栈", hostel: "青旅", motel: "汽车旅馆",
+      apartment: "公寓", restaurant: "餐厅", cafe: "咖啡馆", fast_food: "快餐",
+      food_court: "美食广场", bakery: "面包店", place: "本地地点",
+    };
+    const mapEn = {
+      attraction: "attraction", museum: "museum", viewpoint: "viewpoint", artwork: "artwork",
+      gallery: "gallery", zoo: "zoo", theme_park: "theme park", historic: "historic site",
+      peak: "peak", beach: "beach", waterfall: "waterfall", spring: "spring",
+      hotel: "hotel", guest_house: "guesthouse", hostel: "hostel", motel: "motel",
+      apartment: "apartment", restaurant: "restaurant", cafe: "café", fast_food: "fast food",
+      food_court: "food court", bakery: "bakery", place: "local place",
+    };
+    return langZh ? (mapZh[key] || key) : (mapEn[key] || key);
+  }
+
+  function poiDisplayName(tags, lat, lng) {
+    if (!tags) return null;
+    const n = tags.name || tags["name:en"] || tags["name:zh"] || tags["name:zh-Hans"] ||
+      tags["alt_name"] || tags["loc_name"];
+    if (n && String(n).trim()) return String(n).trim();
+    return null;
+  }
+
+  function estimateLodgePriceFromTags(tags, lodgeBudget) {
+    const tour = (tags && tags.tourism) || "";
+    const stars = parseInt((tags && (tags.stars || tags["stars:hotel"])) || "0", 10) || 0;
+    let base;
+    if (tour === "hostel" || tour === "motel") base = 150;
+    else if (tour === "guest_house" || tour === "apartment") base = 320;
+    else if (stars >= 5) base = 1800;
+    else if (stars >= 4) base = 900;
+    else if (stars >= 3) base = 520;
+    else base = 450;
+    const budget = Number(lodgeBudget) || 400;
+    /* Nudge toward user lodge budget while keeping type signal */
+    return Math.max(80, Math.round(base * 0.55 + budget * 0.45));
+  }
+
+  function estimateFoodPriceFromTags(tags, mealBudget) {
+    const amenity = (tags && tags.amenity) || "";
+    const shop = (tags && tags.shop) || "";
+    let base;
+    if (amenity === "fast_food" || shop === "bakery") base = 30;
+    else if (amenity === "cafe" || amenity === "food_court") base = 55;
+    else if (amenity === "restaurant") base = 110;
+    else base = 80;
+    const perMeal = Math.max(20, (Number(mealBudget) || 150) / 3);
+    return Math.max(15, Math.round(base * 0.5 + perMeal * 0.5));
+  }
+
+  function lodgeTierFromTags(tags) {
+    const tour = (tags && tags.tourism) || "";
+    const stars = parseInt((tags && (tags.stars || tags["stars:hotel"])) || "0", 10) || 0;
+    if (tour === "hostel" || tour === "motel") return "backpacker";
+    if (stars >= 5) return "luxury";
+    if (stars >= 4) return "comfort";
+    if (tour === "guest_house" || tour === "apartment") return "mid";
+    return "mid";
+  }
+
+  function dedupePois(list) {
+    const seen = Object.create(null);
+    const out = [];
+    list.forEach(function (p) {
+      const nameKey = (p.name || "").toLowerCase().replace(/\s+/g, " ").trim();
+      const coordKey = (Math.round(p.lat * 10000) + "," + Math.round(p.lng * 10000));
+      const key = nameKey ? ("n:" + nameKey) : ("c:" + coordKey);
+      if (seen[key]) return;
+      seen[key] = true;
+      out.push(p);
+    });
+    return out;
+  }
+
+  function buildOverpassQuery(lat, lng, radiusM) {
+    const r = Math.max(1000, Math.min(50000, Math.round(radiusM || 50000)));
+    const around = "(around:" + r + "," + lat + "," + lng + ")";
+    return "[out:json][timeout:10];\n(\n" +
+      "  node[\"tourism\"~\"^(attraction|museum|viewpoint|artwork|gallery|zoo|theme_park)$\"]" + around + ";\n" +
+      "  way[\"tourism\"~\"^(attraction|museum|viewpoint|artwork|gallery|zoo|theme_park)$\"]" + around + ";\n" +
+      "  node[\"historic\"]" + around + ";\n" +
+      "  way[\"historic\"]" + around + ";\n" +
+      "  node[\"natural\"~\"^(peak|beach|waterfall|spring)$\"]" + around + ";\n" +
+      "  way[\"natural\"~\"^(peak|beach|waterfall|spring)$\"]" + around + ";\n" +
+      "  node[\"tourism\"~\"^(hotel|guest_house|hostel|motel|apartment)$\"]" + around + ";\n" +
+      "  way[\"tourism\"~\"^(hotel|guest_house|hostel|motel|apartment)$\"]" + around + ";\n" +
+      "  node[\"amenity\"=\"hotel\"]" + around + ";\n" +
+      "  way[\"amenity\"=\"hotel\"]" + around + ";\n" +
+      "  node[\"amenity\"~\"^(restaurant|cafe|fast_food|food_court)$\"]" + around + ";\n" +
+      "  way[\"amenity\"~\"^(restaurant|cafe|fast_food|food_court)$\"]" + around + ";\n" +
+      "  node[\"shop\"=\"bakery\"]" + around + ";\n" +
+      "  way[\"shop\"=\"bakery\"]" + around + ";\n" +
+      ");\nout center tags 120;";
+  }
+
+  async function fetchLocalPois(lat, lng, radiusM) {
+    radiusM = radiusM == null ? 50000 : radiusM;
+    const cacheKey = Math.round(lat * 100) + "," + Math.round(lng * 100) + ":" + Math.round(radiusM / 1000);
+    const cached = poiMemCache[cacheKey];
+    if (cached && (Date.now() - cached.at) < POI_CACHE_TTL_MS) {
+      return cached.data;
+    }
+    const empty = { attractions: [], lodging: [], food: [], sparse: true, ok: false };
+    const query = buildOverpassQuery(lat, lng, radiusM);
+    let data = null;
+    for (let i = 0; i < OVERPASS_ENDPOINTS.length; i++) {
+      const endpoint = OVERPASS_ENDPOINTS[i];
+      try {
+        const ctrl = new AbortController();
+        const tmo = setTimeout(function () { ctrl.abort(); }, 10000);
+        const res = await fetch(endpoint, {
+          method: "POST",
+          signal: ctrl.signal,
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8", Accept: "application/json" },
+          body: "data=" + encodeURIComponent(query),
+        });
+        clearTimeout(tmo);
+        if (!res.ok) continue;
+        data = await res.json();
+        break;
+      } catch (_) {
+        /* try next endpoint */
+      }
+    }
+    if (!data || !Array.isArray(data.elements)) {
+      poiMemCache[cacheKey] = { at: Date.now(), data: empty };
+      return empty;
+    }
+    const attractions = [];
+    const lodging = [];
+    const food = [];
+    data.elements.forEach(function (el) {
+      const tags = el.tags || {};
+      const kind = classifyOverpassTags(tags);
+      if (!kind) return;
+      const coords = overpassElementCoords(el);
+      if (!coords) return;
+      const name = poiDisplayName(tags, coords.lat, coords.lng);
+      if (!name) return; /* skip unnamed — avoid inventing labels */
+      const distKm = haversineKm(lat, lng, coords.lat, coords.lng);
+      if (distKm > (radiusM / 1000) + 0.5) return;
+      const areaHint = tags["addr:suburb"] || tags["addr:district"] || tags["addr:neighbourhood"] ||
+        tags["addr:city"] || tags["addr:town"] || tags["addr:village"] || "";
+      const item = {
+        name: name,
+        lat: coords.lat,
+        lng: coords.lng,
+        distKm: distKm,
+        typeKey: poiTypeKey(tags),
+        tags: tags,
+        areaHint: areaHint,
+      };
+      if (kind === "attraction") attractions.push(item);
+      else if (kind === "lodging") lodging.push(item);
+      else if (kind === "food") food.push(item);
+    });
+    const byDist = function (a, b) { return a.distKm - b.distKm; };
+    const result = {
+      attractions: dedupePois(attractions).sort(byDist),
+      lodging: dedupePois(lodging).sort(byDist),
+      food: dedupePois(food).sort(byDist),
+      sparse: false,
+      ok: true,
+    };
+    result.sparse = result.attractions.length < 2 && result.lodging.length < 1 && result.food.length < 1;
+    poiMemCache[cacheKey] = { at: Date.now(), data: result };
+    return result;
+  }
+
+  function liveLodgingsFromPois(pois, lodgePerNight, count) {
+    count = count || 3;
+    const budget = Number(lodgePerNight) || 400;
+    let list = (pois.lodging || []).map(function (p) {
+      const price = estimateLodgePriceFromTags(p.tags, budget);
+      const tier = lodgeTierFromTags(p.tags);
+      const typeNote = poiTypeNote(p.tags, false);
+      const typeNoteZh = poiTypeNote(p.tags, true);
+      const areaEn = p.areaHint || (Math.round(p.distKm * 10) / 10 + " km from pin");
+      const areaZh = p.areaHint || ("距标注点约 " + (Math.round(p.distKm * 10) / 10) + " km");
+      return {
+        nameEn: p.name, nameZh: p.name,
+        areaEn: areaEn, areaZh: areaZh,
+        vibeEn: typeNote + " · OSM local", vibeZh: typeNoteZh + " · 实时本地",
+        price: price, tier: tier, distKm: p.distKm,
+      };
+    });
+    if (!list.length) {
+      return genericLodging("mid", inferTierFromDaily(budget)).slice(0, count).map(function (g) {
+        return Object.assign({}, g, {
+          nameEn: g.nameEn + " (area sparse)",
+          nameZh: g.nameZh + "（周边稀疏）",
+          areaEn: "Near your pin · explore locally",
+          areaZh: "标注点附近 · 实地探索",
+          vibeEn: "No mapped hotels within 50 km — generic budget estimate",
+          vibeZh: "50 km 内无地图酒店，仅预算估算",
+        });
+      });
+    }
+    list = list.slice().sort(function (a, b) {
+      const pa = Math.abs(a.price - budget) + a.distKm * 8;
+      const pb = Math.abs(b.price - budget) + b.distKm * 8;
+      return pa - pb;
+    });
+    return list.slice(0, count);
+  }
+
+  function liveFoodsFromPois(pois, mealBudgetPerDay, count) {
+    count = count || 3;
+    const perMeal = Math.max(20, (Number(mealBudgetPerDay) || 150) / 3);
+    let list = (pois.food || []).map(function (p) {
+      const price = estimateFoodPriceFromTags(p.tags, mealBudgetPerDay);
+      const typeNote = poiTypeNote(p.tags, false);
+      const typeNoteZh = poiTypeNote(p.tags, true);
+      const areaEn = p.areaHint || (Math.round(p.distKm * 10) / 10 + " km from pin");
+      const areaZh = p.areaHint || ("距标注点约 " + (Math.round(p.distKm * 10) / 10) + " km");
+      return {
+        nameEn: p.name, nameZh: p.name,
+        areaEn: areaEn, areaZh: areaZh,
+        whyEn: typeNote + " nearby", whyZh: "附近" + typeNoteZh,
+        price: price, distKm: p.distKm,
+      };
+    });
+    if (!list.length) {
+      return genericFood().slice(0, count).map(function (g) {
+        return Object.assign({}, g, {
+          nameEn: "Local markets & home cooking",
+          nameZh: "当地市集与家常菜",
+          areaEn: "Near your pin",
+          areaZh: "标注点附近",
+          whyEn: "Sparse mapped eateries — ask locals",
+          whyZh: "地图餐馆较少，问问当地人",
+        });
+      });
+    }
+    list = list.slice().sort(function (a, b) {
+      return (Math.abs(a.price - perMeal) + a.distKm * 5) - (Math.abs(b.price - perMeal) + b.distKm * 5);
+    });
+    return list.slice(0, count);
+  }
+
+  function sparseSlotCopy(slot, langZh) {
+    const copies = {
+      morning: {
+        en: "Sparse mapped sights nearby — walk local trails, village lanes, or the nearest market and note what is actually here.",
+        zh: "周边标注景点较少——步行探索本地小径、村落巷弄或最近的市集，如实记录这里有什么。",
+      },
+      afternoon: {
+        en: "Explore whatever local paths, viewpoints, or community spaces you find within a short radius — do not chase distant famous cities.",
+        zh: "在短距离内探索你能找到的本地小路、观景处或社区空间——不要去追远处的著名城市。",
+      },
+      evening: {
+        en: "Quiet evening near your stay: simple local food if available, early rest, and a short walk under open sky.",
+        zh: "在住宿附近安静过夜：有则吃简单本地餐，早些休息，并在开阔夜色下短走一圈。",
+      },
+    };
+    const c = copies[slot] || copies.afternoon;
+    return langZh ? c.zh : c.en;
+  }
+
+  function activityFromAttraction(poi, slot, langZh) {
+    if (!poi) return sparseSlotCopy(slot, langZh);
+    const type = poiTypeNote(poi.tags, langZh);
+    const km = Math.round(poi.distKm * 10) / 10;
+    if (langZh) {
+      if (slot === "morning") return "前往「" + poi.name + "」（" + type + "，约 " + km + " km）——清晨人少，慢慢观察现场环境。";
+      if (slot === "evening") return "傍晚再访「" + poi.name + "」一带，或在附近散步收尾（" + type + "，约 " + km + " km）。";
+      return "白天深入「" + poi.name + "」（" + type + "，约 " + km + " km）——按现场开放情况安排停留。";
+    }
+    if (slot === "morning") return "Head to \"" + poi.name + "\" (" + type + ", ~" + km + " km) — quieter morning light; observe what is on site.";
+    if (slot === "evening") return "Evening near \"" + poi.name + "\" (" + type + ", ~" + km + " km) — a short stroll and wind-down.";
+    return "Spend the afternoon at \"" + poi.name + "\" (" + type + ", ~" + km + " km) — stay as long as access allows.";
+  }
+
+  function themeFromAttractions(attrs, dayIdx, langZh) {
+    if (!attrs || !attrs.length) {
+      return langZh ? "稀疏地带探索" : "Sparse-area explore";
+    }
+    const p = attrs[Math.min(dayIdx, attrs.length - 1)];
+    const type = poiTypeNote(p.tags, langZh);
+    return langZh ? (p.name + " · " + type) : (p.name + " · " + type);
+  }
+
+  function tipFromPois(pois, langZh) {
+    const nA = (pois.attractions || []).length;
+    const nL = (pois.lodging || []).length;
+    const nF = (pois.food || []).length;
+    if (langZh) {
+      if (nA + nL + nF < 3) {
+        return "此地 OpenStreetMap 标注较少：以实地探索为准，勿把远处名城当成「附近」。下载离线地图并预留弹性时间。";
+      }
+      return "行程点来自标注坐标 " + Math.round(NEARBY_TOURISM_KM) + " km 内的实时地图数据（按距离排序）。开放时间可能变动，出发前再确认。";
+    }
+    if (nA + nL + nF < 3) {
+      return "Few OpenStreetMap POIs here — explore on the ground; never invent distant famous cities as \"nearby\". Download offline maps and keep a buffer.";
+    }
+    return "Stops are live map POIs within ~" + Math.round(NEARBY_TOURISM_KM) + " km of your pin, sorted by distance. Hours change — recheck before you go.";
+  }
+
+  function transportLiveNote(tier, langZh) {
+    const base = langZh
+      ? "以标注点周边短途为主：步行、本地公交或包车；偏远处预留半天机动。"
+      : "Stay near the pin: walk, local buses, or a hired car; remote pins need a half-day buffer.";
+    return transportForTier(tier, base);
+  }
+
+
   async function buildPlan(place, lat, lng, days, salt, budgetOpts) {
     place = localizePlace(place);
-    const vibeKey = VIBE_TEMPLATES[place.vibe] ? place.vibe : null;
-    const tpl = vibeKey ? VIBE_TEMPLATES[vibeKey] : FALLBACK_VIBE;
     const seed0 = hashSeed(lat, lng, days, salt);
     const total = (budgetOpts && budgetOpts.total) || tideTotalBudget || 3000;
     const lodgeNight = (budgetOpts && budgetOpts.lodge) || tideLodgeBudget || 400;
@@ -2397,21 +2776,23 @@
     const daily = Math.round(total / Math.max(1, days));
     const mealPerDay = Math.round(remain * 0.45 / Math.max(1, days));
     const tier = inferTierFromDaily(daily);
-    const baseTransport = bilStr(tpl.transport);
-    const transport = transportForTier(tier, baseTransport);
     const farFromCurated = !!(place.approx || !place._cityRef ||
       (typeof place.distanceKm === "number" && place.distanceKm > NEARBY_TOURISM_KM));
     const cityKey = farFromCurated
       ? (place.cityKey && String(place.cityKey).indexOf("local:") === 0
           ? place.cityKey
           : localTourismKey(place.nameEn || place.name, lat, lng))
-      : (place.cityKey || (place._cityRef && cityKeyFnSafe(place._cityRef)) || place.nameEn || "Beijing");
+      : (place.cityKey || (place._cityRef && cityKeyFnSafe(place._cityRef)) || place.nameEn || "local");
     /* Wikimedia: local geo name when far; curated city name when close */
     const searchName = farFromCurated
       ? (place.nameEn || place.name || cityKey)
       : ((place._cityRef && place._cityRef.nameEn) || place.nameEn || place.name || cityKey);
+
+    /* Always fetch live POIs around click coords (not curated city DB) */
+    const pois = await fetchLocalPois(lat, lng, 50000);
     const photos = await resolveCityPhotos(cityKey, searchName, Math.max(9, days * 3), lat, lng);
-    const lodgings = pickLodgings(cityKey, lodgeNight, 3).map(function (h) {
+
+    const lodgings = liveLodgingsFromPois(pois, lodgeNight, 3).map(function (h) {
       return {
         name: lang === "zh" ? h.nameZh : h.nameEn,
         area: lang === "zh" ? h.areaZh : h.areaEn,
@@ -2419,7 +2800,7 @@
         price: h.price,
       };
     });
-    const foods = pickFoods(cityKey, mealPerDay, 3).map(function (f) {
+    const foods = liveFoodsFromPois(pois, mealPerDay, 3).map(function (f) {
       return {
         name: lang === "zh" ? f.nameZh : f.nameEn,
         area: lang === "zh" ? f.areaZh : f.areaEn,
@@ -2427,36 +2808,47 @@
         price: f.price,
       };
     });
+
+    const transport = transportLiveNote(tier, lang === "zh");
+    const foodClue = (pois.food && pois.food.length)
+      ? (lang === "zh"
+          ? ("附近地图餐馆示例：" + pois.food.slice(0, 2).map(function (x) { return x.name; }).join("、") + "。")
+          : ("Nearby mapped eateries: " + pois.food.slice(0, 2).map(function (x) { return x.name; }).join(", ") + "."))
+      : (place.food || (lang === "zh" ? "当地市集与地方菜" : "Local markets and regional dishes"));
+
     const introBits = [
-      /* Local pin (_cityRef null): no distant-city "near X" copy — use place name only */
       place._cityRef
         ? t("introExact", { name: place.name, days: days })
         : t("introApprox", { name: place.name }),
-      t("foodClue", { food: place.food, transport: transport }),
+      t("foodClue", { food: foodClue, transport: transport }),
       t("activityBudgetNote", { tier: tierLabel(tier) }),
+      (lang === "zh"
+        ? ("景点／住宿／餐饮来自标注点 " + Math.round(NEARBY_TOURISM_KM) + " km 内实时 OpenStreetMap 检索。")
+        : ("Sights, stays, and food are live OpenStreetMap finds within ~" + Math.round(NEARBY_TOURISM_KM) + " km of your pin.")),
     ];
     const foodNotes = t("foodNotes");
+    const attrs = pois.attractions || [];
     const daysOut = [];
     for (let d = 1; d <= days; d++) {
       const seed = seed0 + d * 17;
-      let morning = bilPick(tpl.morning, seed + 1);
-      let afternoon = bilPick(tpl.afternoon, seed + 2);
-      let evening = bilPick(tpl.evening, seed + 3);
+      const a0 = attrs.length ? attrs[(d - 1) % attrs.length] : null;
+      const a1 = attrs.length > 1 ? attrs[d % attrs.length] : a0;
+      const a2 = attrs.length > 2 ? attrs[(d + 1) % attrs.length] : a1;
+      let morning = activityFromAttraction(a0, "morning", lang === "zh");
+      let afternoon = activityFromAttraction(a1, "afternoon", lang === "zh");
+      let evening = activityFromAttraction(a2, "evening", lang === "zh");
       const act = activityNoteForTier(tier);
-      if (tier === "backpacker") {
-        morning += " " + act;
-      } else if (tier === "luxury") {
-        afternoon += " " + act;
-      } else {
-        evening = evening + " " + act;
-      }
+      if (tier === "backpacker") morning += " " + act;
+      else if (tier === "luxury") afternoon += " " + act;
+      else evening = evening + " " + act;
+      const tipBase = tipFromPois(pois, lang === "zh");
       daysOut.push({
-        day: d, theme: bilPick(tpl.themes, seed),
+        day: d, theme: themeFromAttractions(attrs, d - 1, lang === "zh"),
         morning: morning, afternoon: afternoon, evening: evening,
-        tip: bilPick(tpl.tips, seed + 4),
+        tip: tipBase,
         foodNote: d === 1
-          ? t("foodFocusBudget", { food: place.food, budget: fmtCny(mealPerDay) })
-          : pick(foodNotes, seed + 5),
+          ? t("foodFocusBudget", { food: (foods[0] && foods[0].name) || place.food, budget: fmtCny(mealPerDay) })
+          : (Array.isArray(foodNotes) ? pick(foodNotes, seed + 5) : tipBase),
         photos: {
           morning: pickSlotPhoto(photos, "morning", d, seed),
           afternoon: pickSlotPhoto(photos, "afternoon", d, seed + 1),
@@ -2478,8 +2870,11 @@
       foods: foods,
       cityKey: cityKey,
       headerPhotos: photos.slice(0, 3),
+      livePois: true,
+      poiCounts: { attractions: attrs.length, lodging: (pois.lodging || []).length, food: (pois.food || []).length },
     };
   }
+
   function cityKeyFnSafe(c) { try { return cityKey(c); } catch (_) { return c && c.nameEn; } }
 
   function escapeHtml(s) {
@@ -3187,7 +3582,10 @@
     const chain = planeStops.map((s) => s.name).join(" → ");
     parts.push({
       type: "intro",
-      text: t("multiIntro", { n: planeStops.length - 1, chain: chain }) + " " + t("activityBudgetNote", { tier: tierLabel(tier) }),
+      text: t("multiIntro", { n: planeStops.length - 1, chain: chain }) + " " + t("activityBudgetNote", { tier: tierLabel(tier) }) +
+        (lang === "zh"
+          ? " 每站住宿／餐饮／活动来自该站坐标 50 km 内实时 OpenStreetMap 检索。"
+          : " Lodging, food, and activities per stop come from live OpenStreetMap POIs within 50 km of that stop."),
     });
     parts.push({
       type: "meta",
@@ -3197,25 +3595,31 @@
       headerPhotos: [],
     });
 
-    /* Prefetch photos per stop */
+    /* Prefetch photos + live POIs per stop (around stop lat/lng) */
     const photoByStop = {};
+    const poisByStop = {};
     await Promise.all(planeStops.map(async function (stop) {
       const ck = stop.cityKey || stop.nameEn || stop.name;
-      /* Prefer local place name when no curated _cityRef (nearby chip unset) */
       const sn = stop._cityRef
         ? (stop._cityRef.nameEn || stop.nameEn || stop.name)
         : (stop.nameEn || stop.name || ck);
-      photoByStop[ck] = await resolveCityPhotos(ck, sn, 9, stop.lat, stop.lng);
+      const [photos, pois] = await Promise.all([
+        resolveCityPhotos(ck, sn, 9, stop.lat, stop.lng),
+        fetchLocalPois(stop.lat, stop.lng, 50000),
+      ]);
+      photoByStop[ck] = photos;
+      poisByStop[ck + "|" + stop.lat + "," + stop.lng] = pois;
     }));
 
     let dayNum = 1;
     for (let i = 0; i < planeStops.length; i++) {
       const stop = planeStops[i];
-      const vibeKey = VIBE_TEMPLATES[stop.vibe] ? stop.vibe : null;
-      const tpl = vibeKey ? VIBE_TEMPLATES[vibeKey] : FALLBACK_VIBE;
       const seed = hashSeed(stop.lat, stop.lng, i + 1, dayNum * 13);
       const ck = stop.cityKey || stop.nameEn || stop.name;
       const photos = photoByStop[ck] || fallbackPhotos(ck, 9);
+      const pois = poisByStop[ck + "|" + stop.lat + "," + stop.lng] ||
+        { attractions: [], lodging: [], food: [], sparse: true };
+      const attrs = pois.attractions || [];
       if (i > 0) {
         parts.push({
           type: "day", day: dayNum, title: t("transferTitle", { city: stop.name }), theme: t("transferTheme"),
@@ -3236,28 +3640,30 @@
         });
         dayNum++;
       }
-      const lodgings = pickLodgings(ck, lodgeNight, 2).map(function (h) {
+      const lodgings = liveLodgingsFromPois(pois, lodgeNight, 2).map(function (h) {
         return { name: lang === "zh" ? h.nameZh : h.nameEn, area: lang === "zh" ? h.areaZh : h.areaEn, vibe: lang === "zh" ? h.vibeZh : h.vibeEn, price: h.price };
       });
-      const foods = pickFoods(ck, mealPerDay, 2).map(function (f) {
+      const foods = liveFoodsFromPois(pois, mealPerDay, 2).map(function (f) {
         return { name: lang === "zh" ? f.nameZh : f.nameEn, area: lang === "zh" ? f.areaZh : f.areaEn, why: lang === "zh" ? f.whyZh : f.whyEn, price: f.price };
       });
-      /* Accumulate first stop lodging/food into meta */
       if (i === 0) {
         parts[1].lodgings = lodgings;
         parts[1].foods = foods;
         parts[1].headerPhotos = photos.slice(0, 3);
       }
+      const a0 = attrs.length ? attrs[0] : null;
+      const a1 = attrs.length > 1 ? attrs[1] : a0;
+      const a2 = attrs.length > 2 ? attrs[2] : a1;
       parts.push({
         type: "day", day: dayNum,
         title: stop.name + (stop.region ? " · " + stop.region : ""),
-        theme: bilPick(tpl.themes, seed), numClass: i === 0 ? "teal" : "",
-        morning: bilPick(tpl.morning, seed + 1) + " " + activityNoteForTier(tier),
-        afternoon: bilPick(tpl.afternoon, seed + 2),
-        evening: bilPick(tpl.evening, seed + 3),
-        foodNote: t("stopFoodNote", { food: stop.food }) + " " + t("foodFocusBudget", { food: stop.food, budget: fmtCny(mealPerDay) }),
-        tip: bilPick(tpl.tips, seed + 4),
-        transport: transportForTier(tier, bilStr(tpl.transport)),
+        theme: themeFromAttractions(attrs, 0, lang === "zh"), numClass: i === 0 ? "teal" : "",
+        morning: activityFromAttraction(a0, "morning", lang === "zh") + " " + activityNoteForTier(tier),
+        afternoon: activityFromAttraction(a1, "afternoon", lang === "zh"),
+        evening: activityFromAttraction(a2, "evening", lang === "zh"),
+        foodNote: t("stopFoodNote", { food: (foods[0] && foods[0].name) || stop.food }) + " " + t("foodFocusBudget", { food: (foods[0] && foods[0].name) || stop.food, budget: fmtCny(mealPerDay) }),
+        tip: tipFromPois(pois, lang === "zh"),
+        transport: transportLiveNote(tier, lang === "zh"),
         photos: {
           morning: pickSlotPhoto(photos, "morning", dayNum, seed + 3),
           afternoon: pickSlotPhoto(photos, "afternoon", dayNum, seed + 4),
@@ -3271,6 +3677,7 @@
         lodgings: i === 0 ? null : lodgings,
         foods: i === 0 ? null : foods,
         cityKey: ck,
+        livePois: true,
       });
       dayNum++;
     }
