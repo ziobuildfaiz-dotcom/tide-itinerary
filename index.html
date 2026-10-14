@@ -8,6 +8,7 @@
   <!-- tide-approx: no-near-label-v1 -->
   <!-- tide-live-pois: overpass-v2 -->
   <!-- tide-pinch-handoff: touch-v1 -->
+  <!-- tide-chrome: brand-zoom-sep-v1 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tide Itinerary</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -451,6 +452,10 @@
       background: rgba(11, 31, 51, 0.9) !important; color: var(--sand) !important;
       border-color: rgba(232, 213, 183, 0.2) !important;
     }
+    /* tide-chrome: brand-zoom-sep-v1 — clear brand pill; keep zoom top-left (hint owns top-right) */
+    .leaflet-top.leaflet-left {
+      top: 70px;
+    }
 
     /* Budget panel */
     .budget-panel {
@@ -637,6 +642,7 @@
 
   <div id="map" aria-label="World map"></div>
 
+  <!-- tide-chrome: brand-zoom-sep-v1 -->
   <div class="brand" aria-hidden="true">
     <div class="brand-mark">
       <svg viewBox="0 0 24 24" fill="none" stroke="#F7F3EB" stroke-width="2" stroke-linecap="round">
