@@ -20,8 +20,8 @@
   <script type="importmap">
   {
     "imports": {
-      "three": "http://127.0.0.1:8765/vendor/three/three.module.js",
-      "three/addons/": "http://127.0.0.1:8765/vendor/three/addons/"
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/addons/"
     }
   }
   </script>
@@ -234,11 +234,21 @@
       .brand-text span { display: none; }
       .side-panel { width: 100%; }
     }
+
+    /* Tide ↔ Interstellar handoff veil (matches --void) */
+    #pageFade {
+      position: fixed; inset: 0; z-index: 99999;
+      background: #05080f; opacity: 0; pointer-events: none;
+      transition: opacity 0.55s ease;
+    }
+    #pageFade.show { opacity: 1; pointer-events: all; }
+    #pageFade.instant { transition: none; }
   </style>
 </head>
 <body>
   <div id="map" aria-label="Earth map"></div>
   <canvas id="webgl"></canvas>
+  <div id="pageFade" aria-hidden="true"></div>
 
   <div class="topbar">
     <div class="brand">
@@ -1303,7 +1313,7 @@ async function returnToEarthGlobe() {
   setTimeout(() => hintEl.classList.add("hide"), 5500);
 }
 
-/** Fade: briefly show Leaflet Earth map, then hand off to Tide Itinerary (index.html). */
+/** Crossfade WebGL → void → Tide Itinerary (index.html). Keep globe visible until veil covers. */
 function goBackToTideMap() {
   if (handingOffToTide) return;
   handingOffToTide = true;
@@ -1313,24 +1323,25 @@ function goBackToTideMap() {
   sidePanel.setAttribute("aria-hidden", "true");
   highlightRing.visible = false;
   controls.enabled = false;
-  // Reverse morph: hide WebGL, reveal interstellar Leaflet map briefly
-  phase = "map";
-  setPhaseDots(phase);
-  systemRoot.visible = false;
-  globeEarth.visible = false;
-  setGlobeMoonVisible(false);
-  canvas.classList.remove("active");
-  const mapEl = document.getElementById("map");
-  mapEl.classList.remove("fade-out");
-  try { map.setZoom(2); map.invalidateSize(); } catch (_) {}
-  const veil = document.createElement("div");
-  veil.style.cssText = "position:fixed;inset:0;z-index:9999;background:#05080f;opacity:0;transition:opacity 0.45s ease;pointer-events:all;";
-  document.body.appendChild(veil);
-  // Let the 2D map flash through, then fade to Tide
-  setTimeout(() => {
-    requestAnimationFrame(() => { veil.style.opacity = "1"; });
-  }, 180);
-  setTimeout(() => { location.href = "index.html?from=interstellar"; }, 720);
+  // Prep Leaflet under the veil for Tide return (wide world zoom)
+  try {
+    map.setView([20, 20], 2);
+    map.invalidateSize();
+  } catch (_) {}
+  const fadeEl = document.getElementById("pageFade");
+  // Hold / nudge camera closer while void veil rises over the live WebGL frame
+  const camLen = camera.position.length();
+  const closer = camera.position.clone().normalize().multiplyScalar(Math.max(camLen * 0.82, 2.05));
+  const holdTarget = controls.target.clone();
+  animateCamera(closer, holdTarget, 480);
+  if (fadeEl) {
+    fadeEl.classList.remove("instant");
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { fadeEl.classList.add("show"); });
+    });
+  }
+  // ~1000ms total: camera nudge + void crossfade, then navigate
+  setTimeout(() => { location.href = "index.html?from=interstellar"; }, 1050);
 }
 
 function fillPanel(id) {
@@ -1605,12 +1616,24 @@ setPhaseDots("map");
   try {
     const params = new URLSearchParams(location.search || "");
     if (params.get("from") === "tide") {
-      // Start map already fading so Tide→Interstellar feels continuous
       const mapEl = document.getElementById("map");
+      const fadeEl = document.getElementById("pageFade");
+      // Continue inbound void: start covered, map already faded, WebGL ready
       if (mapEl) mapEl.classList.add("fade-out");
-      setTimeout(() => {
+      if (fadeEl) {
+        fadeEl.classList.add("instant", "show");
+      }
+      // Enter globe immediately under the veil (no empty-map pause)
+      requestAnimationFrame(() => {
         if (phase === "map" && !transitionLock) enterGlobe();
-      }, 180);
+        // Then lift the veil so the globe appears as a continuous crossfade
+        requestAnimationFrame(() => {
+          if (fadeEl) {
+            fadeEl.classList.remove("instant");
+            requestAnimationFrame(() => { fadeEl.classList.remove("show"); });
+          }
+        });
+      });
       try {
         const u = new URL(location.href);
         u.searchParams.delete("from");

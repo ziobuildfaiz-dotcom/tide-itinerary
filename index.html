@@ -374,7 +374,7 @@
     #pageFade {
       position: fixed; inset: 0; z-index: 99999;
       background: #05080f; opacity: 0; pointer-events: none;
-      transition: opacity 0.32s ease;
+      transition: opacity 0.55s ease;
     }
     #pageFade.show { opacity: 1; pointer-events: all; }
 
@@ -635,7 +635,7 @@
     <button type="button" class="mode-btn" id="modePlane" role="tab" aria-selected="false">Paper Plane</button>
   </div>
 
-  <a class="interstellar-link" id="interstellarLink" href="interstellar.html?v=earth3d2" title="Interstellar Travel">
+  <a class="interstellar-link" id="interstellarLink" href="interstellar.html?v=public-three1" title="Interstellar Travel">
     <span class="orb" aria-hidden="true"></span>
     <span><span id="interstellarLabel">星际旅行</span><small id="interstellarSub">Interstellar</small></span>
   </a>
@@ -1787,8 +1787,8 @@
         if (fadeEl) fadeEl.classList.add("show");
       } catch (_) {}
       setTimeout(function () {
-        location.href = "interstellar.html?v=earth3d2&from=tide";
-      }, 320);
+        location.href = "interstellar.html?v=public-three1&from=tide";
+      }, 520);
     }
 
     if (mapEl) {
