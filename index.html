@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="tide-build" content="pdf-print-light-v13" />
   <!-- tide-nearby: 50km-local-v2 -->
-  <!-- tide-photos: geo-v3-landmarks -->
+  <!-- tide-photos: geo-v3-landmarks — landmark text first; demote metro/village; nearest-city fallback; strip 街道/Subdistrict -->
   <!-- tide-pin: anchor-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
   <!-- tide-live-pois: overpass-v3-fast -->
@@ -1658,6 +1658,7 @@
     return String(name || "")
       .replace(/^local:/, "")
       .replace(/(街道|镇|鎮|乡|鄉|村|社区|社區|居委会|居委會)$/g, "")
+      .replace(/\b(Subdistrict|Street|Township|Village|Community|Residential\s+District|District)\b$/gi, "")
       .replace(/\s+/g, " ")
       .trim();
   }
