@@ -7,6 +7,7 @@
   <!-- tide-photos: geo-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
   <!-- tide-live-pois: overpass-v1 -->
+  <!-- tide-pinch-handoff: touch-v1 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tide Itinerary</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -656,7 +657,7 @@
     <button type="button" class="mode-btn" id="modePlane" role="tab" aria-selected="false">Paper Plane</button>
   </div>
 
-  <a class="interstellar-link" id="interstellarLink" href="interstellar.html?v=public-three1" title="Interstellar Travel">
+  <a class="interstellar-link" id="interstellarLink" href="interstellar.html?v=pinch-handoff1" title="Interstellar Travel">
     <span class="orb" aria-hidden="true"></span>
     <span><span id="interstellarLabel">星际旅行</span><small id="interstellarSub">Interstellar</small></span>
   </a>
@@ -1884,6 +1885,9 @@
     const OVERSCROLL_NEED = 2;
     const mapEl = document.getElementById("map");
     const fadeEl = document.getElementById("pageFade");
+    let pinchStartDist = 0;
+    let lastPinchBumpAt = 0;
+    let zoomendBumpCount = 0;
 
     function goToInterstellar() {
       if (handingOff) return;
@@ -1892,11 +1896,18 @@
         if (fadeEl) fadeEl.classList.add("show");
       } catch (_) {}
       setTimeout(function () {
-        location.href = "interstellar.html?v=public-three1&from=tide";
+        location.href = "interstellar.html?v=pinch-handoff1&from=tide";
       }, 520);
     }
 
+    function touchDistance(t0, t1) {
+      const dx = t0.clientX - t1.clientX;
+      const dy = t0.clientY - t1.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
     if (mapEl) {
+      // Desktop / trackpad: wheel zoom-out at minZoom → interstellar
       mapEl.addEventListener("wheel", function (ev) {
         if (handingOff) return;
         try {
@@ -1914,11 +1925,90 @@
           }
         } catch (_) {}
       }, { passive: false, capture: true });
+
+      // iPad / touch: pinch-in (fingers together) at minZoom → interstellar
+      mapEl.addEventListener("touchstart", function (ev) {
+        if (handingOff) return;
+        if (ev.touches && ev.touches.length === 2) {
+          pinchStartDist = touchDistance(ev.touches[0], ev.touches[1]);
+          lastPinchBumpAt = 0;
+        } else {
+          pinchStartDist = 0;
+        }
+      }, { passive: true, capture: true });
+
+      mapEl.addEventListener("touchmove", function (ev) {
+        if (handingOff) return;
+        if (!ev.touches || ev.touches.length !== 2 || !(pinchStartDist > 0)) return;
+        try {
+          const z = map.getZoom();
+          const minZ = map.getMinZoom();
+          const dist = touchDistance(ev.touches[0], ev.touches[1]);
+          // Pinch-in / zoom-out: current distance < ~92% of start
+          if (z <= minZ && dist < pinchStartDist * 0.92) {
+            const now = Date.now();
+            if (now - lastPinchBumpAt >= 120) {
+              lastPinchBumpAt = now;
+              overscrollOutCount += 1;
+              if (overscrollOutCount >= OVERSCROLL_NEED) {
+                ev.preventDefault();
+                goToInterstellar();
+              }
+            }
+          } else if (dist > pinchStartDist * 1.05 || z > minZ) {
+            // Pinch-out (zoom in) or above min zoom → reset
+            overscrollOutCount = 0;
+          }
+        } catch (_) {}
+      }, { passive: false, capture: true });
+
+      mapEl.addEventListener("touchend", function () {
+        pinchStartDist = 0;
+        lastPinchBumpAt = 0;
+        if (!handingOff) overscrollOutCount = 0;
+      }, { passive: true, capture: true });
+
+      mapEl.addEventListener("touchcancel", function () {
+        pinchStartDist = 0;
+        lastPinchBumpAt = 0;
+        if (!handingOff) overscrollOutCount = 0;
+      }, { passive: true, capture: true });
+
+      // Optional Safari gesture path: scale < 1 at minZoom
+      mapEl.addEventListener("gesturechange", function (ev) {
+        if (handingOff) return;
+        try {
+          const z = map.getZoom();
+          const minZ = map.getMinZoom();
+          if (z <= minZ && typeof ev.scale === "number" && ev.scale < 0.92) {
+            const now = Date.now();
+            if (now - lastPinchBumpAt >= 120) {
+              lastPinchBumpAt = now;
+              overscrollOutCount += 1;
+              if (overscrollOutCount >= OVERSCROLL_NEED) {
+                try { ev.preventDefault(); } catch (_) {}
+                goToInterstellar();
+              }
+            }
+          } else if (typeof ev.scale === "number" && ev.scale > 1.05) {
+            overscrollOutCount = 0;
+          }
+        } catch (_) {}
+      }, { passive: false, capture: true });
     }
 
     map.on("zoomend", function () {
       try {
-        if (map.getZoom() > map.getMinZoom()) overscrollOutCount = 0;
+        if (map.getZoom() > map.getMinZoom()) {
+          overscrollOutCount = 0;
+          zoomendBumpCount = 0;
+        } else {
+          // Still at minZoom after a zoom attempt — lighter counter (touch distance is primary)
+          zoomendBumpCount += 1;
+          if (zoomendBumpCount >= 3 && overscrollOutCount < OVERSCROLL_NEED) {
+            overscrollOutCount = Math.min(OVERSCROLL_NEED - 1, overscrollOutCount + 1);
+          }
+        }
       } catch (_) {}
     });
 
