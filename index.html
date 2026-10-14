@@ -5,6 +5,7 @@
   <meta name="tide-build" content="pdf-print-light-v13" />
   <!-- tide-nearby: 50km-local-v2 -->
   <!-- tide-photos: geo-v1 -->
+  <!-- tide-approx: no-near-label-v1 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tide Itinerary</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -923,7 +924,7 @@
     "stopFoodNote": "Food lead here: {food}.",
     "statusPlanReady": "Full plan ready—scroll the day cards, or Fly again for another round.",
     "statusResetKeep": "Route reset; start kept. Launch the paper plane again.",
-    "introApprox": "Coordinates land somewhere sparse—we use the vibe of {nearest} to sketch a workable faraway plan.",
+    "introApprox": "Pinned on {name}—Tide sketches a workable plan from what is around these coordinates.",
     "introExact": "Centered on {name}, Tide rises with {days} days of rhythm: stretch and pause, room for chance.",
     "foodClue": "Food lead: {food}. Getting around: {transport}",
     "foodFocus": "Today focus on: {food}.",
@@ -1067,7 +1068,7 @@
     "stopFoodNote": "本站饮食线索：{food}。",
     "statusPlanReady": "完整行程已生成，可滚动查看各站日计划，或点「重新起飞」再玩一轮。",
     "statusResetKeep": "已重置航线，保留出发地。再次掷出纸飞机。",
-    "introApprox": "坐标落在人烟稀疏处——我们以「{nearest}」气质为蓝本，为你拼出一份可落地的远方计划。",
+    "introApprox": "落点在「{name}」——潮汐就地取材，为你拼出一份可落地的本地计划。",
     "introExact": "以「{name}」为圆心，潮汐为你涌起 {days} 天的节奏：张弛有度，留白给偶遇。",
     "foodClue": "饮食线索：{food}。交通：{transport}",
     "foodFocus": "今日重点尝试：{food}。",
@@ -1658,7 +1659,7 @@
     }
   }
 
-  /* Coordinate geosearch (~30–50km) — prefer place-local images over city-name text search */
+  /* Coordinate geosearch (Commons max ggsradius=10000m) — prefer place-local images */
   async function fetchWikimediaGeosearch(lat, lng, limit) {
     limit = limit || 20;
     const latN = Number(lat), lngN = Number(lng);
@@ -1669,7 +1670,7 @@
     if (hit) return hit;
     const url = "https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*" +
       "&generator=geosearch&ggscoord=" + encodeURIComponent(latN + "|" + lngN) +
-      "&ggsradius=30000&ggslimit=" + limit + "&ggsnamespace=6" +
+      "&ggsradius=10000&ggslimit=" + limit + "&ggsnamespace=6" +
       "&prop=imageinfo&iiprop=url|size|mime|extmetadata&iiurlwidth=800";
     try {
       const ctrl = new AbortController();
@@ -2271,14 +2272,12 @@
           planeStart = Object.assign({}, localPlaceBackup, { lat: lat, lng: lng });
           const p = localizePlace(planeStart);
           placeName.textContent = p.name + (p.region ? " · " + p.region : "");
-          placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°" +
-            (p.approx ? t("approxNear") + p.nearest : "");
+          placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
         } else {
           currentPlace = Object.assign({}, localPlaceBackup);
           const p = localizePlace(currentPlace);
           placeName.textContent = p.name + (p.region ? " · " + p.region : "");
-          placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°" +
-            (p.approx ? t("approxNear") + p.nearest : "");
+          placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
         }
       }
       nearbyChipActive = false;
@@ -2335,6 +2334,7 @@
     const genericFoodZh = "当地市集与地方菜";
     /* Exact city-name match still stays local by default; approx unless name equals curated */
     const exactCity = !!(geoName && (geoName === c.nameEn || geoName === c.nameZh));
+    const withinNearby = near.distanceKm <= NEARBY_TOURISM_KM;
     const place = {
       name: display, nameEn: display, nameZh: display,
       region: geoRegion || t("farAway"), regionEn: geoRegion || "Far away", regionZh: geoRegion || "远方",
@@ -2343,11 +2343,16 @@
       foodEn: genericFoodEn, foodZh: genericFoodZh,
       tags: lang === "zh" ? ["探索"] : ["Explore"],
       tagsEn: ["Explore"], tagsZh: ["探索"],
-      approx: !exactCity, nearest: cityName(c), nearestEn: c.nameEn,
-      cityKey: localKey, _cityRef: null, _nearestCity: c,
+      /* Never claim "near {distant city}" in UI — approx/nearest only when within 50km */
+      approx: false,
+      nearest: withinNearby ? cityName(c) : display,
+      nearestEn: withinNearby ? c.nameEn : display,
+      cityKey: localKey, _cityRef: null,
+      _nearestCity: withinNearby ? c : null,
       distanceKm: near.distanceKm,
     };
-    if (near.distanceKm <= NEARBY_TOURISM_KM) {
+    /* Optional 「附近热门」chip only if curated city within 50 km */
+    if (withinNearby) {
       place._nearbyPopular = { city: c, distanceKm: near.distanceKm };
     }
     return place;
@@ -2423,9 +2428,10 @@
       };
     });
     const introBits = [
-      place.approx
-        ? t("introApprox", { nearest: place.nearest })
-        : t("introExact", { name: place.name, days: days }),
+      /* Local pin (_cityRef null): no distant-city "near X" copy — use place name only */
+      place._cityRef
+        ? t("introExact", { name: place.name, days: days })
+        : t("introApprox", { name: place.name }),
       t("foodClue", { food: place.food, transport: transport }),
       t("activityBudgetNote", { tier: tierLabel(tier) }),
     ];
@@ -2666,8 +2672,7 @@
       const p = localizePlace(currentPlace);
       currentPlace = Object.assign(currentPlace, p);
       placeName.textContent = p.name + (p.region ? " · " + p.region : "");
-      placeCoords.textContent = fmtCoord(currentLatLng.lat) + "°, " + fmtCoord(currentLatLng.lng) + "°" +
-        (p.approx ? t("approxNear") + p.nearest : "");
+      placeCoords.textContent = fmtCoord(currentLatLng.lat) + "°, " + fmtCoord(currentLatLng.lng) + "°";
       if (itinerary.classList.contains("show")) {
         buildPlan(currentPlace, currentLatLng.lat, currentLatLng.lng, selectedDays, lastTideSalt, {
           total: tideTotalBudget, lodge: tideLodgeBudget,
@@ -2781,8 +2786,7 @@
     nearbyChipActive = false;
     const p = localizePlace(place);
     placeName.textContent = p.name + (p.region ? " · " + p.region : "");
-    placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°" +
-      (p.approx ? t("approxNear") + p.nearest : "");
+    placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
     updateNearbySuggest(place);
   }
 
@@ -3046,8 +3050,9 @@
     localPlaceBackup = Object.assign({}, planeStart);
     nearbyChipActive = false;
     placeName.textContent = loc.name + (loc.region ? " · " + loc.region : "");
+    /* No city proximity labels — local pin only; freeCoord is fine (no city name) */
     placeCoords.textContent = fmtCoord(startLat) + "°, " + fmtCoord(startLng) + "°" +
-      (place.approx ? t("approxNear") + (loc.nearest || "") : t("freeCoord"));
+      (place._cityRef ? "" : t("freeCoord"));
     updateNearbySuggest(planeStart);
     btnPlane.disabled = false;
     btnPlaneLabel.textContent = t("confirmStart");
