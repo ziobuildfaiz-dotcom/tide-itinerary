@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="tide-build" content="pdf-print-light-v13" />
-  <!-- tide-nearby: 50km-v1 -->
+  <!-- tide-nearby: 50km-local-v2 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tide Itinerary</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -167,6 +167,23 @@
       font-size: 12px; color: var(--sand); opacity: 0.65; margin-top: 4px;
       font-variant-numeric: tabular-nums;
     }
+    .nearby-suggest {
+      display: none; margin-top: 8px; flex-wrap: wrap; gap: 6px; align-items: center;
+    }
+    .nearby-suggest.show { display: flex; }
+    .nearby-chip {
+      border: 1px solid rgba(232, 213, 183, 0.28); background: rgba(61, 139, 156, 0.12);
+      color: var(--sand); font-family: inherit; font-size: 12px; font-weight: 500;
+      padding: 5px 10px; border-radius: 999px; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+    }
+    .nearby-chip:hover {
+      background: rgba(61, 139, 156, 0.28); border-color: var(--teal); color: var(--foam);
+    }
+    .nearby-chip.active {
+      background: rgba(224, 122, 95, 0.22); border-color: var(--coral); color: var(--foam);
+    }
+    .nearby-chip-hint { font-size: 11px; opacity: 0.55; }
     .icon-btn {
       width: 36px; height: 36px; border: 1px solid rgba(232, 213, 183, 0.22);
       background: rgba(11, 31, 51, 0.4); border-radius: 10px; color: var(--sand);
@@ -667,6 +684,10 @@
         <div class="place-label" id="placeLabel">Destination</div>
         <h1 class="place-name" id="placeName">—</h1>
         <div class="place-coords" id="placeCoords"></div>
+        <div class="nearby-suggest" id="nearbySuggest" hidden>
+          <span class="nearby-chip-hint" id="nearbySuggestHint"></span>
+          <button type="button" class="nearby-chip" id="nearbyChip"></button>
+        </div>
       </div>
       <button type="button" class="icon-btn" id="btnClear" title="Clear marker" aria-label="Clear marker">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -861,6 +882,11 @@
     "regionAround": "Around {region}",
     "freeCoord": " · free coordinates",
     "curatedCity": " · curated city",
+    "nearbyPopularHint": "Nearby popular",
+    "nearbyPopularChip": "{city}",
+    "nearbyUsingCurated": "Using {city} lodging · tap to back to local",
+    "nearbyUseLocal": "Local place (default)",
+    "localCoord": " · local place",
     "startLabel": "Starting point",
     "flewKm": " ← flew {km} km (radius {r} km)",
     "startDot": "S",
@@ -1000,6 +1026,11 @@
     "regionAround": "{region}周边",
     "freeCoord": " · 自由坐标",
     "curatedCity": " · 精选城市",
+    "nearbyPopularHint": "附近热门",
+    "nearbyPopularChip": "{city}",
+    "nearbyUsingCurated": "已用{city}住宿 · 点此回到本地",
+    "nearbyUseLocal": "本地地点（默认）",
+    "localCoord": " · 本地地点",
     "startLabel": "出发地",
     "flewKm": " ← 飞行 {km} km（半径 {r} km）",
     "startDot": "起",
@@ -1717,6 +1748,8 @@
   let selectedDays = 5;
   let currentLatLng = null;
   let currentPlace = null;
+  let localPlaceBackup = null;
+  let nearbyChipActive = false;
   let marker = null;
   let genToken = 0;
   let lastTideSalt = 0;
@@ -1866,6 +1899,9 @@
   const placeLabel = document.getElementById("placeLabel");
   const placeName = document.getElementById("placeName");
   const placeCoords = document.getElementById("placeCoords");
+  const nearbySuggest = document.getElementById("nearbySuggest");
+  const nearbySuggestHint = document.getElementById("nearbySuggestHint");
+  const nearbyChip = document.getElementById("nearbyChip");
   const emptyState = document.getElementById("emptyState");
   const loading = document.getElementById("loading");
   const loadingHint = document.getElementById("loadingHint");
@@ -2111,9 +2147,98 @@
     return "local:" + base;
   }
 
+  function hideNearbySuggest() {
+    if (!nearbySuggest) return;
+    nearbySuggest.hidden = true;
+    nearbySuggest.classList.remove("show");
+    if (nearbyChip) nearbyChip.classList.remove("active");
+    nearbyChipActive = false;
+  }
+
+  function updateNearbySuggest(place) {
+    if (!nearbySuggest || !nearbyChip || !nearbySuggestHint) return;
+    const np = place && place._nearbyPopular;
+    if (!np || !np.city) {
+      hideNearbySuggest();
+      return;
+    }
+    const cname = cityName(np.city);
+    nearbySuggestHint.textContent = t("nearbyPopularHint");
+    nearbyChip.textContent = t("nearbyPopularChip", { city: cname });
+    nearbyChip.dataset.cityEn = np.city.nameEn || "";
+    nearbySuggest.hidden = false;
+    nearbySuggest.classList.add("show");
+    if (nearbyChipActive) nearbyChip.classList.add("active");
+    else nearbyChip.classList.remove("active");
+  }
+
+  function curatedFromCity(c, lat, lng, distanceKm, nearbyPopular) {
+    return {
+      name: cityName(c), nameEn: c.nameEn, nameZh: c.nameZh,
+      region: cityRegion(c), regionEn: c.regionEn, regionZh: c.regionZh,
+      vibe: c.vibe, food: cityFood(c), foodEn: c.foodEn, foodZh: c.foodZh,
+      tags: cityTags(c), tagsEn: c.tagsEn, tagsZh: c.tagsZh,
+      approx: false, nearest: cityName(c), nearestEn: c.nameEn,
+      cityKey: cityKey(c), _cityRef: c, _nearestCity: c,
+      distanceKm: distanceKm,
+      _nearbyPopular: nearbyPopular || { city: c, distanceKm: distanceKm },
+      lat: lat, lng: lng,
+    };
+  }
+
+  function applyNearbyPopular() {
+    const target = mode === "plane" ? planeStart : currentPlace;
+    if (!target || !target._nearbyPopular || !target._nearbyPopular.city) return;
+    const np = target._nearbyPopular;
+    const c = np.city;
+    const lat = (mode === "plane" ? (planeStart && planeStart.lat) : (currentLatLng && currentLatLng.lat));
+    const lng = (mode === "plane" ? (planeStart && planeStart.lng) : (currentLatLng && currentLatLng.lng));
+    if (lat == null || lng == null) return;
+
+    if (nearbyChipActive) {
+      /* second tap: restore local */
+      if (localPlaceBackup) {
+        if (mode === "plane") {
+          planeStart = Object.assign({}, localPlaceBackup, { lat: lat, lng: lng });
+          const p = localizePlace(planeStart);
+          placeName.textContent = p.name + (p.region ? " · " + p.region : "");
+          placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°" +
+            (p.approx ? t("approxNear") + p.nearest : "");
+        } else {
+          currentPlace = Object.assign({}, localPlaceBackup);
+          const p = localizePlace(currentPlace);
+          placeName.textContent = p.name + (p.region ? " · " + p.region : "");
+          placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°" +
+            (p.approx ? t("approxNear") + p.nearest : "");
+        }
+      }
+      nearbyChipActive = false;
+      if (nearbyChip) nearbyChip.classList.remove("active");
+      updateNearbySuggest(mode === "plane" ? planeStart : currentPlace);
+      return;
+    }
+
+    /* first tap: apply curated content, keep pin lat/lng */
+    if (mode === "plane") {
+      localPlaceBackup = Object.assign({}, planeStart);
+      planeStart = curatedFromCity(c, lat, lng, np.distanceKm, np);
+      const p = localizePlace(planeStart);
+      placeName.textContent = p.name + (p.region ? " · " + p.region : "");
+      placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
+    } else {
+      localPlaceBackup = Object.assign({}, currentPlace);
+      currentPlace = curatedFromCity(c, lat, lng, np.distanceKm, np);
+      const p = localizePlace(currentPlace);
+      placeName.textContent = p.name + (p.region ? " · " + p.region : "");
+      placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
+    }
+    nearbyChipActive = true;
+    if (nearbyChip) nearbyChip.classList.add("active");
+    updateNearbySuggest(mode === "plane" ? planeStart : currentPlace);
+  }
+
   async function resolvePlace(lat, lng) {
     const near = nearestCity(lat, lng);
-    const close = near.distanceKm < NEARBY_TOURISM_KM;
     let geoName = null, geoRegion = null;
     try {
       const ctrl = new AbortController();
@@ -2121,68 +2246,42 @@
       const acceptLang = lang === "zh" ? "zh-CN,zh,en" : "en";
       const url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" +
         encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lng) +
-        "&accept-language=" + acceptLang + "&zoom=10";
+        "&accept-language=" + acceptLang + "&zoom=14";
       const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json" } });
       clearTimeout(tmo);
       if (res.ok) {
         const data = await res.json();
         const a = data.address || {};
-        geoName = a.city || a.town || a.village || a.municipality || a.county || a.state || data.name || null;
+        geoName = a.neighbourhood || a.suburb || a.village || a.hamlet || a.town ||
+          a.municipality || a.city || a.county || a.state || data.name || null;
         geoRegion = a.country || a.state || null;
       }
     } catch (_) {}
 
     const c = near.city;
-    if (close) {
-      const baseName = cityName(c);
-      let displayName = baseName;
-      if (geoName && geoName !== baseName && geoName !== c.nameEn && geoName !== c.nameZh) {
-        displayName = t("nameNearCombo", { geo: geoName, city: baseName });
-      }
-      return {
-        name: displayName, nameEn: c.nameEn, nameZh: c.nameZh,
-        region: geoRegion || cityRegion(c), regionEn: c.regionEn, regionZh: c.regionZh,
-        vibe: c.vibe, food: cityFood(c), foodEn: c.foodEn, foodZh: c.foodZh,
-        tags: cityTags(c), tagsEn: c.tagsEn, tagsZh: c.tagsZh,
-        approx: false, nearest: baseName, nearestEn: c.nameEn,
-        cityKey: cityKey(c), _cityRef: c, _nearestCity: c,
-        distanceKm: near.distanceKm,
-      };
-    }
-    /* Far / approx: use Nominatim name; do NOT bind lodging/food/photos to far curated city */
+    const display = geoName || (fmtCoord(lat) + ", " + fmtCoord(lng));
     const localKey = localTourismKey(geoName, lat, lng);
     const vibe = inferVibeFromLatLng(lat, lng);
     const genericFoodEn = "Local markets and regional dishes";
     const genericFoodZh = "当地市集与地方菜";
-    if (geoName) {
-      return {
-        name: geoName, nameEn: geoName, nameZh: geoName,
-        region: geoRegion || t("farAway"), regionEn: geoRegion || "Far away", regionZh: geoRegion || "远方",
-        vibe: vibe,
-        food: lang === "zh" ? genericFoodZh : genericFoodEn,
-        foodEn: genericFoodEn, foodZh: genericFoodZh,
-        tags: lang === "zh" ? ["探索"] : ["Explore"],
-        tagsEn: ["Explore"], tagsZh: ["探索"],
-        approx: true, nearest: cityName(c), nearestEn: c.nameEn,
-        cityKey: localKey, _cityRef: null, _nearestCity: c,
-        distanceKm: near.distanceKm,
-      };
-    }
-    return {
-      name: t("nearWaters", { city: cityName(c) }),
-      nameEn: "Waters / hinterland near " + c.nameEn,
-      nameZh: "近" + c.nameZh + "海域／腹地",
-      region: t("regionAround", { region: cityRegion(c) }),
-      regionEn: "Around " + c.regionEn, regionZh: c.regionZh + "周边",
+    /* Exact city-name match still stays local by default; approx unless name equals curated */
+    const exactCity = !!(geoName && (geoName === c.nameEn || geoName === c.nameZh));
+    const place = {
+      name: display, nameEn: display, nameZh: display,
+      region: geoRegion || t("farAway"), regionEn: geoRegion || "Far away", regionZh: geoRegion || "远方",
       vibe: vibe,
       food: lang === "zh" ? genericFoodZh : genericFoodEn,
       foodEn: genericFoodEn, foodZh: genericFoodZh,
       tags: lang === "zh" ? ["探索"] : ["Explore"],
       tagsEn: ["Explore"], tagsZh: ["探索"],
-      approx: true, nearest: cityName(c), nearestEn: c.nameEn,
+      approx: !exactCity, nearest: cityName(c), nearestEn: c.nameEn,
       cityKey: localKey, _cityRef: null, _nearestCity: c,
       distanceKm: near.distanceKm,
     };
+    if (near.distanceKm <= NEARBY_TOURISM_KM) {
+      place._nearbyPopular = { city: c, distanceKm: near.distanceKm };
+    }
+    return place;
   }
 
   function pick(arr, seed) { return arr[Math.abs(seed) % arr.length]; }
@@ -2609,10 +2708,13 @@
     const place = await resolvePlace(lat, lng);
     if (!currentLatLng || currentLatLng.lat !== lat || currentLatLng.lng !== lng) return;
     currentPlace = place;
+    localPlaceBackup = Object.assign({}, place);
+    nearbyChipActive = false;
     const p = localizePlace(place);
     placeName.textContent = p.name + (p.region ? " · " + p.region : "");
     placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°" +
       (p.approx ? t("approxNear") + p.nearest : "");
+    updateNearbySuggest(place);
   }
 
   async function generate(salt) {
@@ -2850,51 +2952,34 @@
     btnPlane.disabled = true;
     btnPlaneLabel.textContent = t("confirmStart");
 
-    const near = nearestCity(lat, lng);
-    const place = await resolvePlace(lat, lng);
-    let startCity = near.city;
-    let startLat = startCity.lat, startLng = startCity.lng;
-    let startName = cityName(startCity), startRegion = cityRegion(startCity);
-    let usedCurated = true;
-    if (near.distanceKm > NEARBY_TOURISM_KM) {
-      startLat = lat; startLng = lng;
-      startName = localizePlace(place).name;
-      startRegion = localizePlace(place).region;
-      usedCurated = false;
-    }
+    /* ALWAYS pin + start at clicked coords — never snap to curated center */
+    const startLat = lat, startLng = lng;
     clearPlaneLayers();
     marker = L.marker([startLat, startLng], { icon: makePinIcon({ start: true }) }).addTo(map);
     map.panTo([startLat, startLng]);
-    if (usedCurated) {
-      planeStart = {
-        lat: startLat, lng: startLng, name: startName, region: startRegion,
-        vibe: startCity.vibe, food: cityFood(startCity),
-        tags: cityTags(startCity), cityKey: cityKey(startCity),
-        _cityRef: startCity, _nearestCity: startCity,
-        nameEn: startCity.nameEn, nameZh: startCity.nameZh,
-        regionEn: startCity.regionEn, regionZh: startCity.regionZh,
-        foodEn: startCity.foodEn, foodZh: startCity.foodZh,
-        tagsEn: startCity.tagsEn, tagsZh: startCity.tagsZh,
-        approx: false, distanceKm: near.distanceKm,
-      };
-    } else {
-      const loc = localizePlace(place);
-      planeStart = {
-        lat: startLat, lng: startLng, name: startName, region: startRegion,
-        vibe: place.vibe || inferVibeFromLatLng(lat, lng),
-        food: loc.food, tags: loc.tags,
-        cityKey: place.cityKey || localTourismKey(place.nameEn || place.name, lat, lng),
-        _cityRef: null, _nearestCity: near.city,
-        nameEn: place.nameEn || startName, nameZh: place.nameZh || startName,
-        regionEn: place.regionEn || startRegion, regionZh: place.regionZh || startRegion,
-        foodEn: place.foodEn, foodZh: place.foodZh,
-        tagsEn: place.tagsEn, tagsZh: place.tagsZh,
-        approx: true, distanceKm: near.distanceKm,
-      };
-    }
-    placeName.textContent = startName + (startRegion ? " · " + startRegion : "");
+
+    const place = await resolvePlace(lat, lng);
+    const loc = localizePlace(place);
+    const near = nearestCity(lat, lng);
+    planeStart = {
+      lat: startLat, lng: startLng, name: loc.name, region: loc.region,
+      vibe: place.vibe || inferVibeFromLatLng(lat, lng),
+      food: loc.food, tags: loc.tags,
+      cityKey: place.cityKey || localTourismKey(place.nameEn || place.name, lat, lng),
+      _cityRef: null, _nearestCity: near.city,
+      nameEn: place.nameEn || loc.name, nameZh: place.nameZh || loc.name,
+      regionEn: place.regionEn || loc.region, regionZh: place.regionZh || loc.region,
+      foodEn: place.foodEn, foodZh: place.foodZh,
+      tagsEn: place.tagsEn, tagsZh: place.tagsZh,
+      approx: !!place.approx, distanceKm: place.distanceKm,
+      _nearbyPopular: place._nearbyPopular || null,
+    };
+    localPlaceBackup = Object.assign({}, planeStart);
+    nearbyChipActive = false;
+    placeName.textContent = loc.name + (loc.region ? " · " + loc.region : "");
     placeCoords.textContent = fmtCoord(startLat) + "°, " + fmtCoord(startLng) + "°" +
-      (near.distanceKm > NEARBY_TOURISM_KM ? t("freeCoord") : t("curatedCity"));
+      (place.approx ? t("approxNear") + (loc.nearest || "") : t("freeCoord"));
+    updateNearbySuggest(planeStart);
     btnPlane.disabled = false;
     btnPlaneLabel.textContent = t("confirmStart");
     planeEmpty.style.display = "block";
@@ -3277,6 +3362,7 @@
     });
     placeLabel.textContent = t("startPlace");
     placeName.textContent = "—"; placeCoords.textContent = "";
+    localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
     showStatus(""); sheet.classList.remove("open");
     hint.classList.remove("hide");
     hint.innerHTML = t("hintPlane");
@@ -3288,6 +3374,7 @@
     clearPlaneLayers();
     if (marker) { map.removeLayer(marker); marker = null; }
     currentLatLng = null; currentPlace = null; lastTidePlan = null;
+    localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
     planeStart = null; planeStops = []; planeBusy = false;
     planePhase = mode === "plane" ? "pick-start" : "idle";
     sheet.classList.remove("open");
@@ -3307,6 +3394,7 @@
 
   btnClear.addEventListener("click", () => { if (mode === "plane") clearPlaneAll(); else clearAll(); });
   btnClear2.addEventListener("click", () => clearAll());
+  if (nearbyChip) nearbyChip.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); applyNearbyPopular(); });
   map.on("click", (e) => { if (mode === "tide") onTideMapClick(e); else onPlaneMapClick(e); });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && sheet.classList.contains("open")) {
