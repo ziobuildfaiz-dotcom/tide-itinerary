@@ -2,9 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="multi-city-50km-guangzhou-foshan-v1" />
+  <meta name="tide-build" content="multi-city-curated-first-v2" />
   <!-- tide-nearby: 50km-all-significant-cities-v4 — itinerary merges landmarks from ALL curated cities within 50km; photos/chip still nearest -->
-  <!-- tide-photos: geo-v3-landmarks — landmark text first; demote metro/village; nearest-city fallback; strip 街道/Subdistrict -->
+  <!-- tide-curated-first: v2 — curated LANDMARKS_BY_CITY ahead of weak live OSM; never sparseSlotCopy within 50km of a LANDMARKS city -->
+  <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
   <!-- tide-live-pois: overpass-v3-fast -->
@@ -12,6 +13,8 @@
   <!-- tide-plan-speed: parallel-v1 -->
   <!-- tide-pinch-handoff: touch-v1 -->
   <!-- tide-chrome: brand-zoom-stack-v3 -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tide Itinerary</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -793,6 +796,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build multi-city-curated-first-v2</span>
         </div>
       </div>
 
@@ -1644,14 +1648,15 @@
       { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/WINDOWS_OF_THE_WORLD_SHENZHEN_%2837%29.jpg/960px-WINDOWS_OF_THE_WORLD_SHENZHEN_%2837%29.jpg", artist: "Dinkun Chen", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:WINDOWS_OF_THE_WORLD_SHENZHEN_(37).jpg", q: "landmark" },
     ],
     "Guangzhou": [
-      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Canton_Tower_%28Evening%29.jpg/960px-Canton_Tower_%28Evening%29.jpg", artist: "Daniel Case", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Canton_Tower_(Evening).jpg", q: "landmark" },
-      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Chen_Clan_Academy_01.jpg/960px-Chen_Clan_Academy_01.jpg", artist: "Zhangzhugang", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Chen_Clan_Academy_01.jpg", q: "landmark" },
-      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Shamian_Island_Guangzhou.jpg/960px-Shamian_Island_Guangzhou.jpg", artist: "Saigon", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Shamian_Island_Guangzhou.jpg", q: "landmark" },
-      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Baiyun_Mountain_Guangzhou.jpg/960px-Baiyun_Mountain_Guangzhou.jpg", artist: "Chixoy", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Baiyun_Mountain_Guangzhou.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/24/Canton_Tower_20241027.jpg/960px-Canton_Tower_20241027.jpg", artist: "Wikimedia Commons", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Canton_Tower_20241027.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1d/Chen_Clan_Academy%2C_Guangzhou_%285928976016%29.jpg/960px-Chen_Clan_Academy%2C_Guangzhou_%285928976016%29.jpg", artist: "Wikimedia Commons", license: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Chen_Clan_Academy,_Guangzhou_(5928976016).jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/Shamian_001.jpg/960px-Shamian_001.jpg", artist: "Wikimedia Commons", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Shamian_001.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Guangzhou_Baiyun_Mountain_20230515.150422.jpg/960px-Guangzhou_Baiyun_Mountain_20230515.150422.jpg", artist: "Wikimedia Commons", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Guangzhou_Baiyun_Mountain_20230515.150422.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/20190729_Guangzhou_Skyline_1.jpg/960px-20190729_Guangzhou_Skyline_1.jpg", artist: "Wikimedia Commons", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:20190729_Guangzhou_Skyline_1.jpg", q: "landmark" },
     ],
     "Foshan": [
-      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Foshan_Zumiao_2014.jpg/960px-Foshan_Zumiao_2014.jpg", artist: "Zhangzhugang", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Foshan_Zumiao_2014.jpg", q: "landmark" },
-      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Qinghui_Garden_Foshan.jpg/960px-Qinghui_Garden_Foshan.jpg", artist: "Zhangzhugang", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Qinghui_Garden_Foshan.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Foshan_Ancestral_Temple_11.jpg/960px-Foshan_Ancestral_Temple_11.jpg", artist: "Wikimedia Commons", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Foshan_Ancestral_Temple_11.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Foshan_Ancestral_Temple_13.jpg/960px-Foshan_Ancestral_Temple_13.jpg", artist: "Wikimedia Commons", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Foshan_Ancestral_Temple_13.jpg", q: "landmark" },
     ],
     "Sydney": [
       { url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Sydney_%28AU%29%2C_Opera_House_--_2019_--_3054.jpg/960px-Sydney_%28AU%29%2C_Opera_House_--_2019_--_3054.jpg", artist: "Dietmar Rabich", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Sydney_(AU),_Opera_House_--_2019_--_3054.jpg", q: "landmark" },
@@ -1993,7 +1998,18 @@
     const fallbackKey = (cityKey && PHOTO_FALLBACK[cityKey]) ? cityKey : nearKey;
     const placeClean = cleanPlaceSearchName(searchName || "");
     const cityClean = cleanPlaceSearchName(fallbackKey || (cityKey && String(cityKey).indexOf("local:") !== 0 ? cityKey : "") || "");
-    const hints = [placeClean, cityClean].filter(Boolean);
+    /* Seed curated PHOTO_FALLBACK first when pin is near a LANDMARKS/PHOTO city (e.g. 上涌→Guangzhou) */
+    if (fallbackKey && PHOTO_FALLBACK[fallbackKey]) {
+      mergePhotosUnique(photos, fallbackPhotos(fallbackKey, count));
+    }
+    const landmarkHints = [];
+    if (fallbackKey && LANDMARKS_BY_CITY[fallbackKey]) {
+      LANDMARKS_BY_CITY[fallbackKey].slice(0, 4).forEach(function (lm) {
+        if (lm.nameEn) landmarkHints.push(lm.nameEn);
+        if (lm.nameZh) landmarkHints.push(lm.nameZh);
+      });
+    }
+    const hints = [placeClean, cityClean].concat(landmarkHints).filter(Boolean);
 
     /* 1) Landmark / place-name text search FIRST (geosearch alone returns metro exits & car ads) */
     const textQueries = [];
@@ -2009,6 +2025,9 @@
       textQueries.push(cityClean + " skyline");
       textQueries.push(cityClean + " tower");
     }
+    landmarkHints.slice(0, 4).forEach(function (h) {
+      if (h && String(h).length >= 2) textQueries.push(String(h) + " " + (cityClean || ""));
+    });
     /* Dedupe queries */
     const seenQ = Object.create(null);
     const uniqQ = [];
@@ -3472,7 +3491,21 @@
     return list.slice(0, count);
   }
 
-  function sparseSlotCopy(slot, langZh) {
+  function pinHasNearbyLandmarksCity(pinLat, pinLng) {
+    if (!isFinite(Number(pinLat)) || !isFinite(Number(pinLng))) return false;
+    const nearList = curatedCitiesWithinKm(pinLat, pinLng, NEARBY_TOURISM_KM);
+    for (let i = 0; i < nearList.length; i++) {
+      if (LANDMARKS_BY_CITY[nearList[i].city.nameEn]) return true;
+    }
+    return false;
+  }
+
+  function sparseSlotCopy(slot, langZh, pinLat, pinLng) {
+    /* Never show sparse copy when any LANDMARKS_BY_CITY city is within 50 km */
+    if (pinHasNearbyLandmarksCity(pinLat, pinLng)) {
+      const curated = curatedLandmarksFromNearbyCities(pinLat, pinLng, NEARBY_TOURISM_KM);
+      if (curated.length) return activityFromAttraction(curated[0], slot, langZh);
+    }
     const copies = {
       morning: {
         en: "Sparse mapped sights nearby — walk local trails, village lanes, or the nearest market and note what is actually here.",
@@ -3491,8 +3524,8 @@
     return langZh ? c.zh : c.en;
   }
 
-  function activityFromAttraction(poi, slot, langZh) {
-    if (!poi) return sparseSlotCopy(slot, langZh);
+  function activityFromAttraction(poi, slot, langZh, pinLat, pinLng) {
+    if (!poi) return sparseSlotCopy(slot, langZh, pinLat, pinLng);
     const type = poiTypeNote(poi.tags, langZh);
     const km = Math.round(poi.distKm * 10) / 10;
     if (langZh) {
@@ -3615,7 +3648,7 @@
     return out;
   }
 
-  /** Merge live Overpass attractions with ALL nearby curated-city landmarks (worldwide). */
+  /** Merge: curated LANDMARKS first (all cities within 50km), then live OSM — never empty if curated exists. */
   function mergeCuratedLandmarks(attrs, cityKeyName, pinLat, pinLng) {
     const live = (attrs || []).slice();
     let curated = curatedLandmarksFromNearbyCities(pinLat, pinLng, NEARBY_TOURISM_KM);
@@ -3625,11 +3658,8 @@
     }
     if (!curated.length) return live;
     const seen = Object.create(null);
-    live.forEach(function (p) {
-      const k = String((p && (p.nameZh || p.nameEn || p.name)) || "").toLowerCase();
-      if (k) seen[k] = true;
-    });
-    const out = live.slice();
+    const out = [];
+    /* curated-first-v2: seed curated ahead of weak/sparse live OSM */
     for (let i = 0; i < curated.length; i++) {
       const c = curated[i];
       const k1 = String(c.nameZh || "").toLowerCase();
@@ -3639,7 +3669,16 @@
       if (k1) seen[k1] = true;
       if (k2) seen[k2] = true;
     }
-    out.sort(function (a, b) { return (Number(a.distKm) || 0) - (Number(b.distKm) || 0); });
+    for (let i = 0; i < live.length; i++) {
+      const p = live[i];
+      const k1 = String((p && (p.nameZh || p.name)) || "").toLowerCase();
+      const k2 = String((p && (p.nameEn || p.name)) || "").toLowerCase();
+      if ((k1 && seen[k1]) || (k2 && seen[k2])) continue;
+      out.push(p);
+      if (k1) seen[k1] = true;
+      if (k2) seen[k2] = true;
+    }
+    /* Keep curated order (already dist-sorted); live appended after matching names skipped */
     return out;
   }
 
@@ -3775,16 +3814,23 @@
     const landmarkCityKey = resolveLandmarkCityKey(place, cityKey, lat, lng);
     let attrs = pois.attractions || [];
     /* Worldwide: always merge hottest landmarks from EVERY curated city within 50 km */
+    /* curated-first: start from curated when present, then append live */
+    const curatedSeed = curatedLandmarksFromNearbyCities(lat, lng, NEARBY_TOURISM_KM);
     attrs = mergeCuratedLandmarks(attrs, landmarkCityKey, lat, lng);
+    if (!attrs.length && curatedSeed.length) attrs = curatedSeed.slice();
     const daysOut = [];
     for (let d = 1; d <= days; d++) {
       const seed = seed0 + d * 17;
-      const a0 = attrs.length ? attrs[(d - 1) % attrs.length] : null;
-      const a1 = attrs.length > 1 ? attrs[d % attrs.length] : a0;
-      const a2 = attrs.length > 2 ? attrs[(d + 1) % attrs.length] : a1;
-      let morning = activityFromAttraction(a0, "morning", lang === "zh");
-      let afternoon = activityFromAttraction(a1, "afternoon", lang === "zh");
-      let evening = activityFromAttraction(a2, "evening", lang === "zh");
+      let a0 = attrs.length ? attrs[(d - 1) % attrs.length] : null;
+      let a1 = attrs.length > 1 ? attrs[d % attrs.length] : a0;
+      let a2 = attrs.length > 2 ? attrs[(d + 1) % attrs.length] : a1;
+      /* assert/fallback: never leave slots empty when curated cities are within 50 km */
+      if (!a0 && curatedSeed.length) a0 = curatedSeed[0];
+      if (!a1 && curatedSeed.length) a1 = curatedSeed[Math.min(1, curatedSeed.length - 1)];
+      if (!a2 && curatedSeed.length) a2 = curatedSeed[Math.min(2, curatedSeed.length - 1)];
+      let morning = activityFromAttraction(a0, "morning", lang === "zh", lat, lng);
+      let afternoon = activityFromAttraction(a1, "afternoon", lang === "zh", lat, lng);
+      let evening = activityFromAttraction(a2, "evening", lang === "zh", lat, lng);
       const act = activityNoteForTier(tier);
       if (tier === "backpacker") morning += " " + act;
       else if (tier === "luxury") afternoon += " " + act;
@@ -4569,8 +4615,10 @@
         { attractions: [], lodging: [], food: [], sparse: true };
       const stopLandmarkKey = resolveLandmarkCityKey(stop, ck, stop.lat, stop.lng);
       let attrs = pois.attractions || [];
-      /* Worldwide multi-city merge for each stop pin */
+      /* curated-first-v2: multi-city merge for each stop pin */
+      const stopCurated = curatedLandmarksFromNearbyCities(stop.lat, stop.lng, NEARBY_TOURISM_KM);
       attrs = mergeCuratedLandmarks(attrs, stopLandmarkKey, stop.lat, stop.lng);
+      if (!attrs.length && stopCurated.length) attrs = stopCurated.slice();
       if (i > 0) {
         parts.push({
           type: "day", day: dayNum, title: t("transferTitle", { city: stop.name }), theme: t("transferTheme"),
@@ -4602,16 +4650,19 @@
         parts[1].foods = foods;
         parts[1].headerPhotos = photos.slice(0, 3);
       }
-      const a0 = attrs.length ? attrs[0] : null;
-      const a1 = attrs.length > 1 ? attrs[1] : a0;
-      const a2 = attrs.length > 2 ? attrs[2] : a1;
+      let a0 = attrs.length ? attrs[0] : null;
+      let a1 = attrs.length > 1 ? attrs[1] : a0;
+      let a2 = attrs.length > 2 ? attrs[2] : a1;
+      if (!a0 && stopCurated.length) a0 = stopCurated[0];
+      if (!a1 && stopCurated.length) a1 = stopCurated[Math.min(1, stopCurated.length - 1)];
+      if (!a2 && stopCurated.length) a2 = stopCurated[Math.min(2, stopCurated.length - 1)];
       parts.push({
         type: "day", day: dayNum,
         title: stop.name + (stop.region ? " · " + stop.region : ""),
         theme: themeFromAttractions(attrs, 0, lang === "zh", stopLandmarkKey || ck, stop.lat, stop.lng), numClass: i === 0 ? "teal" : "",
-        morning: activityFromAttraction(a0, "morning", lang === "zh") + " " + activityNoteForTier(tier),
-        afternoon: activityFromAttraction(a1, "afternoon", lang === "zh"),
-        evening: activityFromAttraction(a2, "evening", lang === "zh"),
+        morning: activityFromAttraction(a0, "morning", lang === "zh", stop.lat, stop.lng) + " " + activityNoteForTier(tier),
+        afternoon: activityFromAttraction(a1, "afternoon", lang === "zh", stop.lat, stop.lng),
+        evening: activityFromAttraction(a2, "evening", lang === "zh", stop.lat, stop.lng),
         foodNote: t("stopFoodNote", { food: (foods[0] && foods[0].name) || stop.food }) + " " + t("foodFocusBudget", { food: (foods[0] && foods[0].name) || stop.food, budget: fmtCny(mealPerDay) }),
         tip: tipFromPois(pois, lang === "zh"),
         transport: transportLiveNote(tier, lang === "zh"),
