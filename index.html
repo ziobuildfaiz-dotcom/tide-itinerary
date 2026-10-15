@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="multi-city-curated-first-v2" />
-  <!-- tide-nearby: 50km-all-significant-cities-v4 — itinerary merges landmarks from ALL curated cities within 50km; photos/chip still nearest -->
-  <!-- tide-curated-first: v2 — curated LANDMARKS_BY_CITY ahead of weak live OSM; never sparseSlotCopy within 50km of a LANDMARKS city -->
+  <meta name="tide-build" content="live-hot-attractions-v1" />
+  <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
   <!-- tide-live-pois: overpass-v3-fast -->
-  <!-- tide-landmarks: curated-v1 — seed real city attractions when Overpass sparse -->
+  <!-- tide-attractions-db: xhs-primary-v1 — attractions-db.json (Xiaohongshu-primary seed) + live scrape merge -->
   <!-- tide-plan-speed: parallel-v1 -->
   <!-- tide-pinch-handoff: touch-v1 -->
   <!-- tide-chrome: brand-zoom-stack-v3 -->
@@ -796,7 +795,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build multi-city-curated-first-v2</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build live-hot-attractions-v1</span>
         </div>
       </div>
 
@@ -3314,6 +3313,345 @@
     return best;
   }
 
+
+  /* ---------- Live hot attractions (XHS-primary DB + Wikivoyage + Wikipedia + Overpass) ---------- */
+  /* tide-live-hot: v1 — request-time scrape; no LANDMARKS_BY_CITY for itinerary names */
+  const ATTRACTIONS_DB_URL = "attractions-db.json";
+  let attractionsDbCache = null;
+  let attractionsDbPromise = null;
+
+  async function loadAttractionsDb() {
+    if (attractionsDbCache) return attractionsDbCache;
+    if (attractionsDbPromise) return attractionsDbPromise;
+    attractionsDbPromise = (async function () {
+      try {
+        const res = await fetch(ATTRACTIONS_DB_URL + "?t=" + Date.now(), { cache: "no-store" });
+        if (!res.ok) throw new Error("attractions-db http " + res.status);
+        const data = await res.json();
+        attractionsDbCache = data && Array.isArray(data.attractions) ? data : { attractions: [], version: 0 };
+        return attractionsDbCache;
+      } catch (_) {
+        attractionsDbCache = { attractions: [], version: 0, error: true };
+        return attractionsDbCache;
+      } finally {
+        attractionsDbPromise = null;
+      }
+    })();
+    return attractionsDbPromise;
+  }
+
+  function attractionDbToPoi(a, pinLat, pinLng) {
+    const lat = Number(a.lat), lng = Number(a.lng);
+    const distKm = (isFinite(pinLat) && isFinite(pinLng) && isFinite(lat) && isFinite(lng))
+      ? haversineKm(pinLat, pinLng, lat, lng) : 0;
+    const nameZh = a.nameZh || a.nameEn || "";
+    const nameEn = a.nameEn || a.nameZh || "";
+    const display = (typeof lang !== "undefined" && lang === "zh") ? nameZh : nameEn;
+    const hot = Number(a.hotScore) || 70;
+    const src = String(a.source || "xiaohongshu-seed");
+    return {
+      name: display,
+      nameZh: nameZh,
+      nameEn: nameEn,
+      lat: lat,
+      lng: lng,
+      distKm: distKm,
+      typeKey: "attraction",
+      tags: { tourism: "attraction", name: display, "name:en": nameEn, "name:zh": nameZh, wikipedia: src.indexOf("wiki") >= 0 ? "yes" : undefined },
+      areaHint: (typeof lang !== "undefined" && lang === "zh") ? (a.cityZh || "") : (a.cityEn || ""),
+      unnamed: false,
+      liveHot: true,
+      fromDb: true,
+      hotScore: hot,
+      source: src,
+      xhsKeyword: a.xhsKeyword || "",
+      tagsXhs: a.tags || [],
+    };
+  }
+
+  function queryAttractionsDbNear(pinLat, pinLng, km) {
+    km = (typeof km === "number") ? km : NEARBY_TOURISM_KM;
+    const list = (attractionsDbCache && attractionsDbCache.attractions) || [];
+    const out = [];
+    for (let i = 0; i < list.length; i++) {
+      const a = list[i];
+      const lat = Number(a.lat), lng = Number(a.lng);
+      if (!isFinite(lat) || !isFinite(lng)) continue;
+      const d = haversineKm(pinLat, pinLng, lat, lng);
+      if (d > km) continue;
+      const poi = attractionDbToPoi(a, pinLat, pinLng);
+      poi.distKm = d;
+      out.push(poi);
+    }
+    out.sort(function (a, b) {
+      const hs = (b.hotScore || 0) - (a.hotScore || 0);
+      if (hs) return hs;
+      return a.distKm - b.distKm;
+    });
+    return out;
+  }
+
+  function stripWikiMarkup(s) {
+    return String(s || "")
+      .replace(/\[\[([^|\]]+)\|[^\]]*\]\]/g, "$1")
+      .replace(/\[\[([^\]]+)\]\]/g, "$1")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\{\{[^}]*\}\}/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function parseWikivoyageSeeBlocks(wikitext) {
+    const wt = String(wikitext || "");
+    const out = [];
+    const re = /\{\{\s*see\s*\|([\s\S]*?)\}\}/gi;
+    let m;
+    while ((m = re.exec(wt)) !== null) {
+      const block = m[1];
+      const field = function (keys) {
+        for (let i = 0; i < keys.length; i++) {
+          const km = new RegExp("\\b" + keys[i] + "\\s*=\\s*([^|\\n]+)", "i").exec(block);
+          if (km) return stripWikiMarkup(km[1]);
+        }
+        return "";
+      };
+      const name = field(["name"]);
+      const alt = field(["alt"]);
+      const lat = parseFloat(field(["lat"]));
+      const lng = parseFloat(field(["long", "lon", "lng"]));
+      if (!name || name.indexOf("[[") === 0) continue;
+      if (!isFinite(lat) || !isFinite(lng)) continue;
+      out.push({ name: name, alt: alt, lat: lat, lng: lng });
+    }
+    return out;
+  }
+
+  function isNonTourismWikiTitle(title) {
+    const t = String(title || "");
+    if (!t) return true;
+    if (/(站|车站|車站|地铁|地鐵|出入口|Line\s*\d|railway|metro|subway|station|bus\s*stop|highway|道路|街道办事处|居委会)/i.test(t)) return true;
+    if (/(行政|区划|區劃|county|prefecture|municipality|province|行政区)/i.test(t) && !/(公园|公園|广场|廣場|博物馆|博物館|寺|塔|palace|museum|park|square|temple|tower|beach|garden)/i.test(t)) return true;
+    return false;
+  }
+
+  async function fetchWikivoyagePageWikitext(host, title) {
+    const url = "https://" + host + "/w/api.php?action=parse&page=" + encodeURIComponent(title) +
+      "&prop=wikitext&format=json&origin=*";
+    const ctrl = new AbortController();
+    const tmo = setTimeout(function () { ctrl.abort(); }, 6000);
+    try {
+      const res = await fetch(url, { signal: ctrl.signal });
+      if (!res.ok) return "";
+      const data = await res.json();
+      return (data && data.parse && data.parse.wikitext && data.parse.wikitext["*"]) || "";
+    } catch (_) {
+      return "";
+    } finally {
+      clearTimeout(tmo);
+    }
+  }
+
+  async function fetchWikivoyageAttractions(pinLat, pinLng, placeLabel, cityHint) {
+    const labels = [];
+    const push = function (s) {
+      const t = String(s || "").replace(/^local:/, "").trim();
+      if (!t) return;
+      if (labels.indexOf(t) === -1) labels.push(t);
+    };
+    push(cityHint);
+    push(placeLabel);
+    /* common EN city from nearest curated CITIES (label only — not LANDMARKS) */
+    try {
+      const near = nearestCity(pinLat, pinLng);
+      if (near && near.city && near.distanceKm <= NEARBY_TOURISM_KM) {
+        push(near.city.nameEn);
+        push(near.city.nameZh);
+      }
+    } catch (_) {}
+
+    const hosts = ["en.wikivoyage.org", "zh.wikivoyage.org"];
+    const tasks = [];
+    for (let i = 0; i < Math.min(labels.length, 3); i++) {
+      for (let h = 0; h < hosts.length; h++) {
+        tasks.push(fetchWikivoyagePageWikitext(hosts[h], labels[i]));
+      }
+    }
+    const texts = await Promise.all(tasks);
+    const pois = [];
+    const seen = Object.create(null);
+    for (let i = 0; i < texts.length; i++) {
+      const blocks = parseWikivoyageSeeBlocks(texts[i]);
+      for (let j = 0; j < blocks.length; j++) {
+        const b = blocks[j];
+        const d = haversineKm(pinLat, pinLng, b.lat, b.lng);
+        if (d > NEARBY_TOURISM_KM) continue;
+        const nameEn = b.name;
+        const nameZh = (b.alt && /[\u4e00-\u9fff]/.test(b.alt)) ? b.alt.split(";")[0].trim() : nameEn;
+        const key = nameEn.toLowerCase();
+        if (seen[key]) continue;
+        seen[key] = true;
+        const display = (typeof lang !== "undefined" && lang === "zh") ? nameZh : nameEn;
+        pois.push({
+          name: display,
+          nameZh: nameZh,
+          nameEn: nameEn,
+          lat: b.lat,
+          lng: b.lng,
+          distKm: d,
+          typeKey: "attraction",
+          tags: { tourism: "attraction", name: display, wikipedia: "wikivoyage:see" },
+          areaHint: "",
+          unnamed: false,
+          liveHot: true,
+          fromWikivoyage: true,
+          hotScore: 88,
+          source: "wikivoyage",
+        });
+      }
+    }
+    pois.sort(function (a, b) { return a.distKm - b.distKm; });
+    return pois;
+  }
+
+  async function fetchWikipediaGeoAttractions(pinLat, pinLng) {
+    const radius = Math.min(10000, Math.round(NEARBY_TOURISM_KM * 1000));
+    const hosts = ["zh.wikipedia.org", "en.wikipedia.org"];
+    const tasks = hosts.map(function (host) {
+      const url = "https://" + host + "/w/api.php?action=query&list=geosearch&gscoord=" +
+        encodeURIComponent(pinLat + "|" + pinLng) + "&gsradius=" + radius +
+        "&gslimit=40&format=json&origin=*";
+      const ctrl = new AbortController();
+      const tmo = setTimeout(function () { ctrl.abort(); }, 5000);
+      return fetch(url, { signal: ctrl.signal })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; })
+        .finally(function () { clearTimeout(tmo); });
+    });
+    const results = await Promise.all(tasks);
+    const pois = [];
+    const seen = Object.create(null);
+    for (let i = 0; i < results.length; i++) {
+      const data = results[i];
+      const list = (data && data.query && data.query.geosearch) || [];
+      for (let j = 0; j < list.length; j++) {
+        const g = list[j];
+        const title = g.title || "";
+        if (isNonTourismWikiTitle(title)) continue;
+        /* keep tourism-ish titles */
+        const keep = /(公园|公園|广场|廣場|博物馆|博物館|寺|塔|宫|宮|城墙|海滩|海滨|码头|桥|橋|山|岛|島|博物馆|museum|palace|temple|tower|park|square|garden|beach|pier|bridge|castle|cathedral|shrine|zoo|aquarium|monument|memorial|fort|harbour|harbor|bund|palace|statue|opera|market|alley|quarter|village|old town|老街|步行街|风景|景区|景區)/i.test(title)
+          || (i === 0 && /[\u4e00-\u9fff]/.test(title) && title.length >= 2 && title.length <= 16);
+        if (!keep && !/(Attraction|Landmark|Tourist)/i.test(title)) {
+          /* zh short place names often attractions; still drop admin */
+          if (!(i === 0 && /[\u4e00-\u9fff]{2,8}/.test(title))) continue;
+        }
+        const lat = Number(g.lat), lng = Number(g.lon);
+        if (!isFinite(lat) || !isFinite(lng)) continue;
+        const d = haversineKm(pinLat, pinLng, lat, lng);
+        if (d > NEARBY_TOURISM_KM) continue;
+        const key = title.toLowerCase();
+        if (seen[key]) continue;
+        seen[key] = true;
+        const isZh = /[\u4e00-\u9fff]/.test(title);
+        pois.push({
+          name: title,
+          nameZh: isZh ? title : title,
+          nameEn: title,
+          lat: lat,
+          lng: lng,
+          distKm: d,
+          typeKey: "attraction",
+          tags: { tourism: "attraction", name: title, wikipedia: "geosearch" },
+          areaHint: "",
+          unnamed: false,
+          liveHot: true,
+          fromWikipedia: true,
+          hotScore: 75,
+          source: "wikipedia",
+        });
+      }
+    }
+    return pois;
+  }
+
+  function hotAttractionScore(p) {
+    let s = Number(p.hotScore) || 0;
+    if (p.fromDb) s += 25;
+    if (p.fromWikivoyage) s += 20;
+    if (p.fromWikipedia) s += 10;
+    const tags = (p && p.tags) || {};
+    if (tags.wikipedia || tags.wikidata) s += 8;
+    if (p.source === "xiaohongshu" || p.source === "xiaohongshu-seed") s += 15;
+    if (tags.tourism === "museum" || tags.tourism === "viewpoint" || tags.tourism === "gallery") s += 5;
+    if (tags.tourism === "attraction" || tags.historic) s += 3;
+    const n = String((p && (p.nameZh || p.nameEn || p.name)) || "");
+    if (/栈桥|八大关|五四|崂山|啤酒|外滩|东方明珠|故宫|长城|埃菲尔|opera|bund|pier|palace|temple|museum/i.test(n)) s += 12;
+    if (/村|village|hamlet|residence|小区|社區|社区|residential|地铁|車站|车站/i.test(n)) s -= 20;
+    if (typeof p.distKm === "number") s -= p.distKm * 0.35;
+    return s;
+  }
+
+  function mergeLiveHotAttractions(lists) {
+    const seen = Object.create(null);
+    const out = [];
+    for (let li = 0; li < lists.length; li++) {
+      const list = lists[li] || [];
+      for (let i = 0; i < list.length; i++) {
+        const p = list[i];
+        if (!p) continue;
+        const k1 = String(p.nameZh || "").toLowerCase().replace(/\s+/g, "");
+        const k2 = String(p.nameEn || p.name || "").toLowerCase().replace(/\s+/g, "");
+        const coordKey = (isFinite(p.lat) && isFinite(p.lng))
+          ? (Math.round(p.lat * 200) + "," + Math.round(p.lng * 200)) : "";
+        if ((k1 && seen[k1]) || (k2 && seen[k2]) || (coordKey && seen["c:" + coordKey])) {
+          /* merge hotScore upward onto existing */
+          const prev = (k1 && seen[k1]) || (k2 && seen[k2]) || (coordKey && seen["c:" + coordKey]);
+          if (prev && typeof prev === "object") {
+            prev.hotScore = Math.max(prev.hotScore || 0, p.hotScore || 0);
+            if (p.fromWikivoyage) prev.fromWikivoyage = true;
+            if (p.fromDb) prev.fromDb = true;
+            if (p.fromWikipedia) prev.fromWikipedia = true;
+            if (p.tags && (p.tags.wikipedia || p.tags.wikidata)) {
+              prev.tags = prev.tags || {};
+              if (p.tags.wikipedia) prev.tags.wikipedia = p.tags.wikipedia;
+              if (p.tags.wikidata) prev.tags.wikidata = p.tags.wikidata;
+            }
+          }
+          continue;
+        }
+        out.push(p);
+        if (k1) seen[k1] = p;
+        if (k2) seen[k2] = p;
+        if (coordKey) seen["c:" + coordKey] = p;
+      }
+    }
+    out.sort(function (a, b) {
+      const ds = hotAttractionScore(b) - hotAttractionScore(a);
+      if (ds) return ds;
+      return a.distKm - b.distKm;
+    });
+    return out;
+  }
+
+  async function fetchLiveHotAttractions(pinLat, pinLng, placeLabel, cityHint, osmAttractions) {
+    await loadAttractionsDb();
+    const dbHits = queryAttractionsDbNear(pinLat, pinLng, NEARBY_TOURISM_KM);
+    const [wv, wiki] = await Promise.all([
+      fetchWikivoyageAttractions(pinLat, pinLng, placeLabel, cityHint),
+      fetchWikipediaGeoAttractions(pinLat, pinLng),
+    ]);
+    /* Prefer notable Overpass POIs (wikipedia/wikidata tagged) */
+    const osm = (osmAttractions || []).map(function (p) {
+      const copy = Object.assign({}, p);
+      copy.liveHot = true;
+      copy.source = copy.source || "overpass";
+      const tags = copy.tags || {};
+      copy.hotScore = (tags.wikipedia || tags.wikidata) ? 80 : 60;
+      return copy;
+    });
+    return mergeLiveHotAttractions([dbHits, wv, wiki, osm]);
+  }
+
+
   /* Worldwide: curated lodging from nearest significant cities within 50 km (any LODGING_BY_CITY hit). */
   function curatedLodgingsNear(lat, lng, lodgePerNight, count) {
     count = count || 5;
@@ -3501,11 +3839,7 @@
   }
 
   function sparseSlotCopy(slot, langZh, pinLat, pinLng) {
-    /* Never show sparse copy when any LANDMARKS_BY_CITY city is within 50 km */
-    if (pinHasNearbyLandmarksCity(pinLat, pinLng)) {
-      const curated = curatedLandmarksFromNearbyCities(pinLat, pinLng, NEARBY_TOURISM_KM);
-      if (curated.length) return activityFromAttraction(curated[0], slot, langZh);
-    }
+    /* Only when ALL live sources (DB + Wikivoyage + Wikipedia + Overpass) returned nothing */
     const copies = {
       morning: {
         en: "Sparse mapped sights nearby — walk local trails, village lanes, or the nearest market and note what is actually here.",
@@ -3685,19 +4019,11 @@
   function themeFromAttractions(attrs, dayIdx, langZh, cityKeyHint, pinLat, pinLng) {
     let list = attrs;
     if (!list || !list.length) {
-      list = curatedLandmarksFromNearbyCities(pinLat, pinLng, NEARBY_TOURISM_KM);
-      if (!list.length) {
-        const ck = resolveLandmarkCityKey(null, cityKeyHint, pinLat, pinLng);
-        list = curatedLandmarksAsPois(ck, pinLat, pinLng);
-      }
-    }
-    if (!list || !list.length) {
       const label = String(cityKeyHint || "").replace(/^local:/, "").trim();
       if (label) {
-        return langZh ? (label + "城市漫步") : (label + " city stroll");
+        return langZh ? (label + "热门打卡") : (label + " hot spots");
       }
-      /* Far from curated cities only — never 「稀疏地带探索」 near LANDMARKS_BY_CITY */
-      return langZh ? "本地实地探索" : "Local on-site explore";
+      return langZh ? "实时热门景点" : "Live hot attractions";
     }
     const i = Math.min(Math.max(0, dayIdx | 0), list.length - 1);
     const a = list[i];
@@ -3718,12 +4044,12 @@
       if (nA + nL + nF < 3) {
         return "此地 OpenStreetMap 标注较少：以实地探索为准，勿把远处名城当成「附近」。下载离线地图并预留弹性时间。";
       }
-      return "行程点来自标注坐标 " + Math.round(NEARBY_TOURISM_KM) + " km 内的实时地图数据（按距离排序）。开放时间可能变动，出发前再确认。";
+      return "行程点来自标注点 " + Math.round(NEARBY_TOURISM_KM) + " km 内实时抓取的热门景点（小红书式热门库 + Wikivoyage/维基/地图），按热度与距离排序。开放时间可能变动，出发前再确认。";
     }
     if (nA + nL + nF < 3) {
       return "Few OpenStreetMap POIs here — explore on the ground; never invent distant famous cities as \"nearby\". Download offline maps and keep a buffer.";
     }
-    return "Stops are live map POIs within ~" + Math.round(NEARBY_TOURISM_KM) + " km of your pin, sorted by distance. Hours change — recheck before you go.";
+    return "Stops are live hot attractions within ~" + Math.round(NEARBY_TOURISM_KM) + " km (Xiaohongshu-style hot DB + Wikivoyage/Wikipedia/maps), ranked by heat then distance. Hours change — recheck before you go.";
   }
 
   function transportLiveNote(tier, langZh) {
@@ -3754,23 +4080,15 @@
             ? place.cityKey
             : localTourismKey(place.nameEn || place.name, lat, lng))
         : (place.cityKey || place.nameEn || "local"));
-    /* Wikimedia: district + nearest curated city (e.g. 陆家嘴 Shanghai) so landmarks beat metro geosearch */
+    /* Photos: place label + nearest city name (PHOTO_FALLBACK is image CDN only, not attraction names) */
     const localLabel = cleanPlaceSearchName(place.nameEn || place.name || "");
-    const photoLandmarkKey = resolveLandmarkCityKey(place, (nearCity && nearCity.nameEn) || cityKey, lat, lng);
-    const photoLandmark = (photoLandmarkKey && LANDMARKS_BY_CITY[photoLandmarkKey] && LANDMARKS_BY_CITY[photoLandmarkKey][0]) || null;
-    const landmarkPhotoHint = photoLandmark
-      ? ((lang === "zh" ? photoLandmark.nameZh : photoLandmark.nameEn) || photoLandmark.nameEn)
-      : "";
     let searchName = nearCity
       ? ((localLabel && localLabel.toLowerCase() !== String(nearCity.nameEn).toLowerCase())
           ? (localLabel + " " + nearCity.nameEn)
           : nearCity.nameEn)
       : (localLabel || cityKey);
-    if (landmarkPhotoHint && String(searchName).indexOf(landmarkPhotoHint) === -1) {
-      searchName = landmarkPhotoHint + " " + (nearCity ? nearCity.nameEn : searchName);
-    }
 
-    /* Always fetch live POIs around click coords (not curated city DB); parallel with photos */
+    /* Live POIs (lodging/food/OSM) + photos in parallel; hot attractions scraped after OSM returns */
     const [pois, photos] = await Promise.all([
       fetchLocalPois(lat, lng, 50000),
       resolveCityPhotos(cityKey, searchName, Math.max(9, days * 3), lat, lng),
@@ -3807,27 +4125,24 @@
       t("foodClue", { food: foodClue, transport: transport }),
       t("activityBudgetNote", { tier: tierLabel(tier) }),
       (lang === "zh"
-        ? ("景点／住宿／餐饮来自标注点 " + Math.round(NEARBY_TOURISM_KM) + " km 内实时 OpenStreetMap 检索。")
-        : ("Sights, stays, and food are live OpenStreetMap finds within ~" + Math.round(NEARBY_TOURISM_KM) + " km of your pin.")),
+        ? ("景点参考小红书式热门推荐，于标注点 " + Math.round(NEARBY_TOURISM_KM) + " km 内实时抓取（热门库 + Wikivoyage/维基/地图）；住宿与餐饮来自实时地图。")
+        : ("Attractions follow a Xiaohongshu-style hot list, live-scraped within ~" + Math.round(NEARBY_TOURISM_KM) + " km (hot DB + Wikivoyage/Wikipedia/maps); stays and food are live map finds.")),
     ];
     const foodNotes = t("foodNotes");
-    const landmarkCityKey = resolveLandmarkCityKey(place, cityKey, lat, lng);
-    let attrs = pois.attractions || [];
-    /* Worldwide: always merge hottest landmarks from EVERY curated city within 50 km */
-    /* curated-first: start from curated when present, then append live */
-    const curatedSeed = curatedLandmarksFromNearbyCities(lat, lng, NEARBY_TOURISM_KM);
-    attrs = mergeCuratedLandmarks(attrs, landmarkCityKey, lat, lng);
-    if (!attrs.length && curatedSeed.length) attrs = curatedSeed.slice();
+    const landmarkCityKey = (nearCity && nearCity.nameEn) || cityKey;
+    /* Live hot attractions only — DB within 50km + Wikivoyage/Wikipedia/Overpass; NOT LANDMARKS_BY_CITY */
+    let attrs = await fetchLiveHotAttractions(
+      lat, lng,
+      localLabel || place.name || "",
+      (nearCity && (nearCity.nameEn || nearCity.nameZh)) || landmarkCityKey,
+      pois.attractions || []
+    );
     const daysOut = [];
     for (let d = 1; d <= days; d++) {
       const seed = seed0 + d * 17;
       let a0 = attrs.length ? attrs[(d - 1) % attrs.length] : null;
       let a1 = attrs.length > 1 ? attrs[d % attrs.length] : a0;
       let a2 = attrs.length > 2 ? attrs[(d + 1) % attrs.length] : a1;
-      /* assert/fallback: never leave slots empty when curated cities are within 50 km */
-      if (!a0 && curatedSeed.length) a0 = curatedSeed[0];
-      if (!a1 && curatedSeed.length) a1 = curatedSeed[Math.min(1, curatedSeed.length - 1)];
-      if (!a2 && curatedSeed.length) a2 = curatedSeed[Math.min(2, curatedSeed.length - 1)];
       let morning = activityFromAttraction(a0, "morning", lang === "zh", lat, lng);
       let afternoon = activityFromAttraction(a1, "afternoon", lang === "zh", lat, lng);
       let evening = activityFromAttraction(a2, "evening", lang === "zh", lat, lng);
@@ -4600,6 +4915,7 @@
       const [photos, pois] = await Promise.all([
         resolveCityPhotos(ck, sn, 9, stop.lat, stop.lng),
         fetchLocalPois(stop.lat, stop.lng, 50000),
+        loadAttractionsDb(),
       ]);
       photoByStop[ck] = photos;
       poisByStop[ck + "|" + stop.lat + "," + stop.lng] = pois;
@@ -4613,12 +4929,13 @@
       const photos = photoByStop[ck] || fallbackPhotos(ck, 9);
       const pois = poisByStop[ck + "|" + stop.lat + "," + stop.lng] ||
         { attractions: [], lodging: [], food: [], sparse: true };
-      const stopLandmarkKey = resolveLandmarkCityKey(stop, ck, stop.lat, stop.lng);
-      let attrs = pois.attractions || [];
-      /* curated-first-v2: multi-city merge for each stop pin */
-      const stopCurated = curatedLandmarksFromNearbyCities(stop.lat, stop.lng, NEARBY_TOURISM_KM);
-      attrs = mergeCuratedLandmarks(attrs, stopLandmarkKey, stop.lat, stop.lng);
-      if (!attrs.length && stopCurated.length) attrs = stopCurated.slice();
+      const stopLandmarkKey = stop._cityRef && stop._cityRef.nameEn ? stop._cityRef.nameEn : ck;
+      let attrs = await fetchLiveHotAttractions(
+        stop.lat, stop.lng,
+        stop.nameEn || stop.name || "",
+        stopLandmarkKey,
+        pois.attractions || []
+      );
       if (i > 0) {
         parts.push({
           type: "day", day: dayNum, title: t("transferTitle", { city: stop.name }), theme: t("transferTheme"),
@@ -4653,9 +4970,6 @@
       let a0 = attrs.length ? attrs[0] : null;
       let a1 = attrs.length > 1 ? attrs[1] : a0;
       let a2 = attrs.length > 2 ? attrs[2] : a1;
-      if (!a0 && stopCurated.length) a0 = stopCurated[0];
-      if (!a1 && stopCurated.length) a1 = stopCurated[Math.min(1, stopCurated.length - 1)];
-      if (!a2 && stopCurated.length) a2 = stopCurated[Math.min(2, stopCurated.length - 1)];
       parts.push({
         type: "day", day: dayNum,
         title: stop.name + (stop.region ? " · " + stop.region : ""),

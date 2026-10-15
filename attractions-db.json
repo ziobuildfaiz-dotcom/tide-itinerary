@@ -1,0 +1,2948 @@
+{
+  "version": 1,
+  "sourcePrimary": "xiaohongshu",
+  "updatedAt": "2026-10-15T03:52:12Z",
+  "note": "Primary ranking goal is Xiaohongshu-style hot spots. Direct XHS API needs cookies+sign (blocked on static Pages). v1 seeds use Wikivoyage See listings + manual Qingdao xiaohongshu-seed entries; live pin flow merges DB hits within 50km with Wikivoyage/Wikipedia/Overpass refresh.",
+  "attractions": [
+    {
+      "id": "xhs:xian:terracotta-army",
+      "nameZh": "兵马俑",
+      "nameEn": "Terracotta Army",
+      "lat": 34.3853,
+      "lng": 109.2788,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 99,
+      "tags": [
+        "网红",
+        "必去",
+        "古城"
+      ],
+      "xhsKeyword": "西安 兵马俑 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:paris:eiffel-tower",
+      "nameZh": "埃菲尔铁塔",
+      "nameEn": "Eiffel Tower",
+      "lat": 48.8584,
+      "lng": 2.2945,
+      "cityZh": "巴黎",
+      "cityEn": "Paris",
+      "countryZh": "法国",
+      "countryEn": "France",
+      "hotScore": 99,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "巴黎 埃菲尔铁塔 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:rome:colosseum",
+      "nameZh": "斗兽场",
+      "nameEn": "Colosseum",
+      "lat": 41.8902,
+      "lng": 12.4922,
+      "cityZh": "罗马",
+      "cityEn": "Rome",
+      "countryZh": "意大利",
+      "countryEn": "Italy",
+      "hotScore": 99,
+      "tags": [
+        "网红",
+        "必去",
+        "古城"
+      ],
+      "xhsKeyword": "罗马 斗兽场 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:sydney:sydney-opera-house",
+      "nameZh": "悉尼歌剧院",
+      "nameEn": "Sydney Opera House",
+      "lat": -33.8568,
+      "lng": 151.2153,
+      "cityZh": "悉尼",
+      "cityEn": "Sydney",
+      "countryZh": "澳大利亚",
+      "countryEn": "Australia",
+      "hotScore": 99,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "悉尼 悉尼歌剧院 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:zhanqiao-pier",
+      "nameZh": "栈桥",
+      "nameEn": "Zhanqiao Pier",
+      "lat": 36.05982,
+      "lng": 120.31542,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 98,
+      "tags": [
+        "网红",
+        "必去",
+        "海边",
+        "地标"
+      ],
+      "xhsKeyword": "青岛 栈桥 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:beijing:forbidden-city",
+      "nameZh": "故宫",
+      "nameEn": "Forbidden City",
+      "lat": 39.9163,
+      "lng": 116.3972,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 98,
+      "tags": [
+        "网红",
+        "必去",
+        "古城"
+      ],
+      "xhsKeyword": "北京 故宫 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:shanghai:the-bund",
+      "nameZh": "外滩",
+      "nameEn": "The Bund",
+      "lat": 31.24,
+      "lng": 121.49,
+      "cityZh": "上海",
+      "cityEn": "Shanghai",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 98,
+      "tags": [
+        "网红",
+        "必去",
+        "夜景"
+      ],
+      "xhsKeyword": "上海 外滩 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:chengdu:chengdu-panda-base",
+      "nameZh": "大熊猫基地",
+      "nameEn": "Chengdu Panda Base",
+      "lat": 30.7389,
+      "lng": 104.145,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 98,
+      "tags": [
+        "网红",
+        "必去",
+        "熊猫"
+      ],
+      "xhsKeyword": "成都 大熊猫基地 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:hangzhou:west-lake",
+      "nameZh": "西湖",
+      "nameEn": "West Lake",
+      "lat": 30.242,
+      "lng": 120.148,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 98,
+      "tags": [
+        "网红",
+        "必去",
+        "湖景"
+      ],
+      "xhsKeyword": "杭州 西湖 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:paris:louvre-museum",
+      "nameZh": "卢浮宫",
+      "nameEn": "Louvre Museum",
+      "lat": 48.8606,
+      "lng": 2.3376,
+      "cityZh": "巴黎",
+      "cityEn": "Paris",
+      "countryZh": "法国",
+      "countryEn": "France",
+      "hotScore": 98,
+      "tags": [
+        "必去",
+        "博物馆"
+      ],
+      "xhsKeyword": "巴黎 卢浮宫 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:bangkok:grand-palace",
+      "nameZh": "大皇宫",
+      "nameEn": "Grand Palace",
+      "lat": 13.75,
+      "lng": 100.4913,
+      "cityZh": "曼谷",
+      "cityEn": "Bangkok",
+      "countryZh": "泰国",
+      "countryEn": "Thailand",
+      "hotScore": 98,
+      "tags": [
+        "网红",
+        "必去",
+        "宫殿"
+      ],
+      "xhsKeyword": "曼谷 大皇宫 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:beijing:great-wall-at-badaling",
+      "nameZh": "八达岭长城",
+      "nameEn": "Great Wall at Badaling",
+      "lat": 40.354,
+      "lng": 116.02,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "北京 八达岭长城 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:guangzhou:canton-tower",
+      "nameZh": "广州塔",
+      "nameEn": "Canton Tower",
+      "lat": 23.1066,
+      "lng": 113.3245,
+      "cityZh": "广州",
+      "cityEn": "Guangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "夜景"
+      ],
+      "xhsKeyword": "广州 广州塔 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:senso-ji",
+      "nameZh": "浅草寺",
+      "nameEn": "Senso-ji",
+      "lat": 35.7148,
+      "lng": 139.7967,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "寺庙"
+      ],
+      "xhsKeyword": "东京 浅草寺 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:new-york:central-park",
+      "nameZh": "中央公园",
+      "nameEn": "Central Park",
+      "lat": 40.7829,
+      "lng": -73.9654,
+      "cityZh": "纽约",
+      "cityEn": "New York",
+      "countryZh": "美国",
+      "countryEn": "USA",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "公园"
+      ],
+      "xhsKeyword": "纽约 中央公园 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:seoul:gyeongbokgung",
+      "nameZh": "景福宫",
+      "nameEn": "Gyeongbokgung",
+      "lat": 37.5796,
+      "lng": 126.977,
+      "cityZh": "首尔",
+      "cityEn": "Seoul",
+      "countryZh": "韩国",
+      "countryEn": "South Korea",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "宫殿"
+      ],
+      "xhsKeyword": "首尔 景福宫 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:london:big-ben-westminster",
+      "nameZh": "大本钟",
+      "nameEn": "Big Ben & Westminster",
+      "lat": 51.5007,
+      "lng": -0.1246,
+      "cityZh": "伦敦",
+      "cityEn": "London",
+      "countryZh": "英国",
+      "countryEn": "United Kingdom",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "伦敦 大本钟 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:badaguan",
+      "nameZh": "八大关",
+      "nameEn": "Badaguan",
+      "lat": 36.05245,
+      "lng": 120.35627,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 96,
+      "tags": [
+        "网红",
+        "必去",
+        "街区",
+        "拍照"
+      ],
+      "xhsKeyword": "青岛 八大关 拍照",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:shanghai:oriental-pearl-tower",
+      "nameZh": "东方明珠",
+      "nameEn": "Oriental Pearl Tower",
+      "lat": 31.2397,
+      "lng": 121.4998,
+      "cityZh": "上海",
+      "cityEn": "Shanghai",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 96,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "上海 东方明珠 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:xian:muslim-quarter",
+      "nameZh": "回民街",
+      "nameEn": "Muslim Quarter",
+      "lat": 34.265,
+      "lng": 108.945,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 96,
+      "tags": [
+        "网红",
+        "美食"
+      ],
+      "xhsKeyword": "西安 回民街 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:shibuya-crossing",
+      "nameZh": "涩谷十字路口",
+      "nameEn": "Shibuya Crossing",
+      "lat": 35.6595,
+      "lng": 139.7005,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 96,
+      "tags": [
+        "网红",
+        "都市"
+      ],
+      "xhsKeyword": "东京 涩谷十字路口 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:new-york:statue-of-liberty",
+      "nameZh": "自由女神像",
+      "nameEn": "Statue of Liberty",
+      "lat": 40.6892,
+      "lng": -74.0445,
+      "cityZh": "纽约",
+      "cityEn": "New York",
+      "countryZh": "美国",
+      "countryEn": "USA",
+      "hotScore": 96,
+      "tags": [
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "纽约 自由女神像 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:london:tower-bridge",
+      "nameZh": "塔桥",
+      "nameEn": "Tower Bridge",
+      "lat": 51.5055,
+      "lng": -0.0754,
+      "cityZh": "伦敦",
+      "cityEn": "London",
+      "countryZh": "英国",
+      "countryEn": "United Kingdom",
+      "hotScore": 96,
+      "tags": [
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "伦敦 塔桥 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:rome:trevi-fountain",
+      "nameZh": "特莱维喷泉",
+      "nameEn": "Trevi Fountain",
+      "lat": 41.9009,
+      "lng": 12.4833,
+      "cityZh": "罗马",
+      "cityEn": "Rome",
+      "countryZh": "意大利",
+      "countryEn": "Italy",
+      "hotScore": 96,
+      "tags": [
+        "网红",
+        "必去"
+      ],
+      "xhsKeyword": "罗马 特莱维喷泉 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:sydney:sydney-harbour-bridge",
+      "nameZh": "海港大桥",
+      "nameEn": "Sydney Harbour Bridge",
+      "lat": -33.8523,
+      "lng": 151.2108,
+      "cityZh": "悉尼",
+      "cityEn": "Sydney",
+      "countryZh": "澳大利亚",
+      "countryEn": "Australia",
+      "hotScore": 96,
+      "tags": [
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "悉尼 海港大桥 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:may-fourth-square",
+      "nameZh": "五四广场",
+      "nameEn": "May Fourth Square",
+      "lat": 36.0616,
+      "lng": 120.3801,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 95,
+      "tags": [
+        "网红",
+        "必去",
+        "地标",
+        "夜景"
+      ],
+      "xhsKeyword": "青岛 五四广场 夜景",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:beijing:tiananmen-square",
+      "nameZh": "天安门广场",
+      "nameEn": "Tiananmen Square",
+      "lat": 39.9055,
+      "lng": 116.3976,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 95,
+      "tags": [
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "北京 天安门广场 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:chengdu:kuanzhai-alley",
+      "nameZh": "宽窄巷子",
+      "nameEn": "Kuanzhai Alley",
+      "lat": 30.669,
+      "lng": 104.053,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 95,
+      "tags": [
+        "网红",
+        "必去",
+        "美食"
+      ],
+      "xhsKeyword": "成都 宽窄巷子 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:paris:notre-dame-cathedral",
+      "nameZh": "巴黎圣母院",
+      "nameEn": "Notre-Dame Cathedral",
+      "lat": 48.853,
+      "lng": 2.3499,
+      "cityZh": "巴黎",
+      "cityEn": "Paris",
+      "countryZh": "法国",
+      "countryEn": "France",
+      "hotScore": 95,
+      "tags": [
+        "必去",
+        "古城"
+      ],
+      "xhsKeyword": "巴黎 巴黎圣母院 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:new-york:times-square",
+      "nameZh": "时代广场",
+      "nameEn": "Times Square",
+      "lat": 40.758,
+      "lng": -73.9855,
+      "cityZh": "纽约",
+      "cityEn": "New York",
+      "countryZh": "美国",
+      "countryEn": "USA",
+      "hotScore": 95,
+      "tags": [
+        "网红",
+        "夜景"
+      ],
+      "xhsKeyword": "纽约 时代广场 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:bangkok:wat-arun",
+      "nameZh": "郑王庙",
+      "nameEn": "Wat Arun",
+      "lat": 13.7437,
+      "lng": 100.4888,
+      "cityZh": "曼谷",
+      "cityEn": "Bangkok",
+      "countryZh": "泰国",
+      "countryEn": "Thailand",
+      "hotScore": 95,
+      "tags": [
+        "网红",
+        "必去"
+      ],
+      "xhsKeyword": "曼谷 郑王庙 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:seoul:n-seoul-tower",
+      "nameZh": "南山塔",
+      "nameEn": "N Seoul Tower",
+      "lat": 37.5512,
+      "lng": 126.9882,
+      "cityZh": "首尔",
+      "cityEn": "Seoul",
+      "countryZh": "韩国",
+      "countryEn": "South Korea",
+      "hotScore": 95,
+      "tags": [
+        "网红",
+        "夜景"
+      ],
+      "xhsKeyword": "首尔 南山塔 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:london:british-museum",
+      "nameZh": "大英博物馆",
+      "nameEn": "British Museum",
+      "lat": 51.5194,
+      "lng": -0.127,
+      "cityZh": "伦敦",
+      "cityEn": "London",
+      "countryZh": "英国",
+      "countryEn": "United Kingdom",
+      "hotScore": 95,
+      "tags": [
+        "必去",
+        "博物馆"
+      ],
+      "xhsKeyword": "伦敦 大英博物馆 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:rome:vatican-museums",
+      "nameZh": "梵蒂冈博物馆",
+      "nameEn": "Vatican Museums",
+      "lat": 41.9065,
+      "lng": 12.4536,
+      "cityZh": "罗马",
+      "cityEn": "Rome",
+      "countryZh": "意大利",
+      "countryEn": "Italy",
+      "hotScore": 95,
+      "tags": [
+        "必去",
+        "博物馆"
+      ],
+      "xhsKeyword": "罗马 梵蒂冈博物馆 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:sydney:bondi-beach",
+      "nameZh": "邦迪海滩",
+      "nameEn": "Bondi Beach",
+      "lat": -33.8915,
+      "lng": 151.2767,
+      "cityZh": "悉尼",
+      "cityEn": "Sydney",
+      "countryZh": "澳大利亚",
+      "countryEn": "Australia",
+      "hotScore": 95,
+      "tags": [
+        "网红",
+        "海边"
+      ],
+      "xhsKeyword": "悉尼 邦迪海滩 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:laoshan-mountain",
+      "nameZh": "崂山",
+      "nameEn": "Laoshan Mountain",
+      "lat": 36.1348,
+      "lng": 120.663,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 94,
+      "tags": [
+        "必去",
+        "自然",
+        "登山"
+      ],
+      "xhsKeyword": "青岛 崂山 一日游",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:beijing:temple-of-heaven",
+      "nameZh": "天坛",
+      "nameEn": "Temple of Heaven",
+      "lat": 39.8822,
+      "lng": 116.4066,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 94,
+      "tags": [
+        "必去",
+        "古城"
+      ],
+      "xhsKeyword": "北京 天坛 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:shanghai:lujiazui-skyline",
+      "nameZh": "陆家嘴",
+      "nameEn": "Lujiazui Skyline",
+      "lat": 31.239,
+      "lng": 121.505,
+      "cityZh": "上海",
+      "cityEn": "Shanghai",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 94,
+      "tags": [
+        "网红",
+        "夜景"
+      ],
+      "xhsKeyword": "上海 陆家嘴 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:xian:giant-wild-goose-pagoda",
+      "nameZh": "大雁塔",
+      "nameEn": "Giant Wild Goose Pagoda",
+      "lat": 34.2184,
+      "lng": 108.9642,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 94,
+      "tags": [
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "西安 大雁塔 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:tokyo-skytree",
+      "nameZh": "东京晴空塔",
+      "nameEn": "Tokyo Skytree",
+      "lat": 35.7101,
+      "lng": 139.8107,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 94,
+      "tags": [
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "东京 东京晴空塔 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:paris:sacr-c-ur-montmartre",
+      "nameZh": "蒙马特圣心堂",
+      "nameEn": "Sacré-Cœur Montmartre",
+      "lat": 48.8867,
+      "lng": 2.3431,
+      "cityZh": "巴黎",
+      "cityEn": "Paris",
+      "countryZh": "法国",
+      "countryEn": "France",
+      "hotScore": 94,
+      "tags": [
+        "网红",
+        "拍照"
+      ],
+      "xhsKeyword": "巴黎 蒙马特圣心堂 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:seoul:myeongdong",
+      "nameZh": "明洞",
+      "nameEn": "Myeongdong",
+      "lat": 37.5636,
+      "lng": 126.9869,
+      "cityZh": "首尔",
+      "cityEn": "Seoul",
+      "countryZh": "韩国",
+      "countryEn": "South Korea",
+      "hotScore": 94,
+      "tags": [
+        "购物",
+        "美食"
+      ],
+      "xhsKeyword": "首尔 明洞 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:rome:pantheon",
+      "nameZh": "万神殿",
+      "nameEn": "Pantheon",
+      "lat": 41.8986,
+      "lng": 12.4769,
+      "cityZh": "罗马",
+      "cityEn": "Rome",
+      "countryZh": "意大利",
+      "countryEn": "Italy",
+      "hotScore": 94,
+      "tags": [
+        "必去",
+        "古城"
+      ],
+      "xhsKeyword": "罗马 万神殿 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:tsingtao-brewery-museum",
+      "nameZh": "青岛啤酒博物馆",
+      "nameEn": "Tsingtao Brewery Museum",
+      "lat": 36.079,
+      "lng": 120.3466,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 93,
+      "tags": [
+        "网红",
+        "必去",
+        "美食",
+        "博物馆"
+      ],
+      "xhsKeyword": "青岛 啤酒博物馆",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:beijing:summer-palace",
+      "nameZh": "颐和园",
+      "nameEn": "Summer Palace",
+      "lat": 39.9999,
+      "lng": 116.2755,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 93,
+      "tags": [
+        "必去",
+        "园林"
+      ],
+      "xhsKeyword": "北京 颐和园 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:guangzhou:pearl-river-night-cruise",
+      "nameZh": "珠江夜游",
+      "nameEn": "Pearl River Night Cruise",
+      "lat": 23.11,
+      "lng": 113.32,
+      "cityZh": "广州",
+      "cityEn": "Guangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 93,
+      "tags": [
+        "网红",
+        "夜景"
+      ],
+      "xhsKeyword": "广州 珠江夜游 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:teamlab-borderless",
+      "nameZh": "团队实验室",
+      "nameEn": "teamLab Borderless",
+      "lat": 35.627,
+      "lng": 139.782,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 93,
+      "tags": [
+        "网红",
+        "艺术"
+      ],
+      "xhsKeyword": "东京 团队实验室 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:new-york:brooklyn-bridge",
+      "nameZh": "布鲁克林大桥",
+      "nameEn": "Brooklyn Bridge",
+      "lat": 40.7061,
+      "lng": -73.9969,
+      "cityZh": "纽约",
+      "cityEn": "New York",
+      "countryZh": "美国",
+      "countryEn": "USA",
+      "hotScore": 93,
+      "tags": [
+        "网红",
+        "拍照"
+      ],
+      "xhsKeyword": "纽约 布鲁克林大桥 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:bangkok:wat-pho",
+      "nameZh": "卧佛寺",
+      "nameEn": "Wat Pho",
+      "lat": 13.7465,
+      "lng": 100.4927,
+      "cityZh": "曼谷",
+      "cityEn": "Bangkok",
+      "countryZh": "泰国",
+      "countryEn": "Thailand",
+      "hotScore": 93,
+      "tags": [
+        "必去",
+        "寺庙"
+      ],
+      "xhsKeyword": "曼谷 卧佛寺 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:seoul:bukchon-hanok-village",
+      "nameZh": "北村韩屋村",
+      "nameEn": "Bukchon Hanok Village",
+      "lat": 37.5826,
+      "lng": 126.9831,
+      "cityZh": "首尔",
+      "cityEn": "Seoul",
+      "countryZh": "韩国",
+      "countryEn": "South Korea",
+      "hotScore": 93,
+      "tags": [
+        "网红",
+        "拍照"
+      ],
+      "xhsKeyword": "首尔 北村韩屋村 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:london:london-eye",
+      "nameZh": "伦敦眼",
+      "nameEn": "London Eye",
+      "lat": 51.5033,
+      "lng": -0.1196,
+      "cityZh": "伦敦",
+      "cityEn": "London",
+      "countryZh": "英国",
+      "countryEn": "United Kingdom",
+      "hotScore": 93,
+      "tags": [
+        "网红",
+        "观景"
+      ],
+      "xhsKeyword": "伦敦 伦敦眼 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:shanghai:yu-garden",
+      "nameZh": "豫园",
+      "nameEn": "Yu Garden",
+      "lat": 31.2272,
+      "lng": 121.492,
+      "cityZh": "上海",
+      "cityEn": "Shanghai",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 92,
+      "tags": [
+        "必去",
+        "古城"
+      ],
+      "xhsKeyword": "上海 豫园 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:shenzhen:shenzhen-bay-park",
+      "nameZh": "深圳湾公园",
+      "nameEn": "Shenzhen Bay Park",
+      "lat": 22.5165,
+      "lng": 113.994,
+      "cityZh": "深圳",
+      "cityEn": "Shenzhen",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 92,
+      "tags": [
+        "网红",
+        "海边",
+        "散步"
+      ],
+      "xhsKeyword": "深圳 深圳湾公园 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:chengdu:jinli-ancient-street",
+      "nameZh": "锦里",
+      "nameEn": "Jinli Ancient Street",
+      "lat": 30.646,
+      "lng": 104.048,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 92,
+      "tags": [
+        "必去",
+        "夜市"
+      ],
+      "xhsKeyword": "成都 锦里 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:hangzhou:lingyin-temple",
+      "nameZh": "灵隐寺",
+      "nameEn": "Lingyin Temple",
+      "lat": 30.243,
+      "lng": 120.1,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 92,
+      "tags": [
+        "必去",
+        "寺庙"
+      ],
+      "xhsKeyword": "杭州 灵隐寺 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:new-york:empire-state-building",
+      "nameZh": "帝国大厦",
+      "nameEn": "Empire State Building",
+      "lat": 40.7484,
+      "lng": -73.9857,
+      "cityZh": "纽约",
+      "cityEn": "New York",
+      "countryZh": "美国",
+      "countryEn": "USA",
+      "hotScore": 92,
+      "tags": [
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "纽约 帝国大厦 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:guangzhou:shamian-island",
+      "nameZh": "沙面岛",
+      "nameEn": "Shamian Island",
+      "lat": 23.1095,
+      "lng": 113.244,
+      "cityZh": "广州",
+      "cityEn": "Guangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 91,
+      "tags": [
+        "网红",
+        "散步"
+      ],
+      "xhsKeyword": "广州 沙面岛 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:meiji-shrine",
+      "nameZh": "明治神宫",
+      "nameEn": "Meiji Shrine",
+      "lat": 35.6764,
+      "lng": 139.6993,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 91,
+      "tags": [
+        "必去",
+        "神社"
+      ],
+      "xhsKeyword": "东京 明治神宫 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:seoul:hongdae",
+      "nameZh": "弘大",
+      "nameEn": "Hongdae",
+      "lat": 37.5563,
+      "lng": 126.9236,
+      "cityZh": "首尔",
+      "cityEn": "Seoul",
+      "countryZh": "韩国",
+      "countryEn": "South Korea",
+      "hotScore": 91,
+      "tags": [
+        "网红",
+        "街头"
+      ],
+      "xhsKeyword": "首尔 弘大 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:olympic-sailing-center",
+      "nameZh": "奥帆中心",
+      "nameEn": "Olympic Sailing Center",
+      "lat": 36.0555,
+      "lng": 120.391,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 90,
+      "tags": [
+        "海边",
+        "地标",
+        "散步"
+      ],
+      "xhsKeyword": "青岛 奥帆中心",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:shanghai:nanjing-road",
+      "nameZh": "南京路步行街",
+      "nameEn": "Nanjing Road",
+      "lat": 31.235,
+      "lng": 121.475,
+      "cityZh": "上海",
+      "cityEn": "Shanghai",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 90,
+      "tags": [
+        "必去",
+        "购物"
+      ],
+      "xhsKeyword": "上海 南京路步行街 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:guangzhou:chen-clan-academy",
+      "nameZh": "陈家祠",
+      "nameEn": "Chen Clan Academy",
+      "lat": 23.1263,
+      "lng": 113.2436,
+      "cityZh": "广州",
+      "cityEn": "Guangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 90,
+      "tags": [
+        "必去",
+        "古城"
+      ],
+      "xhsKeyword": "广州 陈家祠 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:shenzhen:window-of-the-world",
+      "nameZh": "世界之窗",
+      "nameEn": "Window of the World",
+      "lat": 22.5369,
+      "lng": 113.9723,
+      "cityZh": "深圳",
+      "cityEn": "Shenzhen",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 90,
+      "tags": [
+        "必去",
+        "乐园"
+      ],
+      "xhsKeyword": "深圳 世界之窗 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:hangzhou:hefang-street",
+      "nameZh": "河坊街",
+      "nameEn": "Hefang Street",
+      "lat": 30.244,
+      "lng": 120.17,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 90,
+      "tags": [
+        "网红",
+        "小吃"
+      ],
+      "xhsKeyword": "杭州 河坊街 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:paris:seine-river-walk",
+      "nameZh": "塞纳河",
+      "nameEn": "Seine River Walk",
+      "lat": 48.857,
+      "lng": 2.34,
+      "cityZh": "巴黎",
+      "cityEn": "Paris",
+      "countryZh": "法国",
+      "countryEn": "France",
+      "hotScore": 90,
+      "tags": [
+        "散步",
+        "浪漫"
+      ],
+      "xhsKeyword": "巴黎 塞纳河 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:bangkok:chatuchak-weekend-market",
+      "nameZh": "恰图恰市场",
+      "nameEn": "Chatuchak Weekend Market",
+      "lat": 13.7999,
+      "lng": 100.5501,
+      "cityZh": "曼谷",
+      "cityEn": "Bangkok",
+      "countryZh": "泰国",
+      "countryEn": "Thailand",
+      "hotScore": 90,
+      "tags": [
+        "购物",
+        "网红"
+      ],
+      "xhsKeyword": "曼谷 恰图恰市场 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:rome:spanish-steps",
+      "nameZh": "西班牙阶梯",
+      "nameEn": "Spanish Steps",
+      "lat": 41.9059,
+      "lng": 12.4823,
+      "cityZh": "罗马",
+      "cityEn": "Rome",
+      "countryZh": "意大利",
+      "countryEn": "Italy",
+      "hotScore": 90,
+      "tags": [
+        "网红",
+        "拍照"
+      ],
+      "xhsKeyword": "罗马 西班牙阶梯 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:sydney:the-rocks",
+      "nameZh": "岩石区",
+      "nameEn": "The Rocks",
+      "lat": -33.8599,
+      "lng": 151.209,
+      "cityZh": "悉尼",
+      "cityEn": "Sydney",
+      "countryZh": "澳大利亚",
+      "countryEn": "Australia",
+      "hotScore": 90,
+      "tags": [
+        "必去",
+        "街区"
+      ],
+      "xhsKeyword": "悉尼 岩石区 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:shanghai:wukang-road",
+      "nameZh": "武康路",
+      "nameEn": "Wukang Road",
+      "lat": 31.206,
+      "lng": 121.438,
+      "cityZh": "上海",
+      "cityEn": "Shanghai",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 89,
+      "tags": [
+        "网红",
+        "拍照"
+      ],
+      "xhsKeyword": "上海 武康路 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:guangzhou:baiyun-mountain",
+      "nameZh": "白云山",
+      "nameEn": "Baiyun Mountain",
+      "lat": 23.167,
+      "lng": 113.295,
+      "cityZh": "广州",
+      "cityEn": "Guangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 89,
+      "tags": [
+        "自然",
+        "必去"
+      ],
+      "xhsKeyword": "广州 白云山 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:signal-hill",
+      "nameZh": "信号山",
+      "nameEn": "Signal Hill",
+      "lat": 36.0665,
+      "lng": 120.3355,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 88,
+      "tags": [
+        "观景",
+        "日落",
+        "拍照"
+      ],
+      "xhsKeyword": "青岛 信号山 日落",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:beijing:798-art-zone",
+      "nameZh": "798艺术区",
+      "nameEn": "798 Art Zone",
+      "lat": 39.984,
+      "lng": 116.495,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 88,
+      "tags": [
+        "网红",
+        "艺术"
+      ],
+      "xhsKeyword": "北京 798艺术区 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:guangzhou:beijing-road-pedestrian-street",
+      "nameZh": "北京路步行街",
+      "nameEn": "Beijing Road Pedestrian Street",
+      "lat": 23.1255,
+      "lng": 113.268,
+      "cityZh": "广州",
+      "cityEn": "Guangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 88,
+      "tags": [
+        "必去",
+        "美食"
+      ],
+      "xhsKeyword": "广州 北京路步行街 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:shenzhen:lianhuashan-park",
+      "nameZh": "莲花山公园",
+      "nameEn": "Lianhuashan Park",
+      "lat": 22.5517,
+      "lng": 114.059,
+      "cityZh": "深圳",
+      "cityEn": "Shenzhen",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 88,
+      "tags": [
+        "必去",
+        "观景"
+      ],
+      "xhsKeyword": "深圳 莲花山公园 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:toyosu-market",
+      "nameZh": "筑地/丰洲市场",
+      "nameEn": "Toyosu Market",
+      "lat": 35.645,
+      "lng": 139.784,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 88,
+      "tags": [
+        "美食",
+        "必去"
+      ],
+      "xhsKeyword": "东京 筑地/丰洲市场 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:london:hyde-park",
+      "nameZh": "海德公园",
+      "nameEn": "Hyde Park",
+      "lat": 51.5073,
+      "lng": -0.1657,
+      "cityZh": "伦敦",
+      "cityEn": "London",
+      "countryZh": "英国",
+      "countryEn": "United Kingdom",
+      "hotScore": 88,
+      "tags": [
+        "公园",
+        "散步"
+      ],
+      "xhsKeyword": "伦敦 海德公园 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:sydney:darling-harbour",
+      "nameZh": "达令港",
+      "nameEn": "Darling Harbour",
+      "lat": -33.874,
+      "lng": 151.2,
+      "cityZh": "悉尼",
+      "cityEn": "Sydney",
+      "countryZh": "澳大利亚",
+      "countryEn": "Australia",
+      "hotScore": 88,
+      "tags": [
+        "散步",
+        "夜景"
+      ],
+      "xhsKeyword": "悉尼 达令港 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:first-bathing-beach",
+      "nameZh": "第一海水浴场",
+      "nameEn": "First Bathing Beach",
+      "lat": 36.0535,
+      "lng": 120.335,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 87,
+      "tags": [
+        "海边",
+        "沙滩",
+        "网红"
+      ],
+      "xhsKeyword": "青岛 第一海水浴场",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:shenzhen:dameisha-beach",
+      "nameZh": "大梅沙",
+      "nameEn": "Dameisha Beach",
+      "lat": 22.5958,
+      "lng": 114.3095,
+      "cityZh": "深圳",
+      "cityEn": "Shenzhen",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 87,
+      "tags": [
+        "海边",
+        "沙滩"
+      ],
+      "xhsKeyword": "深圳 大梅沙 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:qingdao-tv-tower",
+      "nameZh": "青岛电视塔",
+      "nameEn": "Qingdao TV Tower",
+      "lat": 36.06877,
+      "lng": 120.35117,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 86,
+      "tags": [
+        "地标",
+        "观景"
+      ],
+      "xhsKeyword": "青岛 电视塔",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:qingdao:little-qingdao-island",
+      "nameZh": "小青岛",
+      "nameEn": "Little Qingdao Island",
+      "lat": 36.05295,
+      "lng": 120.31871,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 85,
+      "tags": [
+        "海边",
+        "公园",
+        "拍照"
+      ],
+      "xhsKeyword": "青岛 小青岛",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Qingdao must-hit seed; XHS-style tags; coords from public maps/Wikivoyage"
+    },
+    {
+      "id": "xhs:shenzhen:happy-valley-shenzhen",
+      "nameZh": "欢乐谷",
+      "nameEn": "Happy Valley Shenzhen",
+      "lat": 22.54,
+      "lng": 113.986,
+      "cityZh": "深圳",
+      "cityEn": "Shenzhen",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 85,
+      "tags": [
+        "乐园"
+      ],
+      "xhsKeyword": "深圳 欢乐谷 必去",
+      "source": "xiaohongshu-seed",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:hangzhou:west-lake",
+      "nameZh": "West Lake",
+      "nameEn": "West Lake",
+      "lat": 30.2375,
+      "lng": 120.14083,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "杭州 West Lake 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:spring-dawn-at-su-causeway",
+      "nameZh": "苏堤春晓 Sūdīchūnxiǎo",
+      "nameEn": "Spring Dawn at Su Causeway",
+      "lat": 30.2484,
+      "lng": 120.1327,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "杭州 苏堤春晓 Sūdīchūnxiǎo 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:beilin-or-stele-museum",
+      "nameZh": "西安碑林博物馆",
+      "nameEn": "Beilin (or Stele) Museum",
+      "lat": 34.255,
+      "lng": 108.94806,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "西安 西安碑林博物馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:shaanxi-art-museum",
+      "nameZh": "陕西美术馆",
+      "nameEn": "Shaanxi Art Museum",
+      "lat": 34.26153,
+      "lng": 108.94673,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "西安 陕西美术馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:bangkok:chulalongkorn-university",
+      "nameZh": "Chulalongkorn University",
+      "nameEn": "Chulalongkorn University",
+      "lat": 13.73836,
+      "lng": 100.53211,
+      "cityZh": "曼谷",
+      "cityEn": "Bangkok",
+      "countryZh": "泰国",
+      "countryEn": "Thailand",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "曼谷 Chulalongkorn University 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:bangkok:national-institute-of-development-administration",
+      "nameZh": "National Institute of Development Administration",
+      "nameEn": "National Institute of Development Administration",
+      "lat": 13.76962,
+      "lng": 100.65262,
+      "cityZh": "曼谷",
+      "cityEn": "Bangkok",
+      "countryZh": "泰国",
+      "countryEn": "Thailand",
+      "hotScore": 97,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "曼谷 National Institute of Development Administration 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:tianfu-square",
+      "nameZh": "天府广场 (tiān fǔ guǎng chǎng)",
+      "nameEn": "Tianfu Square",
+      "lat": 30.65735,
+      "lng": 104.06584,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 96,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "成都 天府广场 (tiān fǔ guǎng chǎng) 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:wind-and-lotus-at-the-crooked-courtyard-in-summe",
+      "nameZh": "曲院风荷, Quyuanfenghe",
+      "nameEn": "Wind and Lotus at the Crooked Courtyard (in Summer)",
+      "lat": 30.25161,
+      "lng": 120.1269,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 96,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "杭州 曲院风荷, Quyuanfenghe 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:shaanxi-history-museum",
+      "nameZh": "陕西历史博物馆",
+      "nameEn": "Shaanxi History Museum",
+      "lat": 34.22577,
+      "lng": 108.95041,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 96,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "西安 陕西历史博物馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:bangkok:assumption-university",
+      "nameZh": "Assumption University",
+      "nameEn": "Assumption University",
+      "lat": 13.61206,
+      "lng": 100.83769,
+      "cityZh": "曼谷",
+      "cityEn": "Bangkok",
+      "countryZh": "泰国",
+      "countryEn": "Thailand",
+      "hotScore": 96,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "曼谷 Assumption University 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:qingdao-textile-valley",
+      "nameZh": "青岛纺织谷",
+      "nameEn": "Qingdao Textile Valley",
+      "lat": 36.145,
+      "lng": 120.385,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 94,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "青岛 青岛纺织谷 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:a-thousand-plateaus-art-space",
+      "nameZh": "千高原艺术空间",
+      "nameEn": "A Thousand Plateaus Art Space",
+      "lat": 30.55881,
+      "lng": 104.04697,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 94,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "成都 千高原艺术空间 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:autumn-moon-over-the-calm-lake",
+      "nameZh": "平湖秋月 Pínghúqiūyuè",
+      "nameEn": "Autumn Moon over the Calm Lake",
+      "lat": 30.2542,
+      "lng": 120.14161,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 94,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "杭州 平湖秋月 Pínghúqiūyuè 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:shaanxi-nature-museum",
+      "nameZh": "陕西自然博物馆",
+      "nameEn": "Shaanxi Nature Museum",
+      "lat": 34.19749,
+      "lng": 108.94195,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 94,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "西安 陕西自然博物馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:bangkok:ramkhamhaeng-university",
+      "nameZh": "Ramkhamhaeng University",
+      "nameEn": "Ramkhamhaeng University",
+      "lat": 13.75524,
+      "lng": 100.62014,
+      "cityZh": "曼谷",
+      "cityEn": "Bangkok",
+      "countryZh": "泰国",
+      "countryEn": "Thailand",
+      "hotScore": 94,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "曼谷 Ramkhamhaeng University 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:qingdao-jiaozhou-bay-bridge",
+      "nameZh": "青岛胶州湾大桥",
+      "nameEn": "Qingdao Jiaozhou Bay Bridge",
+      "lat": 36.16991,
+      "lng": 120.2983,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 92,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "青岛 青岛胶州湾大桥 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:sichuan-art-museum",
+      "nameZh": "四川美术馆 (sì chuān měi shù guǎn)",
+      "nameEn": "Sichuan Art Museum",
+      "lat": 30.66104,
+      "lng": 104.05905,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 92,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "成都 四川美术馆 (sì chuān měi shù guǎn) 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:lingering-snow-on-broken-bridge",
+      "nameZh": "断桥残雪 Duànqiáocánxuě",
+      "nameEn": "Lingering Snow on Broken Bridge",
+      "lat": 30.2609,
+      "lng": 120.14694,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 92,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "杭州 断桥残雪 Duànqiáocánxuě 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:baihuayuan-gardens",
+      "nameZh": "百花苑",
+      "nameEn": "Baihuayuan Gardens",
+      "lat": 36.0658,
+      "lng": 120.34005,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 90,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "青岛 百花苑 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:chengdu-natural-history-museum",
+      "nameZh": "成都自然博物馆",
+      "nameEn": "Chengdu Natural History Museum",
+      "lat": 30.68085,
+      "lng": 104.14183,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 90,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "成都 成都自然博物馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:xi-an-art-museum",
+      "nameZh": "西安美术馆",
+      "nameEn": "Xi'an Art Museum",
+      "lat": 34.21259,
+      "lng": 108.95865,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 90,
+      "tags": [
+        "网红",
+        "必去",
+        "地标"
+      ],
+      "xhsKeyword": "西安 西安美术馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:sichuan-museum",
+      "nameZh": "四川博物院 (sì chuān bó wù yuàn)",
+      "nameEn": "Sichuan Museum",
+      "lat": 30.66329,
+      "lng": 104.0317,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 88,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "成都 四川博物院 (sì chuān bó wù yuàn) 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:twin-peaks-piercing-the-clouds",
+      "nameZh": "双峰插云 Shuāngfēngchāyún",
+      "nameEn": "Twin Peaks Piercing the Clouds",
+      "lat": 30.2528,
+      "lng": 120.11705,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 88,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "杭州 双峰插云 Shuāngfēngchāyún 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:xi-an-museum",
+      "nameZh": "西安博物院",
+      "nameEn": "Xi'an Museum",
+      "lat": 34.23894,
+      "lng": 108.93554,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 88,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "西安 西安博物院 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:bell-tower",
+      "nameZh": "钟楼",
+      "nameEn": "Bell Tower",
+      "lat": 34.26096,
+      "lng": 108.94233,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 86,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "西安 钟楼 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:luxun-park",
+      "nameZh": "鲁迅公园",
+      "nameEn": "Luxun Park",
+      "lat": 36.0553,
+      "lng": 120.3287,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 84,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "青岛 鲁迅公园 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:sichuan-university-museum",
+      "nameZh": "四川大学博物馆",
+      "nameEn": "Sichuan University Museum",
+      "lat": 30.63901,
+      "lng": 104.08822,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 84,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "成都 四川大学博物馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:viewing-fish-at-flower-pond",
+      "nameZh": "花港观鱼, Huagangguanyu",
+      "nameEn": "Viewing Fish at Flower Pond",
+      "lat": 30.23331,
+      "lng": 120.13545,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 84,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "杭州 花港观鱼, Huagangguanyu 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:polar-ocean-world",
+      "nameZh": "青岛极地海洋世界",
+      "nameEn": "Polar Ocean World",
+      "lat": 36.06868,
+      "lng": 120.43741,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "青岛 青岛极地海洋世界 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:southwest-minzu-university-museum-of-nationaliti",
+      "nameZh": "西南民族大学民族博物馆",
+      "nameEn": "Southwest Minzu University Museum of Nationalities",
+      "lat": 30.64183,
+      "lng": 104.04668,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "成都 西南民族大学民族博物馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:three-ponds-mirroring-the-moon",
+      "nameZh": "Lesser Yingzhou Isle, 三潭映月 Sāntányìngyuè",
+      "nameEn": "Three Ponds Mirroring the Moon",
+      "lat": 30.2415,
+      "lng": 120.1411,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "杭州 Lesser Yingzhou Isle, 三潭映月 Sāntányìngyuè 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:daming-palace-national-heritage-park",
+      "nameZh": "大明宫国家遗址公园",
+      "nameEn": "Daming Palace National Heritage Park",
+      "lat": 34.2895,
+      "lng": 108.9601,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "西安 大明宫国家遗址公园 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:beijing:outer-court",
+      "nameZh": "外朝",
+      "nameEn": "Outer Court",
+      "lat": 39.91476,
+      "lng": 116.39146,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "北京 外朝 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:beijing:inner-palace",
+      "nameZh": "内廷",
+      "nameEn": "Inner Palace",
+      "lat": 39.91899,
+      "lng": 116.39029,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "北京 内廷 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:beijing:wall-moat-and-corner-towers",
+      "nameZh": "Wall, moat and corner towers",
+      "nameEn": "Wall, moat and corner towers",
+      "lat": 39.92189,
+      "lng": 116.39595,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "北京 Wall, moat and corner towers 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:beijing:imperial-ancestral-temple",
+      "nameZh": "太庙",
+      "nameEn": "Imperial Ancestral Temple",
+      "lat": 39.91019,
+      "lng": 116.39361,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "北京 太庙 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:beijing:altar-of-land-and-grain",
+      "nameZh": "社稷坛",
+      "nameEn": "Altar of Land and Grain",
+      "lat": 39.9098,
+      "lng": 116.38857,
+      "cityZh": "北京",
+      "cityEn": "Beijing",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "北京 社稷坛 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:kaminarimon",
+      "nameZh": "雷門, Thunder Gate",
+      "nameEn": "Kaminarimon",
+      "lat": 35.71112,
+      "lng": 139.79637,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "东京 雷門, Thunder Gate 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:bunkamura",
+      "nameZh": "Bunkamura",
+      "nameEn": "Bunkamura",
+      "lat": 35.66023,
+      "lng": 139.69557,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "东京 Bunkamura 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:yamatane-museum-of-art",
+      "nameZh": "山種美術館, Yamatane bijutsukan",
+      "nameEn": "Yamatane Museum of Art",
+      "lat": 35.65317,
+      "lng": 139.71364,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "东京 山種美術館, Yamatane bijutsukan 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:tokyo:ntt-docomo-building",
+      "nameZh": "NTT DoCoMo Building",
+      "nameEn": "NTT DoCoMo Building",
+      "lat": 35.68436,
+      "lng": 139.70325,
+      "cityZh": "东京",
+      "cityEn": "Tokyo",
+      "countryZh": "日本",
+      "countryEn": "Japan",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "东京 NTT DoCoMo Building 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:paris:colonne-vend-me",
+      "nameZh": "Colonne Vendôme",
+      "nameEn": "Colonne Vendôme",
+      "lat": 48.86747,
+      "lng": 2.32941,
+      "cityZh": "巴黎",
+      "cityEn": "Paris",
+      "countryZh": "法国",
+      "countryEn": "France",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "巴黎 Colonne Vendôme 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:paris:la-conciergerie",
+      "nameZh": "La Conciergerie",
+      "nameEn": "La Conciergerie",
+      "lat": 48.85639,
+      "lng": 2.34556,
+      "cityZh": "巴黎",
+      "cityEn": "Paris",
+      "countryZh": "法国",
+      "countryEn": "France",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "巴黎 La Conciergerie 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:paris:glise-saint-eustache",
+      "nameZh": "Église Saint-Eustache",
+      "nameEn": "Église Saint-Eustache",
+      "lat": 48.86333,
+      "lng": 2.345,
+      "cityZh": "巴黎",
+      "cityEn": "Paris",
+      "countryZh": "法国",
+      "countryEn": "France",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "巴黎 Église Saint-Eustache 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:paris:jardin-des-tuileries",
+      "nameZh": "Jardin des Tuileries",
+      "nameEn": "Jardin des Tuileries",
+      "lat": 48.86389,
+      "lng": 2.32611,
+      "cityZh": "巴黎",
+      "cityEn": "Paris",
+      "countryZh": "法国",
+      "countryEn": "France",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "巴黎 Jardin des Tuileries 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:london:garden-museum",
+      "nameZh": "Garden Museum",
+      "nameEn": "Garden Museum",
+      "lat": 51.495,
+      "lng": -0.1202,
+      "cityZh": "伦敦",
+      "cityEn": "London",
+      "countryZh": "英国",
+      "countryEn": "United Kingdom",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "伦敦 Garden Museum 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:london:queen-elizabeth-hall",
+      "nameZh": "Queen Elizabeth Hall",
+      "nameEn": "Queen Elizabeth Hall",
+      "lat": 51.5066,
+      "lng": -0.1162,
+      "cityZh": "伦敦",
+      "cityEn": "London",
+      "countryZh": "英国",
+      "countryEn": "United Kingdom",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "伦敦 Queen Elizabeth Hall 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:sydney:sydney-tower",
+      "nameZh": "Sydney Tower",
+      "nameEn": "Sydney Tower",
+      "lat": -33.87053,
+      "lng": 151.20904,
+      "cityZh": "悉尼",
+      "cityEn": "Sydney",
+      "countryZh": "澳大利亚",
+      "countryEn": "Australia",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "悉尼 Sydney Tower 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:sydney:powerhouse-museum-temporarily-closed",
+      "nameZh": "Powerhouse Museum (Temporarily closed)",
+      "nameEn": "Powerhouse Museum (Temporarily closed)",
+      "lat": -33.8792,
+      "lng": 151.1993,
+      "cityZh": "悉尼",
+      "cityEn": "Sydney",
+      "countryZh": "澳大利亚",
+      "countryEn": "Australia",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "悉尼 Powerhouse Museum (Temporarily closed) 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:sydney:trim-the-cat",
+      "nameZh": "Trim the Cat",
+      "nameEn": "Trim the Cat",
+      "lat": -33.86634,
+      "lng": 151.21275,
+      "cityZh": "悉尼",
+      "cityEn": "Sydney",
+      "countryZh": "澳大利亚",
+      "countryEn": "Australia",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "悉尼 Trim the Cat 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:sydney:the-art-gallery-of-new-south-wales",
+      "nameZh": "The Art Gallery of New South Wales",
+      "nameEn": "The Art Gallery of New South Wales",
+      "lat": -33.86882,
+      "lng": 151.21708,
+      "cityZh": "悉尼",
+      "cityEn": "Sydney",
+      "countryZh": "澳大利亚",
+      "countryEn": "Australia",
+      "hotScore": 82,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "悉尼 The Art Gallery of New South Wales 必去",
+      "source": "wikivoyage",
+      "sourceNote": "Popular destination seed with XHS-style tags/hotScore; coords from public maps/Wikivoyage; pending live XHS refresh"
+    },
+    {
+      "id": "xhs:qingdao:qingdao-eastern-bear-park",
+      "nameZh": "青岛东方熊乐园",
+      "nameEn": "Qingdao Eastern Bear Park",
+      "lat": 36.097,
+      "lng": 120.487,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 80,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "青岛 青岛东方熊乐园 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:anshun-bridge",
+      "nameZh": "安顺廊桥",
+      "nameEn": "Anshun Bridge",
+      "lat": 30.6441,
+      "lng": 104.0834,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 80,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "成都 安顺廊桥 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:evening-bell-ringing-on-nanping-hill",
+      "nameZh": "南屏晚钟, Nanpingwanzhong",
+      "nameEn": "Evening Bell Ringing on Nanping Hill",
+      "lat": 30.23093,
+      "lng": 120.14439,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 80,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "杭州 南屏晚钟, Nanpingwanzhong 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:general-yang-hucheng-s-zhiyuan-villa",
+      "nameZh": "杨虎城将军止园别墅",
+      "nameEn": "General Yang Hucheng's Zhiyuan Villa",
+      "lat": 34.2731,
+      "lng": 108.93513,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 80,
+      "tags": [
+        "必去",
+        "打卡"
+      ],
+      "xhsKeyword": "西安 杨虎城将军止园别墅 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:du-fu-s-thatched-cottage",
+      "nameZh": "杜甫草堂",
+      "nameEn": "Du Fu's Thatched Cottage",
+      "lat": 30.66272,
+      "lng": 104.02603,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 78,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "成都 杜甫草堂 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:mid-lake-pavilion",
+      "nameZh": "Mid-Lake Pavilion",
+      "nameEn": "Mid-Lake Pavilion",
+      "lat": 30.24854,
+      "lng": 120.1397,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 78,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "杭州 Mid-Lake Pavilion 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:general-zhang-xueliang-s-official-residence",
+      "nameZh": "张学良将军公馆",
+      "nameEn": "General Zhang Xueliang's Official Residence",
+      "lat": 34.25869,
+      "lng": 108.96304,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 78,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "西安 张学良将军公馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:xiaoyushan-park",
+      "nameZh": "Xiaoyushan Park",
+      "nameEn": "Xiaoyushan Park",
+      "lat": 36.0587,
+      "lng": 120.33132,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 76,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "青岛 Xiaoyushan Park 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:jinsha-archaeological-site",
+      "nameZh": "金沙遗址",
+      "nameEn": "Jinsha Archaeological Site",
+      "lat": 30.68362,
+      "lng": 104.01106,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 76,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "成都 金沙遗址 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:tang-west-market-museum",
+      "nameZh": "大唐西市博物馆",
+      "nameEn": "Tang West Market Museum",
+      "lat": 34.24913,
+      "lng": 108.90333,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 76,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "西安 大唐西市博物馆 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:ming-prince-tombs",
+      "nameZh": "明蜀王陵",
+      "nameEn": "Ming Prince Tombs",
+      "lat": 30.64544,
+      "lng": 104.18645,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 74,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "成都 明蜀王陵 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:hangzhou:hubin-parks",
+      "nameZh": "Hubin Parks",
+      "nameEn": "Hubin Parks",
+      "lat": 30.25619,
+      "lng": 120.15664,
+      "cityZh": "杭州",
+      "cityEn": "Hangzhou",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 74,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "杭州 Hubin Parks 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:xi'an:xi-an-city-wall",
+      "nameZh": "西安城墙",
+      "nameEn": "Xi'an City Wall",
+      "lat": 34.25343,
+      "lng": 108.94234,
+      "cityZh": "西安",
+      "cityEn": "Xi'an",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 74,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "西安 西安城墙 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:zhongshan-park",
+      "nameZh": "中山公园",
+      "nameEn": "Zhongshan Park",
+      "lat": 36.06335,
+      "lng": 120.34406,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 72,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "青岛 中山公园 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:dazhu-mountain",
+      "nameZh": "大珠山",
+      "nameEn": "Dazhu Mountain",
+      "lat": 35.7914,
+      "lng": 119.9798,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 70,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "青岛 大珠山 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:yongling-mausoleum",
+      "nameZh": "永陵, 王建墓",
+      "nameEn": "Yongling Mausoleum",
+      "lat": 30.67698,
+      "lng": 104.04478,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 70,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "成都 永陵, 王建墓 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:xiaomai-island-park",
+      "nameZh": "小麦岛公园",
+      "nameEn": "Xiaomai Island Park",
+      "lat": 36.0531,
+      "lng": 120.4689,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 68,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "青岛 小麦岛公园 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:chengdu:qingyang-temple",
+      "nameZh": "青羊宫",
+      "nameEn": "Qingyang Temple",
+      "lat": 30.66252,
+      "lng": 104.0387,
+      "cityZh": "成都",
+      "cityEn": "Chengdu",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 68,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "成都 青羊宫 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    },
+    {
+      "id": "xhs:qingdao:museum-of-the-chinese-people-s-liberation-army-n",
+      "nameZh": "中国人民解放军海军博物馆, previously known as the Qingdao Naval Museum",
+      "nameEn": "Museum of the Chinese People's Liberation Army Navy",
+      "lat": 36.05456,
+      "lng": 120.32387,
+      "cityZh": "青岛",
+      "cityEn": "Qingdao",
+      "countryZh": "中国",
+      "countryEn": "China",
+      "hotScore": 66,
+      "tags": [
+        "必去",
+        "旅行"
+      ],
+      "xhsKeyword": "青岛 中国人民解放军海军博物馆, previously known as the Qingdao Naval Museum 必去",
+      "source": "wikivoyage",
+      "sourceNote": "seeded from Wikivoyage See listings; XHS-style hotScore/tags for 小红书-primary ranking"
+    }
+  ],
+  "count": 152
+}
