@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="tide-build" content="interstellar-chrome-zoom-stack-v3" />
+  <meta name="tide-build" content="interstellar-chrome-zoom-stack-v3b" />
   <!-- tide-interstellar: globe-moon-v1 -->
   <!-- tide-chrome: brand-zoom-stack-v3 -->
 <title>星际旅行 · Interstellar Travel</title>
@@ -242,7 +242,7 @@
     .leaflet-top,
     .leaflet-bottom { z-index: 1100 !important; }
     .leaflet-top.leaflet-left {
-      top: 78px;   /* topbar 16 + brand ~52 + ~10px gap */
+      top: 72px;   /* brand bottom ~70; + leaflet control margin-top 10 → ~82, small clear gap */
       left: 6px;   /* + leaflet 10px margin ≈ brand left 16px */
       z-index: 1100 !important;
     }
@@ -252,8 +252,6 @@
       overflow: hidden;
       box-shadow: var(--shadow);
       backdrop-filter: blur(12px);
-      margin-left: 10px !important;
-      margin-top: 0 !important;
       z-index: 1100 !important;
     }
     .leaflet-control-zoom a {
