@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="pdf-print-light-v13" />
-  <!-- tide-nearby: 50km-local-v2 -->
+  <meta name="tide-build" content="pdf-print-light-v14-nearest-city" />
+  <!-- tide-nearby: 50km-nearest-significant-v3-worldwide -->
   <!-- tide-photos: geo-v3-landmarks — landmark text first; demote metro/village; nearest-city fallback; strip 街道/Subdistrict -->
   <!-- tide-pin: anchor-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
@@ -1161,6 +1161,7 @@
     { nameEn: "Beijing", nameZh: "北京", regionEn: "China", regionZh: "中国", lat: 39.9, lng: 116.4, vibe: "heritage", foodEn: "Peking duck and hotpot", foodZh: "烤鸭与涮羊肉", tagsEn: ["Heritage", "Food"], tagsZh: ["古城", "美食"] },
     { nameEn: "Shanghai", nameZh: "上海", regionEn: "China", regionZh: "中国", lat: 31.23, lng: 121.47, vibe: "neon", foodEn: "Xiaolongbao and Shanghainese", foodZh: "小笼包与本帮菜", tagsEn: ["City", "Food"], tagsZh: ["都市", "美食"] },
     { nameEn: "Hong Kong", nameZh: "香港", regionEn: "China", regionZh: "中国", lat: 22.32, lng: 114.17, vibe: "neon", foodEn: "Cha chaan teng and seafood", foodZh: "茶餐厅与海鲜", tagsEn: ["City", "Food", "Beach"], tagsZh: ["都市", "美食", "海滩"] },
+    { nameEn: "Shenzhen", nameZh: "深圳", regionEn: "China", regionZh: "中国", lat: 22.54, lng: 114.06, vibe: "neon", foodEn: "Cantonese and Chaozhou cuisine", foodZh: "粤菜与潮汕菜", tagsEn: ["City", "Food"], tagsZh: ["都市", "美食"] },
     { nameEn: "Taipei", nameZh: "台北", regionEn: "Taiwan", regionZh: "中国台湾", lat: 25.03, lng: 121.57, vibe: "foodie", foodEn: "Night-market snacks and beef noodle", foodZh: "夜市小吃与牛肉面", tagsEn: ["Food", "City"], tagsZh: ["美食", "都市"] },
     { nameEn: "Bangkok", nameZh: "曼谷", regionEn: "Thailand", regionZh: "泰国", lat: 13.76, lng: 100.5, vibe: "tropical", foodEn: "Tom yum and street food", foodZh: "冬阴功与街头小吃", tagsEn: ["Food", "Heritage"], tagsZh: ["美食", "古城"] },
     { nameEn: "Chiang Mai", nameZh: "清迈", regionEn: "Thailand", regionZh: "泰国", lat: 18.79, lng: 98.98, vibe: "tropical", foodEn: "Curry and sticky rice", foodZh: "咖喱与手抓饭", tagsEn: ["Heritage", "Nature"], tagsZh: ["古城", "自然"] },
@@ -1404,6 +1405,12 @@
       { nameEn: "Central Harbor Hotel", nameZh: "中环海港酒店", areaEn: "Central", areaZh: "中环", vibeEn: "Skyline ferry", vibeZh: "天际线渡轮", price: 900, tier: "comfort" },
       { nameEn: "Peak-Side Suite", nameZh: "山顶景观套房", areaEn: "The Peak approach", areaZh: "山顶沿线", vibeEn: "Harbor glitter", vibeZh: "维港灯火", price: 2600, tier: "luxury" },
     ],
+    "Shenzhen": [
+      { nameEn: "OCT Loft Hostel", nameZh: "华侨城创意园青旅", areaEn: "Nanshan OCT", areaZh: "南山华侨城", vibeEn: "Art warehouses & metro", vibeZh: "艺术仓与地铁", price: 140, tier: "backpacker" },
+      { nameEn: "Science Park Mid Hotel", nameZh: "科技园中档酒店", areaEn: "Nanshan Science Park", areaZh: "南山科技园", vibeEn: "Near SZU / coastal parks", vibeZh: "近深大与滨海公园", price: 420, tier: "mid" },
+      { nameEn: "Futian Civic Stay", nameZh: "福田市民中心酒店", areaEn: "Futian CBD", areaZh: "福田CBD", vibeEn: "Metro hub & skyline", vibeZh: "地铁枢纽与天际线", price: 780, tier: "comfort" },
+      { nameEn: "Shenzhen Bay Suite", nameZh: "深圳湾景观套房", areaEn: "Shenzhen Bay", areaZh: "深圳湾", vibeEn: "Coastal promenade nights", vibeZh: "滨海长廊夜景", price: 1900, tier: "luxury" },
+    ],
     "Chengdu": [
       { nameEn: "Kuanzhai Alley Hostel", nameZh: "宽窄巷子青旅", areaEn: "Kuanzhai", areaZh: "宽窄巷子", vibeEn: "Tea & pandas day trips", vibeZh: "茶馆与熊猫日行", price: 120, tier: "backpacker" },
       { nameEn: "Chunxi Mid Hotel", nameZh: "春熙路中档酒店", areaEn: "Chunxi Road", areaZh: "春熙路", vibeEn: "Hotpot walking distance", vibeZh: "步行可达火锅", price: 380, tier: "mid" },
@@ -1449,6 +1456,12 @@
       { nameEn: "Bagel & lox counter", nameZh: "百吉饼三文鱼", areaEn: "Upper West", areaZh: "上西区", whyEn: "Morning ritual", whyZh: "晨间仪式", price: 55, tags: ["local"] },
       { nameEn: "Food-hall tasting", nameZh: "美食广场试吃", areaEn: "Chelsea / Midtown", areaZh: "切尔西／中城", whyEn: "Many cuisines", whyZh: "多元菜系", price: 90, tags: ["local"] },
       { nameEn: "Chef's tasting", nameZh: "主厨品尝菜单", areaEn: "West Village", areaZh: "西村", whyEn: "Reservation night", whyZh: "预约之夜", price: 600, tags: ["fine"] },
+    ],
+    "Shenzhen": [
+      { nameEn: "Chaoshan beef hotpot", nameZh: "潮汕牛肉火锅", areaEn: "Nanshan / Luohu", areaZh: "南山／罗湖", whyEn: "Fresh slices, clear broth", whyZh: "手切鲜牛清汤", price: 120, tags: ["signature", "local"] },
+      { nameEn: "Dim sum morning tea", nameZh: "早茶点心", areaEn: "Futian", areaZh: "福田", whyEn: "Cantonese carts", whyZh: "粤式早茶", price: 70, tags: ["local"] },
+      { nameEn: "Coastal seafood stall", nameZh: "滨海鲜味档", areaEn: "Shenzhen Bay / Shekou", areaZh: "深圳湾／蛇口", whyEn: "Evening seafood plates", whyZh: "夜海鲜拼盘", price: 95, tags: ["local"] },
+      { nameEn: "OCT creative-park café set", nameZh: "华侨城创意园咖啡简餐", areaEn: "OCT Loft", areaZh: "华侨城创意园", whyEn: "Light lunch between galleries", whyZh: "逛展间隙轻食", price: 55, tags: ["street", "snack"] },
     ],
   };
 
@@ -1576,6 +1589,12 @@
       { url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Hong_Kong_Harbour_Night_2019-06-11.jpg/960px-Hong_Kong_Harbour_Night_2019-06-11.jpg", artist: "Benh LIEU SONG (Flickr)", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Hong_Kong_Harbour_Night_2019-06-11.jpg", q: "landmark" },
       { url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Star_Ferry_Silver_Star_VISA_livery.jpg/960px-Star_Ferry_Silver_Star_VISA_livery.jpg", artist: "British Hker", license: "CC BY 4.0", source: "https://commons.wikimedia.org/wiki/File:Star_Ferry_Silver_Star_VISA_livery.jpg", q: "landmark" },
       { url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Cha_Chaan_Teng_7267.JPG/960px-Cha_Chaan_Teng_7267.JPG", artist: "T1NH0 (talk)", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Cha_Chaan_Teng_7267.JPG", q: "food" },
+    ],
+    "Shenzhen": [
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Shenzhen_Civic_Center-20110101-RM-125000.jpg/960px-Shenzhen_Civic_Center-20110101-RM-125000.jpg", artist: "Ermell", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Shenzhen_Civic_Center-20110101-RM-125000.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Night_of_Civic_Center_Shenzhen_from_Lianhua_Mountain.jpg/960px-Night_of_Civic_Center_Shenzhen_from_Lianhua_Mountain.jpg", artist: "Sparktour", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Night_of_Civic_Center_Shenzhen_from_Lianhua_Mountain.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/7/7c/Shenzhen%2C_with_Eiffel_tower_in_the_background.jpg", artist: "Steve Jurvetson", license: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Shenzhen,_with_Eiffel_tower_in_the_background.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/WINDOWS_OF_THE_WORLD_SHENZHEN_%2837%29.jpg/960px-WINDOWS_OF_THE_WORLD_SHENZHEN_%2837%29.jpg", artist: "Dinkun Chen", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:WINDOWS_OF_THE_WORLD_SHENZHEN_(37).jpg", q: "landmark" },
     ],
     "Sydney": [
       { url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Sydney_%28AU%29%2C_Opera_House_--_2019_--_3054.jpg/960px-Sydney_%28AU%29%2C_Opera_House_--_2019_--_3054.jpg", artist: "Dietmar Rabich", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Sydney_(AU),_Opera_House_--_2019_--_3054.jpg", q: "landmark" },
@@ -2387,6 +2406,68 @@
     return { city: best, distanceKm: bestD };
   }
 
+  /* Worldwide: all curated CITIES within km, nearest first — no fame/hot-city bias */
+  function curatedCitiesWithinKm(lat, lng, km) {
+    const out = [];
+    for (let i = 0; i < CITIES.length; i++) {
+      const c = CITIES[i];
+      const d = haversine(lat, lng, c.lat, c.lng);
+      if (d <= km) out.push({ city: c, distanceKm: d });
+    }
+    out.sort(function (a, b) { return a.distanceKm - b.distanceKm; });
+    return out;
+  }
+
+  function matchCuratedCityName(str) {
+    const raw = String(str || "").trim();
+    if (!raw) return null;
+    const lower = raw.toLowerCase();
+    for (let i = 0; i < CITIES.length; i++) {
+      const c = CITIES[i];
+      const en = String(c.nameEn || "").toLowerCase();
+      const zh = String(c.nameZh || "");
+      if (lower === en || raw === zh) return c;
+      if (en && lower.indexOf(en) !== -1) return c;
+      if (zh && raw.indexOf(zh) !== -1) return c;
+    }
+    return null;
+  }
+
+  /**
+   * Worldwide nearest-significant-city rule:
+   * Among curated CITIES within NEARBY_TOURISM_KM of the pin, ALWAYS pick the nearest.
+   * Nominatim city/town/municipality/county may confirm a curated match within 50 km,
+   * but never overrides a closer curated city (no farther/more-famous bias).
+   */
+  function resolveSignificantCity(lat, lng, address) {
+    const nearList = curatedCitiesWithinKm(lat, lng, NEARBY_TOURISM_KM);
+    const pure = nearestCity(lat, lng);
+    if (!nearList.length) {
+      return { city: null, distanceKm: pure.distanceKm, nearList: nearList, geoMatched: null };
+    }
+    let chosen = nearList[0];
+    let geoMatched = null;
+    if (address) {
+      const fields = [address.city, address.town, address.municipality, address.county];
+      for (let i = 0; i < fields.length; i++) {
+        const hitCity = matchCuratedCityName(fields[i]);
+        if (!hitCity) continue;
+        for (let j = 0; j < nearList.length; j++) {
+          if (nearList[j].city.nameEn === hitCity.nameEn) {
+            geoMatched = nearList[j];
+            break;
+          }
+        }
+        if (geoMatched) break;
+      }
+    }
+    /* Prefer geocoded curated city only when it is not farther than the nearest */
+    if (geoMatched && geoMatched.distanceKm <= chosen.distanceKm + 0.05) {
+      chosen = geoMatched;
+    }
+    return { city: chosen.city, distanceKm: chosen.distanceKm, nearList: nearList, geoMatched: geoMatched };
+  }
+
   function inferVibeFromLatLng(lat, lng) {
     if (lat > 60 || lat < -45) return "arctic";
     if (Math.abs(lat) < 23.5) return "tropical";
@@ -2507,8 +2588,8 @@
   }
 
   async function resolvePlace(lat, lng) {
-    const near = nearestCity(lat, lng);
-    let geoName = null, geoRegion = null;
+    const pureNear = nearestCity(lat, lng);
+    let geoName = null, geoRegion = null, address = null;
     try {
       const ctrl = new AbortController();
       const tmo = setTimeout(() => ctrl.abort(), 3500);
@@ -2521,21 +2602,23 @@
       if (res.ok) {
         const data = await res.json();
         const a = data.address || {};
+        address = a;
         geoName = a.neighbourhood || a.suburb || a.village || a.hamlet || a.town ||
           a.municipality || a.city || a.county || a.state || data.name || null;
         geoRegion = a.country || a.state || null;
       }
     } catch (_) {}
 
-    const c = near.city;
+    /* Worldwide: nearest curated city within 50 km wins (photos / chip / itinerary binding) */
+    const significant = resolveSignificantCity(lat, lng, address);
+    const c = significant.city || pureNear.city;
+    const distanceKm = significant.city ? significant.distanceKm : pureNear.distanceKm;
     const display = geoName || (fmtCoord(lat) + ", " + fmtCoord(lng));
     const localKey = localTourismKey(geoName, lat, lng);
     const vibe = inferVibeFromLatLng(lat, lng);
     const genericFoodEn = "Local markets and regional dishes";
     const genericFoodZh = "当地市集与地方菜";
-    /* Exact city-name match still stays local by default; approx unless name equals curated */
-    const exactCity = !!(geoName && (geoName === c.nameEn || geoName === c.nameZh));
-    const withinNearby = near.distanceKm <= NEARBY_TOURISM_KM;
+    const withinNearby = !!(significant.city);
     const place = {
       name: display, nameEn: display, nameZh: display,
       region: geoRegion || t("farAway"), regionEn: geoRegion || "Far away", regionZh: geoRegion || "远方",
@@ -2550,11 +2633,12 @@
       nearestEn: withinNearby ? c.nameEn : display,
       cityKey: localKey, _cityRef: null,
       _nearestCity: withinNearby ? c : null,
-      distanceKm: near.distanceKm,
+      distanceKm: distanceKm,
+      _curatedNearList: significant.nearList || [],
     };
-    /* Optional 「附近热门」chip only if curated city within 50 km */
+    /* Optional 「附近热门」chip: nearest significant curated city within 50 km (worldwide) */
     if (withinNearby) {
-      place._nearbyPopular = { city: c, distanceKm: near.distanceKm };
+      place._nearbyPopular = { city: c, distanceKm: distanceKm };
     }
     return place;
   }
@@ -2920,6 +3004,25 @@
       merged.food = merged.food.concat(parsed.food);
     }
     const byDist = function (a, b) { return a.distKm - b.distKm; };
+    /* Worldwide multi-city bias: when 2+ curated cities sit within 50 km of the pin,
+       drop attractions that hug a farther curated city more than the pin / nearest city. */
+    const nearCurated = curatedCitiesWithinKm(lat, lng, NEARBY_TOURISM_KM);
+    let attractions = dedupePois(merged.attractions);
+    if (nearCurated.length >= 2) {
+      const nearestC = nearCurated[0].city;
+      const fartherCities = nearCurated.slice(1).map(function (x) { return x.city; });
+      attractions = attractions.filter(function (p) {
+        if (typeof p.lat !== "number" || typeof p.lng !== "number") return true;
+        const distPin = (typeof p.distKm === "number") ? p.distKm : haversine(lat, lng, p.lat, p.lng);
+        const distNearestCity = haversine(p.lat, p.lng, nearestC.lat, nearestC.lng);
+        for (let fi = 0; fi < fartherCities.length; fi++) {
+          const fc = fartherCities[fi];
+          const distFar = haversine(p.lat, p.lng, fc.lat, fc.lng);
+          if (distFar < distPin || distFar < distNearestCity) return false;
+        }
+        return true;
+      });
+    }
     const attractionScore = function (p) {
       const n = String((p && p.name) || "");
       const tags = (p && p.tags) || {};
@@ -2929,7 +3032,8 @@
       if (tags.tourism === "attraction" || tags.historic) s += 3;
       if (/东方明珠|外滩|陆家嘴|陸家嘴|pearl|bund|lujiazui|tower|museum|palace|temple|公园|广场/i.test(n)) s += 10;
       if (/村|village|hamlet|residence|小区|社區|社区|residential/i.test(n)) s -= 12;
-      if (typeof p.distKm === "number") s -= Math.min(6, p.distKm * 0.15);
+      /* Strong distance penalty: nearer POIs beat distant famous ones (worldwide) */
+      if (typeof p.distKm === "number") s -= p.distKm * 0.8;
       return s;
     };
     const byAttraction = function (a, b) {
@@ -2938,7 +3042,7 @@
       return a.distKm - b.distKm;
     };
     return {
-      attractions: dedupePois(merged.attractions).sort(byAttraction),
+      attractions: attractions.sort(byAttraction),
       lodging: dedupePois(merged.lodging).sort(byDist),
       food: dedupePois(merged.food).sort(byDist),
     };
@@ -2950,7 +3054,7 @@
 
   async function fetchLocalPois(lat, lng, radiusM) {
     const maxR = Math.max(1000, Math.min(50000, Math.round(radiusM == null ? 50000 : radiusM)));
-    const cacheKey = Math.round(lat * 100) + "," + Math.round(lng * 100) + ":v3:" + Math.round(maxR / 1000);
+    const cacheKey = Math.round(lat * 100) + "," + Math.round(lng * 100) + ":v4-nearest:" + Math.round(maxR / 1000);
     const cached = poiMemCache[cacheKey];
     if (cached) {
       const ttl = (cached.data && cached.data.ok && usableLodgeFoodCount(cached.data) > 0)
