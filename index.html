@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="pdf-print-light-v14-nearest-city" />
+  <meta name="tide-build" content="pdf-print-light-v15-curated-landmarks" />
   <!-- tide-nearby: 50km-nearest-significant-v3-worldwide -->
   <!-- tide-photos: geo-v3-landmarks — landmark text first; demote metro/village; nearest-city fallback; strip 街道/Subdistrict -->
   <!-- tide-pin: anchor-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
   <!-- tide-live-pois: overpass-v3-fast -->
+  <!-- tide-landmarks: curated-v1 — seed real city attractions when Overpass sparse -->
   <!-- tide-plan-speed: parallel-v1 -->
   <!-- tide-pinch-handoff: touch-v1 -->
   <!-- tide-chrome: brand-zoom-sep-v1 -->
@@ -1605,6 +1606,111 @@
       { url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/54/Chengdu-pandas-d10.jpg/960px-Chengdu-pandas-d10.jpg", artist: "Colegota", license: "CC BY-SA 2.5 es", source: "https://commons.wikimedia.org/wiki/File:Chengdu-pandas-d10.jpg", q: "landmark" },
       { url: "https://upload.wikimedia.org/wikipedia/commons/1/13/Chengdu_Hotpot.jpg", artist: "Prince Roy", license: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Chengdu_Hotpot.jpg", q: "food" },
       { url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/26/Chengdu_Kuanzhai_Alley_Touristic_Spot_Relics_%E6%88%90%E9%83%BD%E5%AE%BD%E7%AA%84%E5%B7%B7%E5%AD%90%E6%96%87%E7%89%A9%E5%8F%91%E6%8E%98%E9%81%97%E4%BA%A7.jpg/960px-Chengdu_Kuanzhai_Alley_Touristic_Spot_Relics_%E6%88%90%E9%83%BD%E5%AE%BD%E7%AA%84%E5%B7%B7%E5%AD%90%E6%96%87%E7%89%A9%E5%8F%91%E6%8E%98%E9%81%97%E4%BA%A7.jpg", artist: "Breaknet2025", license: "CC BY 4.0", source: "https://commons.wikimedia.org/wiki/File:Chengdu_Kuanzhai_Alley_Touristic_Spot_Relics_%E6%88%90%E9%83%BD%E5%AE%BD%E7%AA%84%E5%B7%B7%E5%AD%90%E6%96%87%E7%89%A9%E5%8F%91%E6%8E%98%E9%81%97%E4%BA%A7.jpg", q: "landmark" },
+    ],
+  };
+
+
+  /* Curated tourist landmarks per significant city — seed when Overpass returns few attractions */
+  const LANDMARKS_BY_CITY = {
+    "Beijing": [
+      { nameEn: "Forbidden City", nameZh: "故宫", lat: 39.9163, lng: 116.3972, kind: "historic" },
+      { nameEn: "Temple of Heaven", nameZh: "天坛", lat: 39.8822, lng: 116.4066, kind: "historic" },
+      { nameEn: "Summer Palace", nameZh: "颐和园", lat: 39.9999, lng: 116.2755, kind: "park" },
+      { nameEn: "Great Wall at Badaling", nameZh: "八达岭长城", lat: 40.3540, lng: 116.0200, kind: "historic" },
+      { nameEn: "Tiananmen Square", nameZh: "天安门广场", lat: 39.9055, lng: 116.3976, kind: "attraction" },
+      { nameEn: "Beihai Park", nameZh: "北海公园", lat: 39.9250, lng: 116.3890, kind: "park" },
+    ],
+    "Shanghai": [
+      { nameEn: "The Bund", nameZh: "外滩", lat: 31.2400, lng: 121.4900, kind: "viewpoint" },
+      { nameEn: "Oriental Pearl Tower", nameZh: "东方明珠", lat: 31.2397, lng: 121.4998, kind: "attraction" },
+      { nameEn: "Yu Garden", nameZh: "豫园", lat: 31.2272, lng: 121.4920, kind: "historic" },
+      { nameEn: "Lujiazui Skyline", nameZh: "陆家嘴", lat: 31.2390, lng: 121.5050, kind: "viewpoint" },
+      { nameEn: "Jing'an Temple", nameZh: "静安寺", lat: 31.2230, lng: 121.4450, kind: "historic" },
+      { nameEn: "French Concession Walk", nameZh: "法租界梧桐街道", lat: 31.2100, lng: 121.4500, kind: "attraction" },
+    ],
+    "Tokyo": [
+      { nameEn: "Senso-ji", nameZh: "浅草寺", lat: 35.7148, lng: 139.7967, kind: "historic" },
+      { nameEn: "Tokyo Skytree", nameZh: "东京晴空塔", lat: 35.7101, lng: 139.8107, kind: "attraction" },
+      { nameEn: "Meiji Shrine", nameZh: "明治神宫", lat: 35.6764, lng: 139.6993, kind: "historic" },
+      { nameEn: "Shibuya Crossing", nameZh: "涩谷十字路口", lat: 35.6595, lng: 139.7005, kind: "attraction" },
+      { nameEn: "Imperial Palace East Gardens", nameZh: "皇居东御苑", lat: 35.6860, lng: 139.7570, kind: "park" },
+      { nameEn: "teamLab Borderless", nameZh: "teamLab无界", lat: 35.6270, lng: 139.7820, kind: "museum" },
+    ],
+    "Paris": [
+      { nameEn: "Eiffel Tower", nameZh: "埃菲尔铁塔", lat: 48.8584, lng: 2.2945, kind: "attraction" },
+      { nameEn: "Louvre Museum", nameZh: "卢浮宫", lat: 48.8606, lng: 2.3376, kind: "museum" },
+      { nameEn: "Notre-Dame Cathedral", nameZh: "巴黎圣母院", lat: 48.8530, lng: 2.3499, kind: "historic" },
+      { nameEn: "Montmartre & Sacré-Cœur", nameZh: "蒙马特圣心堂", lat: 48.8867, lng: 2.3431, kind: "historic" },
+      { nameEn: "Musée d'Orsay", nameZh: "奥赛博物馆", lat: 48.8600, lng: 2.3266, kind: "museum" },
+      { nameEn: "Seine River Walk", nameZh: "塞纳河畔漫步", lat: 48.8570, lng: 2.3400, kind: "viewpoint" },
+    ],
+    "New York": [
+      { nameEn: "Central Park", nameZh: "中央公园", lat: 40.7829, lng: -73.9654, kind: "park" },
+      { nameEn: "Statue of Liberty", nameZh: "自由女神像", lat: 40.6892, lng: -74.0445, kind: "attraction" },
+      { nameEn: "Times Square", nameZh: "时代广场", lat: 40.7580, lng: -73.9855, kind: "attraction" },
+      { nameEn: "Metropolitan Museum of Art", nameZh: "大都会艺术博物馆", lat: 40.7794, lng: -73.9632, kind: "museum" },
+      { nameEn: "Brooklyn Bridge", nameZh: "布鲁克林大桥", lat: 40.7061, lng: -73.9969, kind: "viewpoint" },
+      { nameEn: "Empire State Building", nameZh: "帝国大厦", lat: 40.7484, lng: -73.9857, kind: "attraction" },
+    ],
+    "London": [
+      { nameEn: "Tower Bridge", nameZh: "塔桥", lat: 51.5055, lng: -0.0754, kind: "historic" },
+      { nameEn: "British Museum", nameZh: "大英博物馆", lat: 51.5194, lng: -0.1270, kind: "museum" },
+      { nameEn: "Big Ben & Westminster", nameZh: "大本钟与西敏寺", lat: 51.5007, lng: -0.1246, kind: "historic" },
+      { nameEn: "London Eye", nameZh: "伦敦眼", lat: 51.5033, lng: -0.1196, kind: "attraction" },
+      { nameEn: "Hyde Park", nameZh: "海德公园", lat: 51.5073, lng: -0.1657, kind: "park" },
+      { nameEn: "Tate Modern", nameZh: "泰特现代美术馆", lat: 51.5076, lng: -0.0994, kind: "museum" },
+    ],
+    "Rome": [
+      { nameEn: "Colosseum", nameZh: "斗兽场", lat: 41.8902, lng: 12.4922, kind: "historic" },
+      { nameEn: "Trevi Fountain", nameZh: "特莱维喷泉", lat: 41.9009, lng: 12.4833, kind: "historic" },
+      { nameEn: "Vatican Museums", nameZh: "梵蒂冈博物馆", lat: 41.9065, lng: 12.4536, kind: "museum" },
+      { nameEn: "Pantheon", nameZh: "万神殿", lat: 41.8986, lng: 12.4769, kind: "historic" },
+      { nameEn: "Roman Forum", nameZh: "古罗马广场", lat: 41.8925, lng: 12.4853, kind: "historic" },
+      { nameEn: "Piazza Navona", nameZh: "纳沃纳广场", lat: 41.8992, lng: 12.4731, kind: "attraction" },
+    ],
+    "Bangkok": [
+      { nameEn: "Grand Palace", nameZh: "大皇宫", lat: 13.7500, lng: 100.4913, kind: "historic" },
+      { nameEn: "Wat Arun", nameZh: "郑王庙", lat: 13.7437, lng: 100.4888, kind: "historic" },
+      { nameEn: "Wat Pho", nameZh: "卧佛寺", lat: 13.7465, lng: 100.4927, kind: "historic" },
+      { nameEn: "Chatuchak Weekend Market", nameZh: "恰图恰周末市场", lat: 13.7999, lng: 100.5501, kind: "attraction" },
+      { nameEn: "Chao Phraya River Pier", nameZh: "湄南河码头", lat: 13.7563, lng: 100.5018, kind: "viewpoint" },
+      { nameEn: "Jim Thompson House", nameZh: "吉姆汤普森故居", lat: 13.7493, lng: 100.5285, kind: "museum" },
+    ],
+    "Hong Kong": [
+      { nameEn: "Victoria Peak", nameZh: "太平山顶", lat: 22.2759, lng: 114.1455, kind: "viewpoint" },
+      { nameEn: "Star Ferry Pier", nameZh: "天星码头", lat: 22.2930, lng: 114.1680, kind: "attraction" },
+      { nameEn: "Tsim Sha Tsui Promenade", nameZh: "尖沙咀海滨长廊", lat: 22.2940, lng: 114.1740, kind: "viewpoint" },
+      { nameEn: "Man Mo Temple", nameZh: "文武庙", lat: 22.2840, lng: 114.1502, kind: "historic" },
+      { nameEn: "Avenue of Stars", nameZh: "星光大道", lat: 22.2936, lng: 114.1747, kind: "viewpoint" },
+      { nameEn: "Lan Kwai Fong", nameZh: "兰桂坊", lat: 22.2808, lng: 114.1555, kind: "attraction" },
+    ],
+    "Shenzhen": [
+      { nameEn: "Shenzhen Bay Park", nameZh: "深圳湾公园", lat: 22.5165, lng: 113.9940, kind: "park" },
+      { nameEn: "Window of the World", nameZh: "世界之窗", lat: 22.5369, lng: 113.9723, kind: "theme_park" },
+      { nameEn: "Lianhuashan Park", nameZh: "莲花山公园", lat: 22.5517, lng: 114.0590, kind: "park" },
+      { nameEn: "Shenzhen Talent Park", nameZh: "深圳人才公园", lat: 22.5160, lng: 113.9895, kind: "park" },
+      { nameEn: "Dameisha Beach", nameZh: "大梅沙", lat: 22.5958, lng: 114.3095, kind: "beach" },
+      { nameEn: "OCT East", nameZh: "东部华侨城", lat: 22.6260, lng: 114.2880, kind: "theme_park" },
+      { nameEn: "Shenzhen Safari Park", nameZh: "深圳野生动物园", lat: 22.6048, lng: 113.9745, kind: "zoo" },
+      { nameEn: "Civic Center", nameZh: "市民中心", lat: 22.5430, lng: 114.0580, kind: "attraction" },
+      { nameEn: "Coastal City", nameZh: "海岸城", lat: 22.5175, lng: 113.9370, kind: "attraction" },
+      { nameEn: "Happy Valley Shenzhen", nameZh: "欢乐谷", lat: 22.5400, lng: 113.9860, kind: "theme_park" },
+    ],
+    "Sydney": [
+      { nameEn: "Sydney Opera House", nameZh: "悉尼歌剧院", lat: -33.8568, lng: 151.2153, kind: "attraction" },
+      { nameEn: "Sydney Harbour Bridge", nameZh: "悉尼海港大桥", lat: -33.8523, lng: 151.2108, kind: "viewpoint" },
+      { nameEn: "Bondi Beach", nameZh: "邦迪海滩", lat: -33.8915, lng: 151.2767, kind: "beach" },
+      { nameEn: "The Rocks", nameZh: "岩石区", lat: -33.8599, lng: 151.2090, kind: "historic" },
+      { nameEn: "Royal Botanic Garden", nameZh: "皇家植物园", lat: -33.8642, lng: 151.2166, kind: "park" },
+      { nameEn: "Darling Harbour", nameZh: "达令港", lat: -33.8740, lng: 151.2000, kind: "attraction" },
+    ],
+    "Chengdu": [
+      { nameEn: "Chengdu Research Base of Giant Panda", nameZh: "成都大熊猫繁育研究基地", lat: 30.7389, lng: 104.1450, kind: "zoo" },
+      { nameEn: "Kuanzhai Alley", nameZh: "宽窄巷子", lat: 30.6690, lng: 104.0530, kind: "historic" },
+      { nameEn: "Jinli Ancient Street", nameZh: "锦里古街", lat: 30.6460, lng: 104.0480, kind: "historic" },
+      { nameEn: "Wuhou Shrine", nameZh: "武侯祠", lat: 30.6465, lng: 104.0470, kind: "historic" },
+      { nameEn: "Chunxi Road", nameZh: "春熙路", lat: 30.6560, lng: 104.0810, kind: "attraction" },
+      { nameEn: "People's Park Teahouse", nameZh: "人民公园茶馆", lat: 30.6600, lng: 104.0620, kind: "park" },
     ],
   };
 
@@ -3217,13 +3323,126 @@
     return "Spend the afternoon at \"" + poi.name + "\" (" + type + ", ~" + km + " km) — stay as long as access allows.";
   }
 
-  function themeFromAttractions(attrs, dayIdx, langZh) {
-    if (!attrs || !attrs.length) {
-      return langZh ? "稀疏地带探索" : "Sparse-area explore";
+
+  function resolveLandmarkCityKey(place, cityKeyHint, lat, lng) {
+    if (place && place._cityRef && place._cityRef.nameEn && LANDMARKS_BY_CITY[place._cityRef.nameEn]) {
+      return place._cityRef.nameEn;
     }
-    const p = attrs[Math.min(dayIdx, attrs.length - 1)];
-    const type = poiTypeNote(p.tags, langZh);
-    return langZh ? (p.name + " · " + type) : (p.name + " · " + type);
+    if (place && place._nearestCity && place._nearestCity.nameEn && LANDMARKS_BY_CITY[place._nearestCity.nameEn]) {
+      const d = (typeof place.distanceKm === "number")
+        ? place.distanceKm
+        : haversine(lat, lng, place._nearestCity.lat, place._nearestCity.lng);
+      if (d <= NEARBY_TOURISM_KM) return place._nearestCity.nameEn;
+    }
+    const hint = String(cityKeyHint || "").replace(/^local:/, "");
+    if (hint && LANDMARKS_BY_CITY[hint]) return hint;
+    if (isFinite(Number(lat)) && isFinite(Number(lng))) {
+      const near = nearestCity(lat, lng);
+      if (near && near.city && near.distanceKm <= NEARBY_TOURISM_KM && LANDMARKS_BY_CITY[near.city.nameEn]) {
+        return near.city.nameEn;
+      }
+    }
+    return null;
+  }
+
+  function landmarkKindToTourism(kind) {
+    const k = String(kind || "attraction");
+    if (k === "museum" || k === "viewpoint" || k === "zoo" || k === "theme_park" || k === "gallery") return k;
+    if (k === "beach") return "attraction";
+    if (k === "park") return "attraction";
+    if (k === "historic") return "attraction";
+    return "attraction";
+  }
+
+  function landmarkToPoi(lm, pinLat, pinLng) {
+    const lat = Number(lm.lat), lng = Number(lm.lng);
+    const distKm = (isFinite(pinLat) && isFinite(pinLng) && isFinite(lat) && isFinite(lng))
+      ? haversine(pinLat, pinLng, lat, lng)
+      : 0;
+    const nameZh = lm.nameZh || lm.nameEn;
+    const nameEn = lm.nameEn || lm.nameZh;
+    const display = (typeof lang !== "undefined" && lang === "zh") ? nameZh : nameEn;
+    const tour = landmarkKindToTourism(lm.kind);
+    const tags = {
+      tourism: tour,
+      name: display,
+      "name:en": nameEn,
+      "name:zh": nameZh,
+    };
+    if (lm.kind === "historic") tags.historic = "yes";
+    if (lm.kind === "beach") tags.natural = "beach";
+    if (lm.kind === "park") tags.leisure = "park";
+    return {
+      name: display,
+      nameZh: nameZh,
+      nameEn: nameEn,
+      lat: lat,
+      lng: lng,
+      distKm: distKm,
+      typeKey: poiTypeKey(tags),
+      tags: tags,
+      areaHint: "",
+      unnamed: false,
+      curated: true,
+    };
+  }
+
+  function curatedLandmarksAsPois(cityKeyName, pinLat, pinLng) {
+    const list = (cityKeyName && LANDMARKS_BY_CITY[cityKeyName]) || [];
+    return list.map(function (lm) { return landmarkToPoi(lm, pinLat, pinLng); })
+      .sort(function (a, b) { return a.distKm - b.distKm; });
+  }
+
+  /** Merge curated landmarks when live Overpass attractions are sparse (< 3). */
+  function mergeCuratedLandmarks(attrs, cityKeyName, pinLat, pinLng) {
+    const live = (attrs || []).slice();
+    const curated = curatedLandmarksAsPois(cityKeyName, pinLat, pinLng);
+    if (!curated.length) return live;
+    if (live.length >= 3) {
+      /* still prefer real names; keep live order but allow theme richness */
+      return live;
+    }
+    const seen = Object.create(null);
+    live.forEach(function (p) {
+      const k = String((p && (p.nameZh || p.nameEn || p.name)) || "").toLowerCase();
+      if (k) seen[k] = true;
+    });
+    const out = live.slice();
+    for (let i = 0; i < curated.length; i++) {
+      const c = curated[i];
+      const k1 = String(c.nameZh || "").toLowerCase();
+      const k2 = String(c.nameEn || "").toLowerCase();
+      if ((k1 && seen[k1]) || (k2 && seen[k2])) continue;
+      out.push(c);
+      if (k1) seen[k1] = true;
+      if (k2) seen[k2] = true;
+    }
+    return out;
+  }
+
+  function themeFromAttractions(attrs, dayIdx, langZh, cityKeyHint, pinLat, pinLng) {
+    let list = attrs;
+    if (!list || !list.length) {
+      const ck = resolveLandmarkCityKey(null, cityKeyHint, pinLat, pinLng);
+      list = curatedLandmarksAsPois(ck, pinLat, pinLng);
+    }
+    if (!list || !list.length) {
+      const label = String(cityKeyHint || "").replace(/^local:/, "").trim();
+      if (label) {
+        return langZh ? (label + "城市漫步") : (label + " city stroll");
+      }
+      /* Far from curated cities only — never 「稀疏地带探索」 near LANDMARKS_BY_CITY */
+      return langZh ? "本地实地探索" : "Local on-site explore";
+    }
+    const i = Math.min(Math.max(0, dayIdx | 0), list.length - 1);
+    const a = list[i];
+    const b = list.length > 1 ? list[(i + 1) % list.length] : null;
+    const nameA = (langZh ? (a.nameZh || a.name) : (a.nameEn || a.name)) || a.name;
+    if (b) {
+      const nameB = (langZh ? (b.nameZh || b.name) : (b.nameEn || b.name)) || b.name;
+      if (nameB && nameB !== nameA) return nameA + " · " + nameB;
+    }
+    return nameA;
   }
 
   function tipFromPois(pois, langZh) {
@@ -3272,11 +3491,19 @@
         : (place.cityKey || place.nameEn || "local"));
     /* Wikimedia: district + nearest curated city (e.g. 陆家嘴 Shanghai) so landmarks beat metro geosearch */
     const localLabel = cleanPlaceSearchName(place.nameEn || place.name || "");
-    const searchName = nearCity
+    const photoLandmarkKey = resolveLandmarkCityKey(place, (nearCity && nearCity.nameEn) || cityKey, lat, lng);
+    const photoLandmark = (photoLandmarkKey && LANDMARKS_BY_CITY[photoLandmarkKey] && LANDMARKS_BY_CITY[photoLandmarkKey][0]) || null;
+    const landmarkPhotoHint = photoLandmark
+      ? ((lang === "zh" ? photoLandmark.nameZh : photoLandmark.nameEn) || photoLandmark.nameEn)
+      : "";
+    let searchName = nearCity
       ? ((localLabel && localLabel.toLowerCase() !== String(nearCity.nameEn).toLowerCase())
           ? (localLabel + " " + nearCity.nameEn)
           : nearCity.nameEn)
       : (localLabel || cityKey);
+    if (landmarkPhotoHint && String(searchName).indexOf(landmarkPhotoHint) === -1) {
+      searchName = landmarkPhotoHint + " " + (nearCity ? nearCity.nameEn : searchName);
+    }
 
     /* Always fetch live POIs around click coords (not curated city DB); parallel with photos */
     const [pois, photos] = await Promise.all([
@@ -3319,7 +3546,12 @@
         : ("Sights, stays, and food are live OpenStreetMap finds within ~" + Math.round(NEARBY_TOURISM_KM) + " km of your pin.")),
     ];
     const foodNotes = t("foodNotes");
-    const attrs = pois.attractions || [];
+    const landmarkCityKey = resolveLandmarkCityKey(place, cityKey, lat, lng);
+    let attrs = pois.attractions || [];
+    /* When Overpass is sparse (< 3) OR theme would be empty, seed curated city landmarks */
+    if (attrs.length < 3 || (landmarkCityKey && !attrs.length)) {
+      attrs = mergeCuratedLandmarks(attrs, landmarkCityKey, lat, lng);
+    }
     const daysOut = [];
     for (let d = 1; d <= days; d++) {
       const seed = seed0 + d * 17;
@@ -3335,7 +3567,7 @@
       else evening = evening + " " + act;
       const tipBase = tipFromPois(pois, lang === "zh");
       daysOut.push({
-        day: d, theme: themeFromAttractions(attrs, d - 1, lang === "zh"),
+        day: d, theme: themeFromAttractions(attrs, d - 1, lang === "zh", landmarkCityKey || cityKey, lat, lng),
         morning: morning, afternoon: afternoon, evening: evening,
         tip: tipBase,
         foodNote: d === 1
@@ -4111,7 +4343,11 @@
       const photos = photoByStop[ck] || fallbackPhotos(ck, 9);
       const pois = poisByStop[ck + "|" + stop.lat + "," + stop.lng] ||
         { attractions: [], lodging: [], food: [], sparse: true };
-      const attrs = pois.attractions || [];
+      const stopLandmarkKey = resolveLandmarkCityKey(stop, ck, stop.lat, stop.lng);
+      let attrs = pois.attractions || [];
+      if (attrs.length < 3 || (stopLandmarkKey && !attrs.length)) {
+        attrs = mergeCuratedLandmarks(attrs, stopLandmarkKey, stop.lat, stop.lng);
+      }
       if (i > 0) {
         parts.push({
           type: "day", day: dayNum, title: t("transferTitle", { city: stop.name }), theme: t("transferTheme"),
@@ -4149,7 +4385,7 @@
       parts.push({
         type: "day", day: dayNum,
         title: stop.name + (stop.region ? " · " + stop.region : ""),
-        theme: themeFromAttractions(attrs, 0, lang === "zh"), numClass: i === 0 ? "teal" : "",
+        theme: themeFromAttractions(attrs, 0, lang === "zh", stopLandmarkKey || ck, stop.lat, stop.lng), numClass: i === 0 ? "teal" : "",
         morning: activityFromAttraction(a0, "morning", lang === "zh") + " " + activityNoteForTier(tier),
         afternoon: activityFromAttraction(a1, "afternoon", lang === "zh"),
         evening: activityFromAttraction(a2, "evening", lang === "zh"),
