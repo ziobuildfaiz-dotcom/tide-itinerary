@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="pdf-print-light-v15-curated-landmarks" />
+  <meta name="tide-build" content="chrome-zoom-stack-v2-clear-markers" />
   <!-- tide-nearby: 50km-nearest-significant-v3-worldwide -->
   <!-- tide-photos: geo-v3-landmarks — landmark text first; demote metro/village; nearest-city fallback; strip 街道/Subdistrict -->
   <!-- tide-pin: anchor-v1 -->
@@ -11,7 +11,7 @@
   <!-- tide-landmarks: curated-v1 — seed real city attractions when Overpass sparse -->
   <!-- tide-plan-speed: parallel-v1 -->
   <!-- tide-pinch-handoff: touch-v1 -->
-  <!-- tide-chrome: brand-zoom-sep-v1 -->
+  <!-- tide-chrome: brand-zoom-stack-v2 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tide Itinerary</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -452,14 +452,28 @@
       font-size: 10px !important;
     }
     .leaflet-control-attribution a { color: rgba(232, 213, 183, 0.7) !important; }
-    .leaflet-control-zoom a {
-      background: rgba(11, 31, 51, 0.9) !important; color: var(--sand) !important;
-      border-color: rgba(232, 213, 183, 0.2) !important;
-    }
-    /* tide-chrome: brand-zoom-sep-v1 — clear brand pill; keep zoom top-left (hint owns top-right) */
+    /* tide-chrome: brand-zoom-stack-v2 — zoom stacked under brand pill; clear gap so markers never sit under +/- */
     .leaflet-top.leaflet-left {
-      top: 70px;
+      top: 96px;   /* brand ~18+52, plus ~26px gap — clears pin body under chrome */
+      left: 8px;   /* align control left edge with brand pill (18px) */
     }
+    .leaflet-control-zoom {
+      border: 1px solid rgba(232, 213, 183, 0.22) !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+    .leaflet-control-zoom a {
+      width: 34px !important; height: 34px !important; line-height: 34px !important;
+      background: rgba(11, 31, 51, 0.92) !important; color: var(--sand) !important;
+      border-bottom-color: rgba(232, 213, 183, 0.18) !important;
+      font-size: 16px !important; font-weight: 600;
+    }
+    .leaflet-control-zoom a:hover {
+      background: rgba(26, 58, 82, 0.95) !important; color: var(--foam) !important;
+    }
+    .leaflet-control-zoom a:last-child { border-bottom: none !important; }
 
     /* Budget panel */
     .budget-panel {
@@ -646,7 +660,7 @@
 
   <div id="map" aria-label="World map"></div>
 
-  <!-- tide-chrome: brand-zoom-sep-v1 -->
+  <!-- tide-chrome: brand-zoom-stack-v2 -->
   <div class="brand" aria-hidden="true">
     <div class="brand-mark">
       <svg viewBox="0 0 24 24" fill="none" stroke="#F7F3EB" stroke-width="2" stroke-linecap="round">
@@ -2081,8 +2095,10 @@
   let lastPlaneParts = null;
 
   const map = L.map("map", {
+    /* tide-chrome: brand-zoom-stack-v2 — keep default topleft; CSS stacks it under brand */
     zoomControl: true, worldCopyJump: true, minZoom: 2, maxZoom: 12,
   }).setView([20, 20], 2);
+  try { map.zoomControl.setPosition("topleft"); } catch (_) {}
 
   const TILE_EN = L.tileLayer(
     "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
@@ -4076,7 +4092,7 @@
       radius: km * 1000, color: "#3D8B9C", weight: 2,
       fillColor: "#E07A5F", fillOpacity: 0.08, dashArray: "4 6",
     }).addTo(map);
-    try { map.fitBounds(radiusCircle.getBounds(), { padding: [40, 40], maxZoom: 5, animate: true }); }
+    try { map.fitBounds(radiusCircle.getBounds(), { paddingTopLeft: [72, 120], paddingBottomRight: [40, 40], maxZoom: 5, animate: true }); }
     catch (_) { map.setView([lat, lng], 4); }
   }
   function rollRadiusKm() { return Math.round(200 + Math.random() * 2300); }
