@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="chrome-zoom-stack-v3-interstellar-align" />
-  <!-- tide-nearby: 50km-nearest-significant-v3-worldwide -->
+  <meta name="tide-build" content="multi-city-50km-guangzhou-foshan-v1" />
+  <!-- tide-nearby: 50km-all-significant-cities-v4 — itinerary merges landmarks from ALL curated cities within 50km; photos/chip still nearest -->
   <!-- tide-photos: geo-v3-landmarks — landmark text first; demote metro/village; nearest-city fallback; strip 街道/Subdistrict -->
   <!-- tide-pin: anchor-v1 -->
   <!-- tide-approx: no-near-label-v1 -->
@@ -1182,6 +1182,8 @@
     { nameEn: "Shanghai", nameZh: "上海", regionEn: "China", regionZh: "中国", lat: 31.23, lng: 121.47, vibe: "neon", foodEn: "Xiaolongbao and Shanghainese", foodZh: "小笼包与本帮菜", tagsEn: ["City", "Food"], tagsZh: ["都市", "美食"] },
     { nameEn: "Hong Kong", nameZh: "香港", regionEn: "China", regionZh: "中国", lat: 22.32, lng: 114.17, vibe: "neon", foodEn: "Cha chaan teng and seafood", foodZh: "茶餐厅与海鲜", tagsEn: ["City", "Food", "Beach"], tagsZh: ["都市", "美食", "海滩"] },
     { nameEn: "Shenzhen", nameZh: "深圳", regionEn: "China", regionZh: "中国", lat: 22.54, lng: 114.06, vibe: "neon", foodEn: "Cantonese and Chaozhou cuisine", foodZh: "粤菜与潮汕菜", tagsEn: ["City", "Food"], tagsZh: ["都市", "美食"] },
+    { nameEn: "Guangzhou", nameZh: "广州", regionEn: "China", regionZh: "中国", lat: 23.13, lng: 113.26, vibe: "foodie", foodEn: "Cantonese dim sum and night markets", foodZh: "广式早茶与夜市", tagsEn: ["Food", "City", "Heritage"], tagsZh: ["美食", "都市", "古城"] },
+    { nameEn: "Foshan", nameZh: "佛山", regionEn: "China", regionZh: "中国", lat: 23.02, lng: 113.12, vibe: "heritage", foodEn: "Shunde cuisine and Cantonese roast", foodZh: "顺德菜与粤式烧腊", tagsEn: ["Heritage", "Food"], tagsZh: ["古城", "美食"] },
     { nameEn: "Taipei", nameZh: "台北", regionEn: "Taiwan", regionZh: "中国台湾", lat: 25.03, lng: 121.57, vibe: "foodie", foodEn: "Night-market snacks and beef noodle", foodZh: "夜市小吃与牛肉面", tagsEn: ["Food", "City"], tagsZh: ["美食", "都市"] },
     { nameEn: "Bangkok", nameZh: "曼谷", regionEn: "Thailand", regionZh: "泰国", lat: 13.76, lng: 100.5, vibe: "tropical", foodEn: "Tom yum and street food", foodZh: "冬阴功与街头小吃", tagsEn: ["Food", "Heritage"], tagsZh: ["美食", "古城"] },
     { nameEn: "Chiang Mai", nameZh: "清迈", regionEn: "Thailand", regionZh: "泰国", lat: 18.79, lng: 98.98, vibe: "tropical", foodEn: "Curry and sticky rice", foodZh: "咖喱与手抓饭", tagsEn: ["Heritage", "Nature"], tagsZh: ["古城", "自然"] },
@@ -1431,6 +1433,18 @@
       { nameEn: "Futian Civic Stay", nameZh: "福田市民中心酒店", areaEn: "Futian CBD", areaZh: "福田CBD", vibeEn: "Metro hub & skyline", vibeZh: "地铁枢纽与天际线", price: 780, tier: "comfort" },
       { nameEn: "Shenzhen Bay Suite", nameZh: "深圳湾景观套房", areaEn: "Shenzhen Bay", areaZh: "深圳湾", vibeEn: "Coastal promenade nights", vibeZh: "滨海长廊夜景", price: 1900, tier: "luxury" },
     ],
+    "Guangzhou": [
+      { nameEn: "Beijing Road Hostel", nameZh: "北京路青旅", areaEn: "Yuexiu Beijing Road", areaZh: "越秀北京路", vibeEn: "Walk to pedestrian street & metro", vibeZh: "步行可达步行街与地铁", price: 130, tier: "backpacker" },
+      { nameEn: "Tianhe Mid Hotel", nameZh: "天河中档酒店", areaEn: "Tianhe", areaZh: "天河", vibeEn: "Near Canton Tower / Zhujiang New Town", vibeZh: "近广州塔与珠江新城", price: 420, tier: "mid" },
+      { nameEn: "Shamian Colonial Stay", nameZh: "沙面殖民风酒店", areaEn: "Shamian Island", areaZh: "沙面", vibeEn: "Tree-lined island lanes", vibeZh: "绿荫岛巷", price: 780, tier: "comfort" },
+      { nameEn: "Pearl River View Suite", nameZh: "珠江景观套房", areaEn: "Zhujiang New Town", areaZh: "珠江新城", vibeEn: "Night cruise lights at the window", vibeZh: "窗外珠江夜游灯火", price: 1800, tier: "luxury" },
+    ],
+    "Foshan": [
+      { nameEn: "Zumiao Lane Guesthouse", nameZh: "祖庙巷弄民宿", areaEn: "Chancheng Zumiao", areaZh: "禅城祖庙", vibeEn: "Near ancestral temple & folk streets", vibeZh: "近祖庙与民俗街", price: 150, tier: "backpacker" },
+      { nameEn: "Guicheng Practical Hotel", nameZh: "桂城务实酒店", areaEn: "Nanhai Guicheng", areaZh: "南海桂城", vibeEn: "Metro to Guangzhou & local eats", vibeZh: "地铁通广州与本地餐饮", price: 380, tier: "mid" },
+      { nameEn: "Shunde Qinghui Stay", nameZh: "顺德清晖园周边酒店", areaEn: "Shunde Daliang", areaZh: "顺德大良", vibeEn: "Garden town & Shunde cuisine", vibeZh: "园林小镇与顺德菜", price: 650, tier: "comfort" },
+      { nameEn: "Lingnan Courtyard Suite", nameZh: "岭南庭院套房", areaEn: "Chancheng", areaZh: "禅城", vibeEn: "Quiet courtyard nights", vibeZh: "安静庭院夜", price: 1400, tier: "luxury" },
+    ],
     "Chengdu": [
       { nameEn: "Kuanzhai Alley Hostel", nameZh: "宽窄巷子青旅", areaEn: "Kuanzhai", areaZh: "宽窄巷子", vibeEn: "Tea & pandas day trips", vibeZh: "茶馆与熊猫日行", price: 120, tier: "backpacker" },
       { nameEn: "Chunxi Mid Hotel", nameZh: "春熙路中档酒店", areaEn: "Chunxi Road", areaZh: "春熙路", vibeEn: "Hotpot walking distance", vibeZh: "步行可达火锅", price: 380, tier: "mid" },
@@ -1482,6 +1496,19 @@
       { nameEn: "Dim sum morning tea", nameZh: "早茶点心", areaEn: "Futian", areaZh: "福田", whyEn: "Cantonese carts", whyZh: "粤式早茶", price: 70, tags: ["local"] },
       { nameEn: "Coastal seafood stall", nameZh: "滨海鲜味档", areaEn: "Shenzhen Bay / Shekou", areaZh: "深圳湾／蛇口", whyEn: "Evening seafood plates", whyZh: "夜海鲜拼盘", price: 95, tags: ["local"] },
       { nameEn: "OCT creative-park café set", nameZh: "华侨城创意园咖啡简餐", areaEn: "OCT Loft", areaZh: "华侨城创意园", whyEn: "Light lunch between galleries", whyZh: "逛展间隙轻食", price: 55, tags: ["street", "snack"] },
+    ],
+    "Guangzhou": [
+      { nameEn: "Morning tea dim sum hall", nameZh: "早茶点心楼", areaEn: "Tianhe / Yuexiu", areaZh: "天河／越秀", whyEn: "Har gow, siu mai, shrimp dumpling carts", whyZh: "虾饺烧卖早茶车", price: 80, tags: ["local", "signature"] },
+      { nameEn: "Beijing Road street snacks", nameZh: "北京路街头小吃", areaEn: "Beijing Road", areaZh: "北京路", whyEn: "Double-skin milk & roast meats", whyZh: "双皮奶与烧腊", price: 35, tags: ["street", "snack"] },
+      { nameEn: "Chen Clan area Cantonese dinner", nameZh: "陈家祠一带粤菜晚餐", areaEn: "Liwan", areaZh: "荔湾", whyEn: "Classic claypot & seasonal greens", whyZh: "煲仔与时蔬", price: 110, tags: ["local"] },
+      { nameEn: "Pearl River night cruise supper", nameZh: "珠江夜游晚餐", areaEn: "Tianzi Pier / Canton Tower side", areaZh: "天字码头／广州塔一带", whyEn: "Skyline dinner after the cruise", whyZh: "夜游后的江景晚餐", price: 220, tags: ["fine", "signature"] },
+      { nameEn: "Shamian café brunch", nameZh: "沙面咖啡馆早午餐", areaEn: "Shamian", areaZh: "沙面", whyEn: "Quiet island brunch", whyZh: "安静岛上早午餐", price: 65, tags: ["local"] },
+    ],
+    "Foshan": [
+      { nameEn: "Shunde double-skin milk", nameZh: "顺德双皮奶", areaEn: "Daliang", areaZh: "大良", whyEn: "Local sweet classic", whyZh: "本地甜品经典", price: 25, tags: ["snack", "signature"] },
+      { nameEn: "Zumiao roast goose stall", nameZh: "祖庙烧鹅档", areaEn: "Chancheng", areaZh: "禅城", whyEn: "Crispy Cantonese roast", whyZh: "脆皮粤式烧鹅", price: 55, tags: ["local", "street"] },
+      { nameEn: "Guicheng hotpot night", nameZh: "桂城火锅夜", areaEn: "Nanhai Guicheng", areaZh: "南海桂城", whyEn: "Neighborhood evening table", whyZh: "街区夜聚餐桌", price: 100, tags: ["local"] },
+      { nameEn: "Shunde private kitchen", nameZh: "顺德私房菜", areaEn: "Shunde", areaZh: "顺德", whyEn: "Fresh river seafood & simple seasoning", whyZh: "河鲜清淡本味", price: 180, tags: ["fine", "signature"] },
     ],
   };
 
@@ -1616,6 +1643,16 @@
       { url: "https://upload.wikimedia.org/wikipedia/commons/7/7c/Shenzhen%2C_with_Eiffel_tower_in_the_background.jpg", artist: "Steve Jurvetson", license: "CC BY 2.0", source: "https://commons.wikimedia.org/wiki/File:Shenzhen,_with_Eiffel_tower_in_the_background.jpg", q: "landmark" },
       { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/WINDOWS_OF_THE_WORLD_SHENZHEN_%2837%29.jpg/960px-WINDOWS_OF_THE_WORLD_SHENZHEN_%2837%29.jpg", artist: "Dinkun Chen", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:WINDOWS_OF_THE_WORLD_SHENZHEN_(37).jpg", q: "landmark" },
     ],
+    "Guangzhou": [
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Canton_Tower_%28Evening%29.jpg/960px-Canton_Tower_%28Evening%29.jpg", artist: "Daniel Case", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Canton_Tower_(Evening).jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Chen_Clan_Academy_01.jpg/960px-Chen_Clan_Academy_01.jpg", artist: "Zhangzhugang", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Chen_Clan_Academy_01.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Shamian_Island_Guangzhou.jpg/960px-Shamian_Island_Guangzhou.jpg", artist: "Saigon", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Shamian_Island_Guangzhou.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Baiyun_Mountain_Guangzhou.jpg/960px-Baiyun_Mountain_Guangzhou.jpg", artist: "Chixoy", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Baiyun_Mountain_Guangzhou.jpg", q: "landmark" },
+    ],
+    "Foshan": [
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Foshan_Zumiao_2014.jpg/960px-Foshan_Zumiao_2014.jpg", artist: "Zhangzhugang", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Foshan_Zumiao_2014.jpg", q: "landmark" },
+      { url: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Qinghui_Garden_Foshan.jpg/960px-Qinghui_Garden_Foshan.jpg", artist: "Zhangzhugang", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Qinghui_Garden_Foshan.jpg", q: "landmark" },
+    ],
     "Sydney": [
       { url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ea/Sydney_%28AU%29%2C_Opera_House_--_2019_--_3054.jpg/960px-Sydney_%28AU%29%2C_Opera_House_--_2019_--_3054.jpg", artist: "Dietmar Rabich", license: "CC BY-SA 4.0", source: "https://commons.wikimedia.org/wiki/File:Sydney_(AU),_Opera_House_--_2019_--_3054.jpg", q: "landmark" },
       { url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d1/Sydney_Harbour_Bridge_from_Circular_Quay.jpg/960px-Sydney_Harbour_Bridge_from_Circular_Quay.jpg", artist: "JJ Harrison (https://www.jjharrison.com.au/)", license: "CC BY-SA 3.0", source: "https://commons.wikimedia.org/wiki/File:Sydney_Harbour_Bridge_from_Circular_Quay.jpg", q: "landmark" },
@@ -1714,6 +1751,24 @@
       { nameEn: "Civic Center", nameZh: "市民中心", lat: 22.5430, lng: 114.0580, kind: "attraction" },
       { nameEn: "Coastal City", nameZh: "海岸城", lat: 22.5175, lng: 113.9370, kind: "attraction" },
       { nameEn: "Happy Valley Shenzhen", nameZh: "欢乐谷", lat: 22.5400, lng: 113.9860, kind: "theme_park" },
+    ],
+    "Guangzhou": [
+      { nameEn: "Canton Tower", nameZh: "广州塔", lat: 23.1066, lng: 113.3245, kind: "attraction" },
+      { nameEn: "Beijing Road Pedestrian Street", nameZh: "北京路步行街", lat: 23.1255, lng: 113.2680, kind: "attraction" },
+      { nameEn: "Chen Clan Academy", nameZh: "陈家祠", lat: 23.1263, lng: 113.2436, kind: "historic" },
+      { nameEn: "Shamian Island", nameZh: "沙面岛", lat: 23.1095, lng: 113.2440, kind: "historic" },
+      { nameEn: "Baiyun Mountain", nameZh: "白云山", lat: 23.1670, lng: 113.2950, kind: "park" },
+      { nameEn: "Pearl River Night Cruise Area", nameZh: "珠江夜游一带", lat: 23.1100, lng: 113.3200, kind: "viewpoint" },
+      { nameEn: "Yuexiu Park & Five Rams", nameZh: "越秀公园五羊石像", lat: 23.1400, lng: 113.2660, kind: "park" },
+      { nameEn: "Zhujiang New Town", nameZh: "珠江新城", lat: 23.1190, lng: 113.3210, kind: "viewpoint" },
+    ],
+    "Foshan": [
+      { nameEn: "Foshan Ancestral Temple", nameZh: "佛山祖庙", lat: 23.0295, lng: 113.1150, kind: "historic" },
+      { nameEn: "Lingnan Tiandi", nameZh: "岭南天地", lat: 23.0270, lng: 113.1180, kind: "attraction" },
+      { nameEn: "Qinghui Garden", nameZh: "清晖园", lat: 22.8400, lng: 113.2500, kind: "historic" },
+      { nameEn: "Shunde Old Town", nameZh: "顺德旧城大良", lat: 22.8380, lng: 113.2520, kind: "historic" },
+      { nameEn: "Nanfeng Ancient Kiln", nameZh: "南风古灶", lat: 23.0040, lng: 113.1000, kind: "historic" },
+      { nameEn: "Qiandeng Lake Park", nameZh: "千灯湖公园", lat: 23.0450, lng: 113.1450, kind: "park" },
     ],
     "Sydney": [
       { nameEn: "Sydney Opera House", nameZh: "悉尼歌剧院", lat: -33.8568, lng: 151.2153, kind: "attraction" },
@@ -3240,7 +3295,77 @@
     return best;
   }
 
-  function liveLodgingsFromPois(pois, lodgePerNight, count) {
+  /* Worldwide: curated lodging from nearest significant cities within 50 km (any LODGING_BY_CITY hit). */
+  function curatedLodgingsNear(lat, lng, lodgePerNight, count) {
+    count = count || 5;
+    const nearList = (isFinite(Number(lat)) && isFinite(Number(lng)))
+      ? curatedCitiesWithinKm(lat, lng, NEARBY_TOURISM_KM) : [];
+    const out = [];
+    const seen = Object.create(null);
+    for (let i = 0; i < nearList.length; i++) {
+      const key = nearList[i].city.nameEn;
+      if (!LODGING_BY_CITY[key]) continue;
+      const picked = pickLodgings(key, lodgePerNight, count);
+      for (let j = 0; j < picked.length; j++) {
+        const h = picked[j];
+        const k = String(h.nameEn || h.nameZh || "").toLowerCase();
+        if (k && seen[k]) continue;
+        if (k) seen[k] = true;
+        out.push(Object.assign({}, h, {
+          areaEn: h.areaEn + " · " + key,
+          areaZh: h.areaZh + " · " + (nearList[i].city.nameZh || key),
+          vibeEn: (h.vibeEn || "") + " · curated " + key,
+          vibeZh: (h.vibeZh || "") + " · 精选" + (nearList[i].city.nameZh || key),
+          distKm: nearList[i].distanceKm,
+          curated: true,
+          sourceCity: key,
+        }));
+      }
+      if (out.length >= count) break;
+    }
+    const budget = Number(lodgePerNight) || 400;
+    out.sort(function (a, b) {
+      return Math.abs(a.price - budget) - Math.abs(b.price - budget);
+    });
+    return out.slice(0, count);
+  }
+
+  /* Worldwide: curated food from nearest significant cities within 50 km (any FOOD_BY_CITY hit). */
+  function curatedFoodsNear(lat, lng, mealBudgetPerDay, count) {
+    count = count || 5;
+    const nearList = (isFinite(Number(lat)) && isFinite(Number(lng)))
+      ? curatedCitiesWithinKm(lat, lng, NEARBY_TOURISM_KM) : [];
+    const out = [];
+    const seen = Object.create(null);
+    for (let i = 0; i < nearList.length; i++) {
+      const key = nearList[i].city.nameEn;
+      if (!FOOD_BY_CITY[key]) continue;
+      const picked = pickFoods(key, mealBudgetPerDay, count);
+      for (let j = 0; j < picked.length; j++) {
+        const f = picked[j];
+        const k = String(f.nameEn || f.nameZh || "").toLowerCase();
+        if (k && seen[k]) continue;
+        if (k) seen[k] = true;
+        out.push(Object.assign({}, f, {
+          areaEn: f.areaEn + " · " + key,
+          areaZh: f.areaZh + " · " + (nearList[i].city.nameZh || key),
+          whyEn: (f.whyEn || "") + " · curated " + key,
+          whyZh: (f.whyZh || "") + " · 精选" + (nearList[i].city.nameZh || key),
+          distKm: nearList[i].distanceKm,
+          curated: true,
+          sourceCity: key,
+        }));
+      }
+      if (out.length >= count) break;
+    }
+    const perMeal = Math.max(20, (Number(mealBudgetPerDay) || 150) / 3);
+    out.sort(function (a, b) {
+      return Math.abs(a.price - perMeal) - Math.abs(b.price - perMeal);
+    });
+    return out.slice(0, count);
+  }
+
+  function liveLodgingsFromPois(pois, lodgePerNight, count, lat, lng) {
     count = count || 5;
     const budget = Number(lodgePerNight) || 400;
     let list = (pois.lodging || []).map(function (p) {
@@ -3257,6 +3382,24 @@
         price: price, tier: tier, distKm: p.distKm,
       };
     });
+    /* Sparse OSM → prefer curated city lodging worldwide (never generic filler near CITIES) */
+    if (list.length < 2) {
+      const curated = curatedLodgingsNear(lat, lng, lodgePerNight, count);
+      if (curated.length) {
+        const seen = Object.create(null);
+        list.forEach(function (h) {
+          const k = String(h.nameEn || h.nameZh || "").toLowerCase();
+          if (k) seen[k] = true;
+        });
+        for (let i = 0; i < curated.length && list.length < count; i++) {
+          const h = curated[i];
+          const k = String(h.nameEn || h.nameZh || "").toLowerCase();
+          if (k && seen[k]) continue;
+          if (k) seen[k] = true;
+          list.push(h);
+        }
+      }
+    }
     if (!list.length) {
       return genericLodging("mid", inferTierFromDaily(budget)).slice(0, count).map(function (g) {
         return Object.assign({}, g, {
@@ -3270,14 +3413,14 @@
       });
     }
     list = list.slice().sort(function (a, b) {
-      const pa = Math.abs(a.price - budget) + a.distKm * 8;
-      const pb = Math.abs(b.price - budget) + b.distKm * 8;
+      const pa = Math.abs(a.price - budget) + (Number(a.distKm) || 0) * 8;
+      const pb = Math.abs(b.price - budget) + (Number(b.distKm) || 0) * 8;
       return pa - pb;
     });
     return list.slice(0, count);
   }
 
-  function liveFoodsFromPois(pois, mealBudgetPerDay, count) {
+  function liveFoodsFromPois(pois, mealBudgetPerDay, count, lat, lng) {
     count = count || 5;
     const perMeal = Math.max(20, (Number(mealBudgetPerDay) || 150) / 3);
     let list = (pois.food || []).map(function (p) {
@@ -3293,6 +3436,24 @@
         price: price, distKm: p.distKm,
       };
     });
+    /* Sparse OSM → prefer curated city food worldwide (never 「问问当地人」 near CITIES) */
+    if (list.length < 2) {
+      const curated = curatedFoodsNear(lat, lng, mealBudgetPerDay, count);
+      if (curated.length) {
+        const seen = Object.create(null);
+        list.forEach(function (f) {
+          const k = String(f.nameEn || f.nameZh || "").toLowerCase();
+          if (k) seen[k] = true;
+        });
+        for (let i = 0; i < curated.length && list.length < count; i++) {
+          const f = curated[i];
+          const k = String(f.nameEn || f.nameZh || "").toLowerCase();
+          if (k && seen[k]) continue;
+          if (k) seen[k] = true;
+          list.push(f);
+        }
+      }
+    }
     if (!list.length) {
       return genericFood().slice(0, count).map(function (g) {
         return Object.assign({}, g, {
@@ -3306,7 +3467,7 @@
       });
     }
     list = list.slice().sort(function (a, b) {
-      return (Math.abs(a.price - perMeal) + a.distKm * 5) - (Math.abs(b.price - perMeal) + b.distKm * 5);
+      return (Math.abs(a.price - perMeal) + (Number(a.distKm) || 0) * 5) - (Math.abs(b.price - perMeal) + (Number(b.distKm) || 0) * 5);
     });
     return list.slice(0, count);
   }
@@ -3410,19 +3571,59 @@
 
   function curatedLandmarksAsPois(cityKeyName, pinLat, pinLng) {
     const list = (cityKeyName && LANDMARKS_BY_CITY[cityKeyName]) || [];
-    return list.map(function (lm) { return landmarkToPoi(lm, pinLat, pinLng); })
-      .sort(function (a, b) { return a.distKm - b.distKm; });
+    return list.map(function (lm) {
+      const poi = landmarkToPoi(lm, pinLat, pinLng);
+      poi.sourceCity = cityKeyName;
+      return poi;
+    }).sort(function (a, b) { return a.distKm - b.distKm; });
   }
 
-  /** Merge curated landmarks when live Overpass attractions are sparse (< 3). */
+  /**
+   * Worldwide multi-city hotspots: EVERY curated CITIES entry within NEARBY_TOURISM_KM
+   * that has LANDMARKS_BY_CITY contributes its hottest spots (tagged with source city),
+   * sorted by distance to the pin. Not nearest-only — e.g. Guicheng→GZ+Foshan,
+   * 深大→Shenzhen+HK, and the same rule anywhere on the globe.
+   */
+  function curatedLandmarksFromNearbyCities(pinLat, pinLng, km) {
+    km = (typeof km === "number") ? km : NEARBY_TOURISM_KM;
+    if (!isFinite(Number(pinLat)) || !isFinite(Number(pinLng))) return [];
+    const nearList = curatedCitiesWithinKm(pinLat, pinLng, km);
+    const out = [];
+    const seen = Object.create(null);
+    for (let i = 0; i < nearList.length; i++) {
+      const city = nearList[i].city;
+      const key = city.nameEn;
+      const list = LANDMARKS_BY_CITY[key] || [];
+      for (let j = 0; j < list.length; j++) {
+        const poi = landmarkToPoi(list[j], pinLat, pinLng);
+        poi.sourceCity = key;
+        poi.sourceCityZh = city.nameZh || key;
+        if (poi.areaHint === "") {
+          poi.areaHint = (typeof lang !== "undefined" && lang === "zh")
+            ? (city.nameZh || key)
+            : key;
+        }
+        const k1 = String(poi.nameZh || "").toLowerCase();
+        const k2 = String(poi.nameEn || "").toLowerCase();
+        if ((k1 && seen[k1]) || (k2 && seen[k2])) continue;
+        if (k1) seen[k1] = true;
+        if (k2) seen[k2] = true;
+        out.push(poi);
+      }
+    }
+    out.sort(function (a, b) { return a.distKm - b.distKm; });
+    return out;
+  }
+
+  /** Merge live Overpass attractions with ALL nearby curated-city landmarks (worldwide). */
   function mergeCuratedLandmarks(attrs, cityKeyName, pinLat, pinLng) {
     const live = (attrs || []).slice();
-    const curated = curatedLandmarksAsPois(cityKeyName, pinLat, pinLng);
-    if (!curated.length) return live;
-    if (live.length >= 3) {
-      /* still prefer real names; keep live order but allow theme richness */
-      return live;
+    let curated = curatedLandmarksFromNearbyCities(pinLat, pinLng, NEARBY_TOURISM_KM);
+    /* Fallback: single hinted city if pin is outside every curated radius */
+    if (!curated.length && cityKeyName) {
+      curated = curatedLandmarksAsPois(cityKeyName, pinLat, pinLng);
     }
+    if (!curated.length) return live;
     const seen = Object.create(null);
     live.forEach(function (p) {
       const k = String((p && (p.nameZh || p.nameEn || p.name)) || "").toLowerCase();
@@ -3438,14 +3639,18 @@
       if (k1) seen[k1] = true;
       if (k2) seen[k2] = true;
     }
+    out.sort(function (a, b) { return (Number(a.distKm) || 0) - (Number(b.distKm) || 0); });
     return out;
   }
 
   function themeFromAttractions(attrs, dayIdx, langZh, cityKeyHint, pinLat, pinLng) {
     let list = attrs;
     if (!list || !list.length) {
-      const ck = resolveLandmarkCityKey(null, cityKeyHint, pinLat, pinLng);
-      list = curatedLandmarksAsPois(ck, pinLat, pinLng);
+      list = curatedLandmarksFromNearbyCities(pinLat, pinLng, NEARBY_TOURISM_KM);
+      if (!list.length) {
+        const ck = resolveLandmarkCityKey(null, cityKeyHint, pinLat, pinLng);
+        list = curatedLandmarksAsPois(ck, pinLat, pinLng);
+      }
     }
     if (!list || !list.length) {
       const label = String(cityKeyHint || "").replace(/^local:/, "").trim();
@@ -3532,7 +3737,7 @@
       resolveCityPhotos(cityKey, searchName, Math.max(9, days * 3), lat, lng),
     ]);
 
-    const lodgings = liveLodgingsFromPois(pois, lodgeNight, 5).map(function (h) {
+    const lodgings = liveLodgingsFromPois(pois, lodgeNight, 5, lat, lng).map(function (h) {
       return {
         name: lang === "zh" ? h.nameZh : h.nameEn,
         area: lang === "zh" ? h.areaZh : h.areaEn,
@@ -3540,7 +3745,7 @@
         price: h.price,
       };
     });
-    const foods = liveFoodsFromPois(pois, mealPerDay, 5).map(function (f) {
+    const foods = liveFoodsFromPois(pois, mealPerDay, 5, lat, lng).map(function (f) {
       return {
         name: lang === "zh" ? f.nameZh : f.nameEn,
         area: lang === "zh" ? f.areaZh : f.areaEn,
@@ -3569,10 +3774,8 @@
     const foodNotes = t("foodNotes");
     const landmarkCityKey = resolveLandmarkCityKey(place, cityKey, lat, lng);
     let attrs = pois.attractions || [];
-    /* When Overpass is sparse (< 3) OR theme would be empty, seed curated city landmarks */
-    if (attrs.length < 3 || (landmarkCityKey && !attrs.length)) {
-      attrs = mergeCuratedLandmarks(attrs, landmarkCityKey, lat, lng);
-    }
+    /* Worldwide: always merge hottest landmarks from EVERY curated city within 50 km */
+    attrs = mergeCuratedLandmarks(attrs, landmarkCityKey, lat, lng);
     const daysOut = [];
     for (let d = 1; d <= days; d++) {
       const seed = seed0 + d * 17;
@@ -4366,9 +4569,8 @@
         { attractions: [], lodging: [], food: [], sparse: true };
       const stopLandmarkKey = resolveLandmarkCityKey(stop, ck, stop.lat, stop.lng);
       let attrs = pois.attractions || [];
-      if (attrs.length < 3 || (stopLandmarkKey && !attrs.length)) {
-        attrs = mergeCuratedLandmarks(attrs, stopLandmarkKey, stop.lat, stop.lng);
-      }
+      /* Worldwide multi-city merge for each stop pin */
+      attrs = mergeCuratedLandmarks(attrs, stopLandmarkKey, stop.lat, stop.lng);
       if (i > 0) {
         parts.push({
           type: "day", day: dayNum, title: t("transferTitle", { city: stop.name }), theme: t("transferTheme"),
@@ -4389,10 +4591,10 @@
         });
         dayNum++;
       }
-      const lodgings = liveLodgingsFromPois(pois, lodgeNight, 5).map(function (h) {
+      const lodgings = liveLodgingsFromPois(pois, lodgeNight, 5, stop.lat, stop.lng).map(function (h) {
         return { name: lang === "zh" ? h.nameZh : h.nameEn, area: lang === "zh" ? h.areaZh : h.areaEn, vibe: lang === "zh" ? h.vibeZh : h.vibeEn, price: h.price };
       });
-      const foods = liveFoodsFromPois(pois, mealPerDay, 5).map(function (f) {
+      const foods = liveFoodsFromPois(pois, mealPerDay, 5, stop.lat, stop.lng).map(function (f) {
         return { name: lang === "zh" ? f.nameZh : f.nameEn, area: lang === "zh" ? f.areaZh : f.areaEn, why: lang === "zh" ? f.whyZh : f.whyEn, price: f.price };
       });
       if (i === 0) {
