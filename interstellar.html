@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="tide-build" content="interstellar-chrome-zoom-stack-v3" />
   <!-- tide-interstellar: globe-moon-v1 -->
+  <!-- tide-chrome: brand-zoom-stack-v3 -->
 <title>星际旅行 · Interstellar Travel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -235,6 +237,41 @@
       .side-panel { width: 100%; }
     }
 
+
+    /* tide-chrome: brand-zoom-stack-v3 — Interstellar brand pill top-left; dark +/- stacked BELOW with clear gap (no overlap) */
+    .leaflet-top,
+    .leaflet-bottom { z-index: 1100 !important; }
+    .leaflet-top.leaflet-left {
+      top: 78px;   /* topbar 16 + brand ~52 + ~10px gap */
+      left: 6px;   /* + leaflet 10px margin ≈ brand left 16px */
+      z-index: 1100 !important;
+    }
+    .leaflet-control-zoom {
+      border: 1px solid rgba(232, 200, 114, 0.22) !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      margin-left: 10px !important;
+      margin-top: 0 !important;
+      z-index: 1100 !important;
+    }
+    .leaflet-control-zoom a {
+      width: 34px !important; height: 34px !important; line-height: 34px !important;
+      background: rgba(10, 16, 32, 0.92) !important; color: var(--sand) !important;
+      border-bottom-color: rgba(232, 200, 114, 0.18) !important;
+      font-size: 16px !important; font-weight: 600;
+    }
+    .leaflet-control-zoom a:hover {
+      background: rgba(18, 26, 46, 0.98) !important; color: var(--foam) !important;
+    }
+    .leaflet-control-zoom a:last-child { border-bottom: none !important; }
+    .leaflet-control-attribution {
+      background: rgba(5, 8, 15, 0.7) !important; color: rgba(216, 201, 168, 0.55) !important;
+      font-size: 10px !important;
+    }
+    .leaflet-control-attribution a { color: rgba(216, 201, 168, 0.7) !important; }
+
     /* Tide ↔ Interstellar handoff veil (matches --void) */
     #pageFade {
       position: fixed; inset: 0; z-index: 99999;
@@ -250,6 +287,7 @@
   <canvas id="webgl"></canvas>
   <div id="pageFade" aria-hidden="true"></div>
 
+  <!-- tide-chrome: brand-zoom-stack-v3 -->
   <div class="topbar">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">
@@ -597,10 +635,12 @@ const map = L.map("map", {
   zoom: 2,
   minZoom: 1,
   maxZoom: 8,
+  /* tide-chrome: brand-zoom-stack-v3 — default topleft; CSS stacks under brand pill */
   zoomControl: true,
   worldCopyJump: true,
   attributionControl: true,
 });
+try { map.zoomControl.setPosition("topleft"); } catch (_) {}
 /* World Street Map — same clean basemap as Tide; no Maxar imagery watermarks */
 L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
   attribution: "Tiles © Esri",
