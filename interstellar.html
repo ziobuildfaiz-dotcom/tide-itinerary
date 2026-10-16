@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="tide-build" content="interstellar-chrome-zoom-stack-v3b" />
+  <meta name="tide-build" content="interstellar-mobile-frame-v4" />
   <!-- tide-interstellar: globe-moon-v1 -->
   <!-- tide-chrome: brand-zoom-stack-v3 -->
 <title>星际旅行 · Interstellar Travel</title>
@@ -692,6 +692,70 @@ controls.maxDistance = 220;
 controls.enablePan = false;
 controls.enabled = false;
 
+/* Phone-only framing (≤640px). Desktop / tablet keep prior distances. */
+function isPhoneViewport() {
+  try {
+    return window.matchMedia("(max-width: 640px)").matches;
+  } catch (_) {
+    return window.innerWidth <= 640;
+  }
+}
+/** Distance so a sphere of `radius` fits in the narrower FOV with padding. */
+function viewFitDistance(radius, pad) {
+  pad = pad == null ? 1.18 : pad;
+  const vFov = (camera.fov * Math.PI) / 180;
+  const aspect = Math.max(camera.aspect || (window.innerWidth / Math.max(window.innerHeight, 1)), 0.35);
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+  const lim = Math.min(vFov, hFov);
+  return (radius / Math.tan(lim / 2)) * pad;
+}
+function globeCamDistance() {
+  const r = typeof GLOBE_EARTH_R === "number" ? GLOBE_EARTH_R : 1.6;
+  if (!isPhoneViewport()) return 5.68; // ~length of (0,1.4,5.5)
+  return Math.max(viewFitDistance(r * 1.02, 1.22), 4.8);
+}
+function globeCamPos() {
+  const d = globeCamDistance();
+  if (!isPhoneViewport()) return new THREE.Vector3(0, 1.4, 5.5);
+  // Near +Z, tiny elevation — keeps Earth in true screen center on tall phones
+  return new THREE.Vector3(0, d * 0.06, d * 0.998);
+}
+function globeDistLimits() {
+  const r = typeof GLOBE_EARTH_R === "number" ? GLOBE_EARTH_R : 1.6;
+  if (!isPhoneViewport()) return { min: 1.85, max: 12 };
+  return {
+    min: Math.max(r * 1.12, 1.75),
+    max: Math.max(viewFitDistance(r * 1.02, 1.22) * 2.6, 18),
+  };
+}
+function systemDistLimits() {
+  if (!isPhoneViewport()) return { min: 8, max: 200 };
+  // Neptune orbit ~98; fit full system on portrait (narrow FOV needs far dolly)
+  const fit = viewFitDistance(108, 1.12);
+  return { min: 6, max: Math.max(fit, 420) };
+}
+function systemOverviewCam() {
+  if (!isPhoneViewport()) return new THREE.Vector3(18, 28, 72);
+  const d = viewFitDistance(78, 1.15); // open showing ~Saturn; pinch out for Neptune
+  // Moderate elevation so ecliptic sits mid-frame, not stuck at the bottom
+  return new THREE.Vector3(d * 0.22, d * 0.28, d * 0.93);
+}
+function applyGlobeFraming(snap) {
+  const lim = globeDistLimits();
+  controls.minDistance = lim.min;
+  controls.maxDistance = lim.max;
+  controls.target.set(0, 0, 0);
+  if (snap) {
+    camera.position.copy(globeCamPos());
+    controls.update();
+  }
+}
+function applySystemFramingLimits() {
+  const lim = systemDistLimits();
+  controls.minDistance = lim.min;
+  controls.maxDistance = lim.max;
+}
+
 const ambient = new THREE.AmbientLight(0x8896aa, 2.35);
 scene.add(ambient);
 const hemi = new THREE.HemisphereLight(0xe8f0ff, 0x243040, 1.35);
@@ -1012,11 +1076,7 @@ async function enterGlobe() {
   document.getElementById("map").classList.add("fade-out");
   canvas.classList.add("active");
   controls.enabled = true;
-  controls.minDistance = 1.85;
-  controls.maxDistance = 12;
-  camera.position.set(0, 1.4, 5.5);
-  controls.target.set(0, 0, 0);
-  controls.update();
+  applyGlobeFraming(true);
   globeEarth.visible = true;
   systemRoot.visible = false;
   setGlobeMoonVisible(true);
@@ -1052,10 +1112,10 @@ async function enterSystem() {
   systemEarth.userData.angle = eAngle;
   systemEarth.position.set(Math.cos(eAngle) * 28, 0, Math.sin(eAngle) * 28);
   updateMoonOrbit(0, false);
-  controls.minDistance = 8;
-  controls.maxDistance = 200;
+  applySystemFramingLimits();
+  controls.target.set(0, 0, 0);
   await animateCamera(
-    new THREE.Vector3(18, 28, 72),
+    systemOverviewCam(),
     new THREE.Vector3(0, 0, 0),
     2200
   );
@@ -1067,7 +1127,8 @@ canvas.addEventListener("wheel", (ev) => {
   if (transitionLock || handingOffToTide) return;
   if (phase === "globe") {
     // Zoom out near max distance → unfold solar system
-    if (ev.deltaY > 0 && camera.position.length() > 8.5) {
+    const outGate = isPhoneViewport() ? controls.maxDistance * 0.92 : 8.5;
+    if (ev.deltaY > 0 && camera.position.distanceTo(controls.target) > outGate) {
       enterSystem();
       return;
     }
@@ -1283,8 +1344,7 @@ document.getElementById("btnDeselect").onclick = () => {
   highlightRing.visible = false;
   selectCard.classList.remove("show");
   if (phase === "system") {
-    controls.minDistance = 8;
-    controls.maxDistance = 200;
+    applySystemFramingLimits();
     controls.target.set(0, 0, 0);
   }
 };
@@ -1338,13 +1398,12 @@ async function returnToEarthGlobe() {
   if (typeof sunLightWarm !== "undefined") sunLightWarm.intensity = 0.2;
 
   controls.enabled = true;
-  controls.minDistance = 1.85;
-  controls.maxDistance = 12;
+  applyGlobeFraming(false);
   currentBodyId = "earth";
 
   setHintForPhase();
   await animateCamera(
-    new THREE.Vector3(0, 1.4, 5.5),
+    globeCamPos(),
     new THREE.Vector3(0, 0, 0),
     1400
   );
@@ -1538,25 +1597,35 @@ async function returnToSystem() {
   phase = "system";
   setPhaseDots(phase);
   setHintForPhase();
-  controls.minDistance = 8;
-  controls.maxDistance = 200;
+  applySystemFramingLimits();
   // Frame from a vantage near current body if known
   const cur = bodyMeshes[currentBodyId];
-  const look = cur ? cur.position.clone() : new THREE.Vector3(0, 0, 0);
-  const cam = look.clone().add(new THREE.Vector3(18, 28, 48));
-  if (cam.length() < 40) cam.set(18, 28, 72);
-  await animateCamera(cam, new THREE.Vector3(0, 0, 0), 1600);
+  if (isPhoneViewport()) {
+    await animateCamera(systemOverviewCam(), new THREE.Vector3(0, 0, 0), 1600);
+  } else {
+    const look = cur ? cur.position.clone() : new THREE.Vector3(0, 0, 0);
+    const cam = look.clone().add(new THREE.Vector3(18, 28, 48));
+    if (cam.length() < 40) cam.set(18, 28, 72);
+    await animateCamera(cam, new THREE.Vector3(0, 0, 0), 1600);
+  }
 }
 
 document.getElementById("btnClosePanel").onclick = () => returnToSystem();
 
 /* Resize */
 window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.aspect = window.innerWidth / Math.max(window.innerHeight, 1);
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
   map.invalidateSize();
+  if (phase === "globe" && controls.enabled) {
+    const lim = globeDistLimits();
+    controls.minDistance = lim.min;
+    controls.maxDistance = lim.max;
+  } else if ((phase === "system" || phase === "fly") && controls.enabled) {
+    applySystemFramingLimits();
+  }
 });
 
 
@@ -1619,11 +1688,12 @@ function tick() {
     sunMesh.material.emissiveIntensity = 0.5 + Math.sin(tsec * 1.1) * 0.05;
   }
 
-  // Dolly proximity safety net (trackpad / continuous zoom)
+  // Dolly proximity safety net (trackpad / continuous zoom / pinch)
   if (!handingOffToTide && !transitionLock) {
     if (phase === "globe") {
       const dist = camera.position.distanceTo(controls.target);
       if (dist < GLOBE_TO_TIDE_DIST - 0.08) goBackToTideMap();
+      else if (dist >= controls.maxDistance * 0.97) enterSystem();
     } else if (phase === "inspect" && (inspectId === "earth" || currentBodyId === "earth")) {
       const mesh = bodyMeshes.earth;
       if (mesh) {
