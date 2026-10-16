@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <!-- tide-cdn-bust:2026-10-16T08:29:08Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v4" />
+  <meta name="tide-build" content="mobile-cn-zh-v5" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -959,7 +959,7 @@
     <div class="roll-note" id="rollNote">Dice sets the next hop radius</div>
   </div>
 
-  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v4</div>
+  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v5</div>
 
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
@@ -1052,7 +1052,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v4</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v5</span>
         </div>
       </div>
 
@@ -1121,7 +1121,11 @@
   function isChinaMirrorHost() {
     try {
       const h = (location.hostname || "").toLowerCase();
-      return h === "cdn.jsdmirror.com" || h.endsWith(".jsdmirror.com");
+      if (h === "cdn.jsdmirror.com" || h.endsWith(".jsdmirror.com")) return true;
+      /* Cloudflare China mirror Worker / Pages — always follow GitHub tip, short cache */
+      if (h === "tide-itinerary-cn.moge2443.workers.dev") return true;
+      if (h === "tide-itinerary.pages.dev" || h.endsWith(".tide-itinerary.pages.dev")) return true;
+      return false;
     } catch (_) { return false; }
   }
   (function initLangDefault() {
