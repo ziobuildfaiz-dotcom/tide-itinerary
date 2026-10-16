@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="mobile-plane-v3" />
+  <meta name="tide-build" content="mobile-cn-zh-v4" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -666,7 +666,7 @@
     }
 
 
-    /* Phone-only build proof chip (mobile-plane-v3) */
+    /* Phone-only build proof chip (mobile-cn-zh-v4) */
     .tide-build-chip {
       display: none;
       position: absolute;
@@ -958,7 +958,7 @@
     <div class="roll-note" id="rollNote">Dice sets the next hop radius</div>
   </div>
 
-  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v3</div>
+  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v4</div>
 
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
@@ -1051,7 +1051,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-plane-v3</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v4</span>
         </div>
       </div>
 
@@ -1115,7 +1115,23 @@
   "use strict";
 
   const LANG_KEY = "tide-itinerary-lang";
-  let lang = localStorage.getItem(LANG_KEY) === "zh" ? "zh" : "en";
+  /* China CDN mirror (jsdmirror): default Chinese. GitHub Pages / others: default English.
+     Manual language choice still wins via localStorage on that origin. */
+  function isChinaMirrorHost() {
+    try {
+      const h = (location.hostname || "").toLowerCase();
+      return h === "cdn.jsdmirror.com" || h.endsWith(".jsdmirror.com");
+    } catch (_) { return false; }
+  }
+  (function initLangDefault() {
+    const stored = localStorage.getItem(LANG_KEY);
+    if (stored === "zh" || stored === "en") {
+      window.__tideLangInit = stored;
+      return;
+    }
+    window.__tideLangInit = isChinaMirrorHost() ? "zh" : "en";
+  })();
+  let lang = window.__tideLangInit === "zh" ? "zh" : "en";
 
   const I18N = {
   "en": {
