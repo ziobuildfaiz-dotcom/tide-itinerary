@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="days-hops-slider-v1" />
+  <meta name="tide-build" content="mobile-drawer-a-v1" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -157,8 +157,12 @@
     }
     .sheet.open { transform: translateY(0); }
     .sheet-handle {
+      width: 100%; display: flex; align-items: center; justify-content: center;
+      padding: 10px 0 0; flex-shrink: 0; touch-action: none;
+    }
+    .sheet-handle-bar {
       width: 40px; height: 4px; background: rgba(232, 213, 183, 0.35);
-      border-radius: 2px; margin: 10px auto 0; flex-shrink: 0;
+      border-radius: 2px; pointer-events: none;
     }
     .sheet-head {
       padding: 14px 20px 12px; display: flex; align-items: flex-start;
@@ -420,13 +424,7 @@
       .sheet-handle { display: none; }
       .hint { max-width: 240px; top: 80px; }
     }
-    @media (max-width: 520px) {
-      .mode-switch { left: 18px; right: 18px; transform: none; top: 70px; justify-content: stretch; }
-      .mode-btn { flex: 1; text-align: center; padding: 8px 10px; font-size: 12px; }
-      .hint { top: 122px; max-width: calc(100vw - 36px); }
-      .brand { padding: 8px 12px 8px 10px; }
-      .brand-text span { display: none; }
-    }
+
 
 
     /* Interstellar on top-right stack — left chrome exclusive to brand+zoom */
@@ -466,12 +464,7 @@
       .lang-toggle { top: 118px; }
       .hint { top: 168px; }
     }
-    @media (max-width: 520px) {
-      .interstellar-link { top: 70px; right: 18px; }
-      .lang-toggle { top: 118px; }
-      .mode-switch { top: 166px; }
-      .hint { top: 216px; }
-    }
+
 
     .lang-toggle {
       position: absolute; top: 18px; right: 18px; z-index: 860;
@@ -496,11 +489,115 @@
     @media (min-width: 820px) {
       .hint { top: 80px; }
     }
+
+
+
+    /* —— Scheme A: mobile drawer (phone only ≤520px) —— */
+    .btn-mobile-more {
+      display: none;
+      position: absolute; top: 12px; right: 12px; z-index: 880;
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 1px solid rgba(232, 213, 183, 0.22);
+      background: rgba(11, 31, 51, 0.92); backdrop-filter: blur(12px);
+      color: var(--foam); box-shadow: var(--shadow);
+      align-items: center; justify-content: center;
+      font-size: 18px; line-height: 1; cursor: pointer; padding: 0;
+      font-family: inherit;
+    }
+    .btn-mobile-more:hover, .btn-mobile-more[aria-expanded="true"] {
+      background: rgba(26, 58, 82, 0.95); border-color: rgba(224, 122, 95, 0.45);
+    }
+    .mobile-more-panel {
+      display: none;
+      position: fixed; top: 58px; right: 12px; z-index: 920;
+      min-width: 168px; max-width: min(260px, calc(100vw - 24px));
+      padding: 10px; gap: 8px;
+      flex-direction: column; align-items: stretch;
+      background: rgba(11, 31, 51, 0.96); backdrop-filter: blur(14px);
+      border: 1px solid rgba(232, 213, 183, 0.22); border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    .mobile-more-panel.open { display: flex; }
+    .mobile-more-panel .interstellar-link,
+    .mobile-more-panel .lang-toggle {
+      position: static !important; top: auto !important; right: auto !important; left: auto !important;
+      transform: none !important; width: 100%; box-shadow: none;
+      justify-content: center;
+    }
+    .mobile-more-panel .lang-toggle { flex-wrap: wrap; }
+    .mobile-more-panel .lang-btn { flex: 1; min-width: 0; padding: 7px 8px; font-size: 11px; }
+
     @media (max-width: 520px) {
-      .interstellar-link { top: 70px; right: 18px; }
-      .lang-toggle { top: 118px; right: 18px; left: auto; }
-      .mode-switch { top: 166px; }
-      .hint { top: 216px; max-width: calc(100vw - 36px); }
+      .brand {
+        top: 12px; left: 12px; padding: 8px 12px 8px 10px;
+      }
+      .brand-text span { display: none; }
+      .btn-mobile-more { display: flex; }
+      .mode-switch {
+        left: 12px; right: 12px; transform: none;
+        top: 64px; justify-content: stretch;
+      }
+      .mode-btn { flex: 1; text-align: center; padding: 8px 10px; font-size: 12px; }
+      /* Hide free-floating chrome if not yet moved; panel hosts them */
+      body > .interstellar-link,
+      body > .lang-toggle { display: none !important; }
+      .hint { display: none !important; }
+      .leaflet-top.leaflet-left {
+        top: 118px; /* under brand + mode-switch */
+        left: 4px;
+      }
+      .sheet-handle {
+        min-height: 44px; padding: 0; cursor: grab;
+        touch-action: none; user-select: none; -webkit-user-select: none;
+      }
+      .sheet-handle:active { cursor: grabbing; }
+      .sheet-handle-bar {
+        width: 44px; height: 5px;
+        background: rgba(247, 243, 235, 0.85);
+        box-shadow: 0 0 0 1px rgba(11, 31, 51, 0.25);
+      }
+      .sheet.open.expanded {
+        max-height: min(96dvh, 100%);
+        height: min(96dvh, 100%);
+      }
+      .sheet.dragging {
+        transition: none !important;
+      }
+      .sheet.open.expanded .sheet-body {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
+      .roll-toast {
+        top: 118px; bottom: auto;
+        left: 12px; right: 12px;
+        transform: translateY(-8px);
+        max-width: calc(100vw - 24px);
+        width: auto;
+        padding: 10px 14px;
+        display: flex; flex-direction: column; align-items: center;
+        gap: 2px;
+      }
+      .roll-toast.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      .roll-toast .roll-label { font-size: 11px; margin-bottom: 0; }
+      .roll-toast .roll-km { font-size: 20px; line-height: 1.2; word-break: break-word; }
+      .roll-toast .roll-note {
+        font-size: 11px; margin-top: 2px; white-space: normal;
+        max-width: 100%; line-height: 1.35;
+      }
+      .hop-progress {
+        flex-direction: column; align-items: flex-start; gap: 4px;
+        white-space: normal;
+      }
+      .hop-progress strong {
+        white-space: normal; word-break: break-word;
+      }
+      .status-note {
+        font-size: 12px; word-break: break-word;
+      }
+      .stop-meta { white-space: normal; word-break: break-word; }
     }
 
     .leaflet-control-attribution {
@@ -744,7 +841,7 @@
     <span><span id="interstellarLabel">星际旅行</span><small id="interstellarSub">Interstellar</small></span>
   </a>
 
-  <div class="lang-toggle" role="group" aria-label="Language">
+  <div class="lang-toggle" role="group" aria-label="Language" id="langToggle">
     <button type="button" class="lang-btn active" id="langEn" data-lang="en" aria-pressed="true">
       Full English<small>全英文</small>
     </button>
@@ -752,6 +849,11 @@
       全中文<small>Full Chinese</small>
     </button>
   </div>
+
+  <button type="button" class="btn-mobile-more" id="btnMobileMore" aria-label="More" aria-expanded="false" aria-controls="mobileMorePanel" title="More">
+    <span aria-hidden="true">···</span>
+  </button>
+  <div class="mobile-more-panel" id="mobileMorePanel" role="menu" aria-label="More options" hidden></div>
 
   <div class="hint" id="hint">
     On the map, <em>tap any place</em>—Tide will rise with a travel plan.
@@ -764,7 +866,9 @@
   </div>
 
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
-    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
+      <span class="sheet-handle-bar" aria-hidden="true"></span>
+    </div>
     <header class="sheet-head">
       <div class="place-meta">
         <div class="place-label" id="placeLabel">Destination</div>
@@ -851,7 +955,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build days-hops-slider-v1</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-drawer-a-v1</span>
         </div>
       </div>
 
@@ -5303,7 +5407,7 @@
     placeLabel.textContent = t("startPlace");
     placeName.textContent = "—"; placeCoords.textContent = "";
     localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
-    showStatus(""); sheet.classList.remove("open");
+    showStatus(""); sheet.classList.remove("open", "expanded"); if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
     hint.classList.remove("hide");
     hint.innerHTML = t("hintPlane");
   }
@@ -5317,7 +5421,7 @@
     localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
     planeStart = null; planeStops = []; planeBusy = false;
     planePhase = mode === "plane" ? "pick-start" : "idle";
-    sheet.classList.remove("open");
+    sheet.classList.remove("open", "expanded"); if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
     if (!silent) hint.classList.remove("hide");
     showPanelStates("empty");
     itinerary.innerHTML = "";
@@ -5963,6 +6067,183 @@
   const btnPlaneExportPdf = document.getElementById("btnPlaneExportPdf");
   if (btnPlaneExportPdf) btnPlaneExportPdf.addEventListener("click", function () { exportPlanePdf(); });
 
+
+
+
+  /* ---- Scheme A: phone chrome overflow + sheet peek/expand drag (≤520px only) ---- */
+  (function setupMobileDrawerA() {
+    const mq = window.matchMedia("(max-width: 520px)");
+    const btnMore = document.getElementById("btnMobileMore");
+    const panel = document.getElementById("mobileMorePanel");
+    const islLink = document.getElementById("interstellarLink");
+    const langToggle = document.getElementById("langToggle") || document.querySelector(".lang-toggle");
+    const handle = document.getElementById("sheetHandle");
+    if (!btnMore || !panel || !islLink || !langToggle) return;
+
+    const chromeHome = {
+      islParent: islLink.parentNode,
+      islNext: islLink.nextSibling,
+      langParent: langToggle.parentNode,
+      langNext: langToggle.nextSibling,
+    };
+
+    function closeMorePanel() {
+      panel.classList.remove("open");
+      panel.hidden = true;
+      btnMore.setAttribute("aria-expanded", "false");
+    }
+
+    function openMorePanel() {
+      panel.hidden = false;
+      panel.classList.add("open");
+      btnMore.setAttribute("aria-expanded", "true");
+    }
+
+    function syncChromeHome() {
+      if (mq.matches) {
+        if (islLink.parentNode !== panel) panel.appendChild(islLink);
+        if (langToggle.parentNode !== panel) panel.appendChild(langToggle);
+        btnMore.style.display = "";
+      } else {
+        closeMorePanel();
+        /* Restore before the mobile-only button so desktop absolute stack order matches HTML */
+        if (islLink.parentNode === panel || langToggle.parentNode === panel) {
+          chromeHome.islParent.insertBefore(islLink, btnMore);
+          chromeHome.islParent.insertBefore(langToggle, btnMore);
+        }
+        btnMore.style.display = "none";
+      }
+    }
+
+    btnMore.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!mq.matches) return;
+      if (panel.classList.contains("open")) closeMorePanel();
+      else openMorePanel();
+    });
+    document.addEventListener("click", function (e) {
+      if (!panel.classList.contains("open")) return;
+      if (panel.contains(e.target) || btnMore.contains(e.target)) return;
+      closeMorePanel();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && panel.classList.contains("open")) closeMorePanel();
+    });
+
+    function setExpanded(on) {
+      if (!sheet) return;
+      if (on && mq.matches) {
+        sheet.classList.add("expanded");
+        if (handle) handle.setAttribute("aria-expanded", "true");
+      } else {
+        sheet.classList.remove("expanded");
+        if (handle) handle.setAttribute("aria-expanded", "false");
+      }
+    }
+    window.__tideSheetSetExpanded = setExpanded;
+
+    /* When sheet opens on phone, default to peek (not expanded) */
+    const openObs = new MutationObserver(function () {
+      if (!sheet.classList.contains("open")) {
+        setExpanded(false);
+        sheet.style.transform = "";
+        sheet.classList.remove("dragging");
+      }
+    });
+    openObs.observe(sheet, { attributes: true, attributeFilter: ["class"] });
+
+    /* Sheet handle: tap toggle + drag snap (phone only) */
+    if (handle) {
+      let dragging = false;
+      let moved = false;
+      let startY = 0;
+      let startX = 0;
+      let baseExpanded = false;
+      let lastDy = 0;
+      const TAP_PX = 10;
+      const THRESH = 56;
+
+      function onPointerDown(e) {
+        if (!mq.matches || !sheet.classList.contains("open")) return;
+        if (e.pointerType === "mouse" && e.button !== 0) return;
+        dragging = true;
+        moved = false;
+        baseExpanded = sheet.classList.contains("expanded");
+        startY = e.clientY;
+        startX = e.clientX;
+        lastDy = 0;
+        sheet.classList.add("dragging");
+        try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+        e.preventDefault();
+      }
+
+      function onPointerMove(e) {
+        if (!dragging) return;
+        const dy = e.clientY - startY;
+        const dx = e.clientX - startX;
+        if (Math.abs(dy) > TAP_PX || Math.abs(dx) > TAP_PX) moved = true;
+        lastDy = dy;
+        /* Drag visual: down → translateY+; up from peek → slight lift (capped) */
+        let ty;
+        if (baseExpanded) {
+          ty = Math.max(0, dy);
+        } else {
+          ty = dy < 0 ? Math.max(-48, dy) : Math.max(0, dy);
+        }
+        sheet.style.transform = "translateY(" + ty + "px)";
+        e.preventDefault();
+      }
+
+      function finish(e) {
+        if (!dragging) return;
+        dragging = false;
+        sheet.classList.remove("dragging");
+        try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+        const dy = lastDy;
+        sheet.style.transform = "";
+        if (!moved) {
+          /* Tap: toggle peek ↔ expanded */
+          setExpanded(!baseExpanded);
+          return;
+        }
+        if (dy > THRESH) {
+          /* Drag down → peek (stay open) */
+          setExpanded(false);
+        } else if (dy < -THRESH) {
+          /* Drag up → expanded */
+          setExpanded(true);
+        } else {
+          setExpanded(baseExpanded);
+        }
+      }
+
+      handle.addEventListener("pointerdown", onPointerDown);
+      handle.addEventListener("pointermove", onPointerMove);
+      handle.addEventListener("pointerup", finish);
+      handle.addEventListener("pointercancel", finish);
+      handle.addEventListener("keydown", function (e) {
+        if (!mq.matches || !sheet.classList.contains("open")) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          setExpanded(!sheet.classList.contains("expanded"));
+        }
+      });
+    }
+
+    function onMq() {
+      syncChromeHome();
+      if (!mq.matches) {
+        setExpanded(false);
+        sheet.style.transform = "";
+        sheet.classList.remove("dragging");
+        closeMorePanel();
+      }
+    }
+    syncChromeHome();
+    if (mq.addEventListener) mq.addEventListener("change", onMq);
+    else if (mq.addListener) mq.addListener(onMq);
+  })();
 
 
   /* Initial language paint */
