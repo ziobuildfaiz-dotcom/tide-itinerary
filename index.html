@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- tide-cdn-bust:2026-10-16T08:29:08Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v6" />
+  <!-- tide-cdn-bust:2026-10-16T15:03:25Z -->
+  <meta name="tide-build" content="mobile-cn-zh-v7" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -1061,7 +1061,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v6</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v7</span>
         </div>
       </div>
 
@@ -1227,6 +1227,7 @@
     "tip": "Tip",
     "transport": "Getting around",
     "statusPickedStart": "Start set. Choose hop count, tap Confirm start, then launch the paper plane.",
+    "statusPlanePick": "Paper plane ready — tap the map to set your start.",
     "statusLocked": "Start locked. Tap Launch plane to roll range and fly to the next stop.",
     "statusHopsDone": "All hops done. Tap Generate full plan for a multi-city day schedule.",
     "statusNoCandidate": "No good stop in range—launch again.",
@@ -1378,6 +1379,7 @@
     "tip": "小贴士",
     "transport": "交通",
     "statusPickedStart": "已选定出发地。选择跳跃次数，点「确认出发地」后即可掷出纸飞机。",
+    "statusPlanePick": "纸飞机模式已就绪 — 点地图设定出发地。",
     "statusLocked": "航线已锁定出发地。点击「掷出纸飞机」掷出航程并飞向下站。",
     "statusHopsDone": "所有跳跃已完成。点击「生成完整行程」串联多城日计划。",
     "statusNoCandidate": "航程范围内暂无合适目的地，请再掷一次纸飞机。",
@@ -4844,17 +4846,23 @@
       btnPlaneLabel.textContent = t("confirmStart");
       btnPlane.disabled = true;
       resetPlaneUI();
-      /* Phone: collapse sheet to handle-only so map is free for flying */
+      /* Always open sheet so #planeControls (hop + Confirm) are visible on desktop + phone */
+      sheet.classList.add("open");
       try {
         if (window.matchMedia("(max-width: 520px)").matches) {
-          if (!sheet.classList.contains("open")) sheet.classList.add("open");
-          if (typeof window.__tideSheetSetSnap === "function") window.__tideSheetSetSnap(0);
+          /* Phone: half snap so hop slider + Confirm show (not handle-only snap 0) */
+          if (typeof window.__tideSheetSetSnap === "function") window.__tideSheetSetSnap(1);
           else {
-            sheet.classList.add("collapsed");
-            sheet.classList.remove("expanded");
+            sheet.classList.remove("collapsed", "expanded");
           }
+        } else {
+          /* Desktop side sheet: refresh map after layout shift */
+          setTimeout(function () {
+            try { if (map && map.invalidateSize) map.invalidateSize(); } catch (_) {}
+          }, 120);
         }
       } catch (_) {}
+      showStatus("statusPlanePick");
     }
     hint.classList.remove("hide");
   }
@@ -5145,7 +5153,6 @@
     placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
     sheet.classList.add("open");
     planePhase = "pick-start";
-    btnPlane.disabled = true;
     btnPlaneLabel.textContent = t("confirmStart");
 
     /* ALWAYS pin + start at clicked coords — never snap to curated center */
@@ -5154,7 +5161,30 @@
     marker = L.marker([startLat, startLng], { icon: makePinIcon({ start: true }) }).addTo(map);
     map.panTo([startLat, startLng]);
 
+    /* Pin + enable Confirm immediately; Nominatim labels fill in async */
+    const near0 = nearestCity(lat, lng);
+    planeStart = {
+      lat: startLat, lng: startLng, name: t("locating"), region: "",
+      vibe: inferVibeFromLatLng(lat, lng),
+      food: "", tags: [],
+      cityKey: localTourismKey("", lat, lng),
+      _cityRef: null, _nearestCity: near0.city,
+      nameEn: "", nameZh: "",
+      regionEn: "", regionZh: "",
+      approx: true, distanceKm: undefined,
+      _nearbyPopular: null,
+    };
+    localPlaceBackup = Object.assign({}, planeStart);
+    nearbyChipActive = false;
+    btnPlane.disabled = false;
+    btnPlaneLabel.textContent = t("confirmStart");
+    planeEmpty.style.display = "block";
+    planeActive.style.display = "none";
+    showStatus("statusPickedStart");
+
     const place = await resolvePlace(lat, lng);
+    /* Skip label update if user cleared / re-picked while geocoding */
+    if (!planeStart || planeStart.lat !== startLat || planeStart.lng !== startLng) return;
     const loc = localizePlace(place);
     const near = nearestCity(lat, lng);
     planeStart = {
@@ -5179,9 +5209,6 @@
     updateNearbySuggest(planeStart);
     btnPlane.disabled = false;
     btnPlaneLabel.textContent = t("confirmStart");
-    planeEmpty.style.display = "block";
-    planeActive.style.display = "none";
-    showStatus("statusPickedStart");
   }
 
   function confirmStart() {
