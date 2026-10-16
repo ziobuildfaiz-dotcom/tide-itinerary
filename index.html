@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="mobile-drawer-a-v1" />
+  <meta name="tide-build" content="mobile-sheet-3state-v1" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -313,6 +313,8 @@
     }
     .sheet-body::-webkit-scrollbar { width: 6px; }
     .sheet-body::-webkit-scrollbar-thumb { background: rgba(232, 213, 183, 0.25); border-radius: 3px; }
+    /* Desktop: children stay sheet flex items. Phone overrides to real scrollport. */
+    .sheet-scroll { display: contents; }
     .empty-state { text-align: center; padding: 28px 12px 20px; color: var(--sand); opacity: 0.75; }
     .empty-state .wave-icon { font-size: 36px; margin-bottom: 10px; opacity: 0.9; }
     .empty-state p { font-size: 14px; line-height: 1.6; }
@@ -530,14 +532,23 @@
     @media (max-width: 520px) {
       .brand {
         top: 12px; left: 12px; padding: 8px 12px 8px 10px;
+        z-index: 1200;
       }
       .brand-text span { display: none; }
-      .btn-mobile-more { display: flex; }
+      .btn-mobile-more { display: flex; z-index: 1210; }
+      .mobile-more-panel { z-index: 1220; }
       .mode-switch {
         left: 12px; right: 12px; transform: none;
         top: 64px; justify-content: stretch;
+        z-index: 1200;
+        pointer-events: auto;
       }
-      .mode-btn { flex: 1; text-align: center; padding: 8px 10px; font-size: 12px; }
+      .mode-btn {
+        flex: 1; text-align: center; padding: 8px 10px; font-size: 12px;
+        pointer-events: auto; position: relative; z-index: 1;
+        -webkit-tap-highlight-color: rgba(224, 122, 95, 0.25);
+        touch-action: manipulation;
+      }
       /* Hide free-floating chrome if not yet moved; panel hosts them */
       body > .interstellar-link,
       body > .lang-toggle { display: none !important; }
@@ -546,15 +557,22 @@
         top: 118px; /* under brand + mode-switch */
         left: 4px;
       }
-      .sheet-handle {
-        min-height: 44px; padding: 0; cursor: grab;
-        touch-action: none; user-select: none; -webkit-user-select: none;
+      /* —— Sheet 3-state snaps: collapsed / half / full —— */
+      .sheet {
+        max-height: none;
+        height: 50vh;
+        transition:
+          transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+          height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+          max-height 0.45s cubic-bezier(0.22, 1, 0.36, 1);
       }
-      .sheet-handle:active { cursor: grabbing; }
-      .sheet-handle-bar {
-        width: 44px; height: 5px;
-        background: rgba(247, 243, 235, 0.85);
-        box-shadow: 0 0 0 1px rgba(11, 31, 51, 0.25);
+      .sheet.open {
+        height: 50vh;
+        max-height: 50vh;
+      }
+      .sheet.open.collapsed {
+        height: 52px;
+        max-height: 52px;
       }
       .sheet.open.expanded {
         max-height: min(96dvh, 100%);
@@ -563,9 +581,39 @@
       .sheet.dragging {
         transition: none !important;
       }
-      .sheet.open.expanded .sheet-body {
+      /* Phone scrollport: days/budget scroll away; sticky destination + X only */
+      .sheet-scroll {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-x: hidden;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         overscroll-behavior: contain;
+      }
+      .sheet-head {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background: linear-gradient(180deg, rgba(26, 58, 82, 0.98), rgba(26, 58, 82, 0.96));
+        backdrop-filter: blur(12px);
+      }
+      .sheet-body {
+        flex: none;
+        overflow: visible;
+        padding-bottom: 36px;
+      }
+      .sheet-handle {
+        min-height: 44px; padding: 0; cursor: grab;
+        touch-action: none; user-select: none; -webkit-user-select: none;
+        flex-shrink: 0;
+      }
+      .sheet-handle:active { cursor: grabbing; }
+      .sheet-handle-bar {
+        width: 44px; height: 5px;
+        background: rgba(247, 243, 235, 0.85);
+        box-shadow: 0 0 0 1px rgba(11, 31, 51, 0.25);
       }
       .roll-toast {
         top: 118px; bottom: auto;
@@ -576,6 +624,7 @@
         padding: 10px 14px;
         display: flex; flex-direction: column; align-items: center;
         gap: 2px;
+        z-index: 1150;
       }
       .roll-toast.show {
         opacity: 1;
@@ -631,6 +680,14 @@
       background: rgba(26, 58, 82, 0.95) !important; color: var(--foam) !important;
     }
     .leaflet-control-zoom a:last-child { border-bottom: none !important; }
+
+    /* Phone: keep zoom under mode-switch (rule above would otherwise override media query) */
+    @media (max-width: 520px) {
+      .leaflet-top.leaflet-left {
+        top: 118px !important;
+        left: 4px !important;
+      }
+    }
 
     /* Budget panel */
     .budget-panel {
@@ -869,6 +926,7 @@
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
       <span class="sheet-handle-bar" aria-hidden="true"></span>
     </div>
+    <div class="sheet-scroll" id="sheetScroll">
     <header class="sheet-head">
       <div class="place-meta">
         <div class="place-label" id="placeLabel">Destination</div>
@@ -955,7 +1013,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-drawer-a-v1</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-sheet-3state-v1</span>
         </div>
       </div>
 
@@ -1011,6 +1069,7 @@
         </div>
       </div>
     </div>
+    </div><!-- /.sheet-scroll -->
   </aside>
 
   <script>
@@ -5407,7 +5466,7 @@
     placeLabel.textContent = t("startPlace");
     placeName.textContent = "—"; placeCoords.textContent = "";
     localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
-    showStatus(""); sheet.classList.remove("open", "expanded"); if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
+    showStatus(""); sheet.classList.remove("open", "expanded", "collapsed"); if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
     hint.classList.remove("hide");
     hint.innerHTML = t("hintPlane");
   }
@@ -5421,7 +5480,7 @@
     localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
     planeStart = null; planeStops = []; planeBusy = false;
     planePhase = mode === "plane" ? "pick-start" : "idle";
-    sheet.classList.remove("open", "expanded"); if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
+    sheet.classList.remove("open", "expanded", "collapsed"); if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
     if (!silent) hint.classList.remove("hide");
     showPanelStates("empty");
     itinerary.innerHTML = "";
@@ -6070,7 +6129,7 @@
 
 
 
-  /* ---- Scheme A: phone chrome overflow + sheet peek/expand drag (≤520px only) ---- */
+  /* ---- Scheme A: phone chrome overflow + sheet 3-state drag (≤520px only) ---- */
   (function setupMobileDrawerA() {
     const mq = window.matchMedia("(max-width: 520px)");
     const btnMore = document.getElementById("btnMobileMore");
@@ -6086,6 +6145,9 @@
       langParent: langToggle.parentNode,
       langNext: langToggle.nextSibling,
     };
+
+    /* Snap indices: 0=collapsed (handle only), 1=half (~50vh), 2=full (~96dvh) */
+    const SNAP = { collapsed: 0, half: 1, full: 2 };
 
     function closeMorePanel() {
       panel.classList.remove("open");
@@ -6131,45 +6193,83 @@
       if (e.key === "Escape" && panel.classList.contains("open")) closeMorePanel();
     });
 
-    function setExpanded(on) {
+    function getSnap() {
+      if (!sheet) return SNAP.half;
+      if (sheet.classList.contains("collapsed")) return SNAP.collapsed;
+      if (sheet.classList.contains("expanded")) return SNAP.full;
+      return SNAP.half;
+    }
+
+    function setSnap(level) {
       if (!sheet) return;
-      if (on && mq.matches) {
-        sheet.classList.add("expanded");
-        if (handle) handle.setAttribute("aria-expanded", "true");
-      } else {
-        sheet.classList.remove("expanded");
+      sheet.style.transform = "";
+      sheet.style.height = "";
+      sheet.style.maxHeight = "";
+      if (!mq.matches) {
+        sheet.classList.remove("collapsed", "expanded");
         if (handle) handle.setAttribute("aria-expanded", "false");
+        return;
+      }
+      const lv = Math.max(0, Math.min(2, level | 0));
+      sheet.classList.toggle("collapsed", lv === SNAP.collapsed);
+      sheet.classList.toggle("expanded", lv === SNAP.full);
+      if (handle) {
+        handle.setAttribute("aria-expanded", lv === SNAP.full ? "true" : "false");
+        handle.setAttribute("data-snap", lv === 0 ? "collapsed" : lv === 2 ? "full" : "half");
       }
     }
-    window.__tideSheetSetExpanded = setExpanded;
 
-    /* When sheet opens on phone, default to peek (not expanded) */
+    /* Compat for clearAll / older callers: true→full, false→half */
+    function setExpanded(on) {
+      if (on && mq.matches) setSnap(SNAP.full);
+      else setSnap(SNAP.half);
+    }
+    window.__tideSheetSetExpanded = setExpanded;
+    window.__tideSheetSetSnap = setSnap;
+
+    function snapHeightPx(level) {
+      const vh = window.innerHeight || 640;
+      if (level <= SNAP.collapsed) return 52;
+      if (level >= SNAP.full) return Math.min(vh * 0.96, vh);
+      return vh * 0.5;
+    }
+
+    /* When sheet closes, reset snap. When it opens on phone, default to half. */
+    let lastOpen = sheet && sheet.classList.contains("open");
     const openObs = new MutationObserver(function () {
-      if (!sheet.classList.contains("open")) {
-        setExpanded(false);
+      const isOpen = sheet.classList.contains("open");
+      if (!isOpen) {
+        sheet.classList.remove("collapsed", "expanded", "dragging");
         sheet.style.transform = "";
-        sheet.classList.remove("dragging");
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
+        if (handle) handle.setAttribute("aria-expanded", "false");
+      } else if (mq.matches && !lastOpen) {
+        /* Fresh open → half (map + preview) */
+        setSnap(SNAP.half);
       }
+      lastOpen = isOpen;
     });
     openObs.observe(sheet, { attributes: true, attributeFilter: ["class"] });
 
-    /* Sheet handle: tap toggle + drag snap (phone only) */
+    /* Sheet handle: tap cycles collapsed→half→full→collapsed; drag snaps by direction */
     if (handle) {
       let dragging = false;
       let moved = false;
       let startY = 0;
       let startX = 0;
-      let baseExpanded = false;
+      let baseSnap = SNAP.half;
       let lastDy = 0;
       const TAP_PX = 10;
-      const THRESH = 56;
+      const THRESH = 48;
 
       function onPointerDown(e) {
         if (!mq.matches || !sheet.classList.contains("open")) return;
         if (e.pointerType === "mouse" && e.button !== 0) return;
+        /* Only the handle captures — never steal top chrome / mode-switch taps */
         dragging = true;
         moved = false;
-        baseExpanded = sheet.classList.contains("expanded");
+        baseSnap = getSnap();
         startY = e.clientY;
         startX = e.clientX;
         lastDy = 0;
@@ -6184,14 +6284,16 @@
         const dx = e.clientX - startX;
         if (Math.abs(dy) > TAP_PX || Math.abs(dx) > TAP_PX) moved = true;
         lastDy = dy;
-        /* Drag visual: down → translateY+; up from peek → slight lift (capped) */
-        let ty;
-        if (baseExpanded) {
-          ty = Math.max(0, dy);
-        } else {
-          ty = dy < 0 ? Math.max(-48, dy) : Math.max(0, dy);
-        }
-        sheet.style.transform = "translateY(" + ty + "px)";
+        const baseH = snapHeightPx(baseSnap);
+        const nextH = baseSnap < SNAP.full ? snapHeightPx(baseSnap + 1) : baseH;
+        const prevH = baseSnap > SNAP.collapsed ? snapHeightPx(baseSnap - 1) : baseH;
+        let h = baseH - dy; /* drag up (dy<0) → taller */
+        const minH = Math.min(prevH, baseH, nextH);
+        const maxH = Math.max(prevH, baseH, nextH);
+        h = Math.max(minH, Math.min(maxH, h));
+        sheet.style.height = h + "px";
+        sheet.style.maxHeight = h + "px";
+        sheet.style.transform = "translateY(0)";
         e.preventDefault();
       }
 
@@ -6202,19 +6304,19 @@
         try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
         const dy = lastDy;
         sheet.style.transform = "";
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
         if (!moved) {
-          /* Tap: toggle peek ↔ expanded */
-          setExpanded(!baseExpanded);
+          /* Tap: cycle collapsed → half → full → collapsed */
+          setSnap((baseSnap + 1) % 3);
           return;
         }
-        if (dy > THRESH) {
-          /* Drag down → peek (stay open) */
-          setExpanded(false);
-        } else if (dy < -THRESH) {
-          /* Drag up → expanded */
-          setExpanded(true);
+        if (dy < -THRESH) {
+          setSnap(Math.min(SNAP.full, baseSnap + 1));
+        } else if (dy > THRESH) {
+          setSnap(Math.max(SNAP.collapsed, baseSnap - 1));
         } else {
-          setExpanded(baseExpanded);
+          setSnap(baseSnap);
         }
       }
 
@@ -6226,7 +6328,13 @@
         if (!mq.matches || !sheet.classList.contains("open")) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          setExpanded(!sheet.classList.contains("expanded"));
+          setSnap((getSnap() + 1) % 3);
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          setSnap(Math.min(SNAP.full, getSnap() + 1));
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          setSnap(Math.max(SNAP.collapsed, getSnap() - 1));
         }
       });
     }
@@ -6234,9 +6342,11 @@
     function onMq() {
       syncChromeHome();
       if (!mq.matches) {
-        setExpanded(false);
+        setSnap(SNAP.half);
+        sheet.classList.remove("collapsed", "expanded", "dragging");
         sheet.style.transform = "";
-        sheet.classList.remove("dragging");
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
         closeMorePanel();
       }
     }
