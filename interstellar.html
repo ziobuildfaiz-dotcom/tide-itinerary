@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- tide-cdn-bust:2026-10-16T08:29:08Z -->
-  <meta name="tide-build" content="interstellar-mobile-frame-v4" />
+  <!-- tide-cdn-bust:2026-10-16T08:32:04Z -->
+  <meta name="tide-build" content="interstellar-mobile-frame-v5" />
   <!-- tide-interstellar: globe-moon-v1 -->
   <!-- tide-chrome: brand-zoom-stack-v3 -->
 <title>星际旅行 · Interstellar Travel</title>
@@ -55,7 +55,12 @@
     }
     #map { z-index: 1; transition: opacity 1.1s ease, filter 1.1s ease; }
     #map.fade-out { opacity: 0; filter: blur(12px) brightness(0.4); pointer-events: none; }
-    #webgl { z-index: 2; opacity: 0; pointer-events: none; transition: opacity 0.9s ease; }
+    #webgl {
+      z-index: 2; opacity: 0; pointer-events: none; transition: opacity 0.9s ease;
+      /* Phone pinch must reach OrbitControls, not browser page-zoom */
+      touch-action: none;
+      -ms-touch-action: none;
+    }
     #webgl.active { opacity: 1; pointer-events: auto; }
     .leaflet-container { background: #02040a !important; font: inherit; }
     #map::after {
@@ -693,17 +698,44 @@ controls.maxDistance = 220;
 controls.enablePan = false;
 controls.enabled = false;
 
-/* Phone-only framing (≤640px). Desktop / tablet keep prior distances. */
+/* Phone-only framing. Desktop / tablet keep prior distances.
+   Root cause of "solar system only in a corner" on phones:
+   (1) OrbitControls target followed the selected planet — zooming out orbited Earth, so the Sun disk sat off-frame;
+   (2) canvas lacked touch-action:none so browser often stole pinch;
+   (3) portrait FOV was too narrow + overview opened too close. */
 function isPhoneViewport() {
+  const w = Math.min(window.innerWidth || 0, (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 0) || window.innerWidth;
+  const h = Math.min(window.innerHeight || 0, (document.documentElement && document.documentElement.clientHeight) || window.innerHeight || 0) || window.innerHeight;
+  const shortSide = Math.min(w, h);
+  // Phones: CSS short side ≤500. iPad mini short side ~768 → untouched.
+  if (shortSide > 0 && shortSide <= 500) return true;
   try {
-    return window.matchMedia("(max-width: 640px)").matches;
-  } catch (_) {
-    return window.innerWidth <= 640;
+    if (window.matchMedia("(max-width: 640px)").matches) return true;
+  } catch (_) {}
+  return false;
+}
+function syncPhoneCameraOptics() {
+  if (!isPhoneViewport()) {
+    if (camera.fov !== 45) {
+      camera.fov = 45;
+      camera.far = 2000;
+      camera.updateProjectionMatrix();
+    }
+    controls.zoomSpeed = 1.0;
+    return;
   }
+  // Wider FOV → usable horizontal view on tall portrait screens
+  if (camera.fov !== 62) {
+    camera.fov = 62;
+    camera.far = 12000;
+    camera.updateProjectionMatrix();
+  }
+  controls.zoomSpeed = 1.55;
 }
 /** Distance so a sphere of `radius` fits in the narrower FOV with padding. */
 function viewFitDistance(radius, pad) {
   pad = pad == null ? 1.18 : pad;
+  syncPhoneCameraOptics();
   const vFov = (camera.fov * Math.PI) / 180;
   const aspect = Math.max(camera.aspect || (window.innerWidth / Math.max(window.innerHeight, 1)), 0.35);
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
@@ -712,36 +744,36 @@ function viewFitDistance(radius, pad) {
 }
 function globeCamDistance() {
   const r = typeof GLOBE_EARTH_R === "number" ? GLOBE_EARTH_R : 1.6;
-  if (!isPhoneViewport()) return 5.68; // ~length of (0,1.4,5.5)
-  return Math.max(viewFitDistance(r * 1.02, 1.22), 4.8);
+  if (!isPhoneViewport()) return 5.68;
+  return Math.max(viewFitDistance(r * 1.02, 1.25), 5.2);
 }
 function globeCamPos() {
   const d = globeCamDistance();
   if (!isPhoneViewport()) return new THREE.Vector3(0, 1.4, 5.5);
-  // Near +Z, tiny elevation — keeps Earth in true screen center on tall phones
-  return new THREE.Vector3(0, d * 0.06, d * 0.998);
+  return new THREE.Vector3(0, d * 0.04, d * 0.999);
 }
 function globeDistLimits() {
   const r = typeof GLOBE_EARTH_R === "number" ? GLOBE_EARTH_R : 1.6;
   if (!isPhoneViewport()) return { min: 1.85, max: 12 };
   return {
     min: Math.max(r * 1.12, 1.75),
-    max: Math.max(viewFitDistance(r * 1.02, 1.22) * 2.6, 18),
+    max: Math.max(viewFitDistance(r * 1.02, 1.25) * 3.2, 22),
   };
 }
 function systemDistLimits() {
   if (!isPhoneViewport()) return { min: 8, max: 200 };
-  // Neptune orbit ~98; fit full system on portrait (narrow FOV needs far dolly)
-  const fit = viewFitDistance(108, 1.12);
-  return { min: 6, max: Math.max(fit, 420) };
+  // Neptune ~98; leave huge headroom — do not clamp the overview
+  const fit = viewFitDistance(115, 1.2);
+  return { min: 5, max: Math.max(fit * 1.35, 900) };
 }
 function systemOverviewCam() {
   if (!isPhoneViewport()) return new THREE.Vector3(18, 28, 72);
-  const d = viewFitDistance(78, 1.15); // open showing ~Saturn; pinch out for Neptune
-  // Moderate elevation so ecliptic sits mid-frame, not stuck at the bottom
-  return new THREE.Vector3(d * 0.22, d * 0.28, d * 0.93);
+  // Frame the FULL system (past Neptune) with low elevation so the ecliptic is centered, not stuck at the bottom edge
+  const d = viewFitDistance(115, 1.22);
+  return new THREE.Vector3(d * 0.12, d * 0.1, d * 0.988);
 }
 function applyGlobeFraming(snap) {
+  syncPhoneCameraOptics();
   const lim = globeDistLimits();
   controls.minDistance = lim.min;
   controls.maxDistance = lim.max;
@@ -752,9 +784,18 @@ function applyGlobeFraming(snap) {
   }
 }
 function applySystemFramingLimits() {
+  syncPhoneCameraOptics();
   const lim = systemDistLimits();
   controls.minDistance = lim.min;
   controls.maxDistance = lim.max;
+}
+function applySystemOverview(snap) {
+  applySystemFramingLimits();
+  controls.target.set(0, 0, 0);
+  if (snap) {
+    camera.position.copy(systemOverviewCam());
+    controls.update();
+  }
 }
 
 const ambient = new THREE.AmbientLight(0x8896aa, 2.35);
@@ -1113,13 +1154,21 @@ async function enterSystem() {
   systemEarth.userData.angle = eAngle;
   systemEarth.position.set(Math.cos(eAngle) * 28, 0, Math.sin(eAngle) * 28);
   updateMoonOrbit(0, false);
-  applySystemFramingLimits();
-  controls.target.set(0, 0, 0);
+  // Phone: drop planet-follow so zoom orbits the Sun (whole system stays framed)
+  selectedId = null;
+  highlightRing.visible = false;
+  try { selectCard.classList.remove("show"); } catch (_) {}
+  if (isPhoneViewport() && scene.fog) {
+    try { scene.fog.density = 0.00055; } catch (_) {}
+  }
+  applySystemOverview(false);
   await animateCamera(
     systemOverviewCam(),
     new THREE.Vector3(0, 0, 0),
     2200
   );
+  // Re-assert after tween (damping / mid-gesture can leave target off-sun on phones)
+  applySystemOverview(true);
   setTimeout(() => hintEl.classList.add("hide"), 6000);
 }
 
@@ -1300,15 +1349,22 @@ function selectBody(id) {
   const s = def.radius * 1.05;
   highlightRing.scale.set(s, s, s);
   highlightRing.position.copy(mesh.position);
-  // Frame the selected body so wheel zoom-in can approach it (Earth → Tide)
+  // Frame the selected body so wheel zoom-in can approach it (Earth → Tide).
+  // Phone: never clamp maxDistance / retarget to the planet — that locked the view
+  // to a tiny slice of the system (maxDistance 70 around Earth).
   if (phase === "system") {
-    controls.target.copy(mesh.position);
-    if (id === "earth") {
-      controls.minDistance = 1.35;
-      controls.maxDistance = 70;
+    if (isPhoneViewport()) {
+      applySystemFramingLimits();
+      controls.target.set(0, 0, 0);
     } else {
-      controls.minDistance = Math.max(def.radius * 2.2, 2.8);
-      controls.maxDistance = 140;
+      controls.target.copy(mesh.position);
+      if (id === "earth") {
+        controls.minDistance = 1.35;
+        controls.maxDistance = 70;
+      } else {
+        controls.minDistance = Math.max(def.radius * 2.2, 2.8);
+        controls.maxDistance = 140;
+      }
     }
   }
   refreshSelectCard();
@@ -1616,16 +1672,16 @@ document.getElementById("btnClosePanel").onclick = () => returnToSystem();
 /* Resize */
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / Math.max(window.innerHeight, 1);
+  syncPhoneCameraOptics();
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
   renderer.setSize(window.innerWidth, window.innerHeight);
   map.invalidateSize();
   if (phase === "globe" && controls.enabled) {
-    const lim = globeDistLimits();
-    controls.minDistance = lim.min;
-    controls.maxDistance = lim.max;
+    applyGlobeFraming(false);
   } else if ((phase === "system" || phase === "fly") && controls.enabled) {
     applySystemFramingLimits();
+    if (isPhoneViewport()) controls.target.set(0, 0, 0);
   }
 });
 
@@ -1672,7 +1728,12 @@ function tick() {
     if (selectedId && bodyMeshes[selectedId] && highlightRing.visible) {
       highlightRing.position.copy(bodyMeshes[selectedId].position);
       highlightRing.rotation.z = tsec * 0.4;
-      controls.target.copy(bodyMeshes[selectedId].position);
+      // Desktop/tablet: orbit the selection. Phone: keep Sun as orbit center so pinch-out shows the full system.
+      if (!isPhoneViewport()) {
+        controls.target.copy(bodyMeshes[selectedId].position);
+      } else if (controls.target.lengthSq() > 0.01) {
+        controls.target.set(0, 0, 0);
+      }
     }
   }
 
