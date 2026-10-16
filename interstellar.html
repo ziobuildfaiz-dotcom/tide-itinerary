@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <!-- tide-cdn-bust:2026-10-16T08:35:16Z -->
-  <meta name="tide-build" content="interstellar-mobile-frame-v7" />
+  <meta name="tide-build" content="interstellar-mobile-frame-v8" />
   <!-- tide-interstellar: globe-moon-v1 -->
   <!-- tide-chrome: brand-zoom-stack-v3 -->
 <title>星际旅行 · Interstellar Travel</title>
@@ -138,9 +138,11 @@
       display: grid; place-items: center; flex-shrink: 0;
     }
     .brand-mark svg { width: 18px; height: 18px; }
+
     .brand-text strong {
       display: block; font-family: "Noto Serif SC", "Noto Serif", serif;
       font-weight: 600; font-size: 15px; color: var(--foam);
+      white-space: nowrap;
     }
     .brand-text span { font-size: 11px; opacity: 0.7; letter-spacing: 0.04em; }
     .top-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
@@ -287,9 +289,29 @@
 
     @media (max-width: 640px) {
       .hint { top: 130px; }
-      .select-card { left: 12px; right: 12px; width: auto; bottom: 64px; }
+      .select-card { left: 12px; right: 12px; width: auto; bottom: 118px; }
+      .brand {
+        max-width: calc(100vw - 168px);
+        padding: 8px 14px 8px 10px;
+        gap: 10px;
+      }
+      .brand-text strong {
+        white-space: nowrap;
+        font-size: 14px;
+        line-height: 1.2;
+      }
       .brand-text span { display: none; }
       .side-panel { width: 100%; }
+      /* Keep CN/EN chrome aligned: system chip above planet rail, rail above phase dots */
+      .hud-bottom {
+        bottom: 118px;
+      }
+      .planet-rail {
+        bottom: 52px;
+        z-index: 830;
+      }
+      .phase-bar { bottom: 14px; }
+      .isl-build-chip { bottom: 98px; }
     }
 
 
@@ -338,7 +360,7 @@
 <body>
   <div id="map" aria-label="Earth map"></div>
   <canvas id="webgl"></canvas>
-  <div class="isl-build-chip" id="islBuildChip" aria-hidden="true">isl v7</div>
+  <div class="isl-build-chip" id="islBuildChip" aria-hidden="true">isl v8</div>
   <div id="pageFade" aria-hidden="true"></div>
 
   <!-- tide-chrome: brand-zoom-stack-v3 -->
