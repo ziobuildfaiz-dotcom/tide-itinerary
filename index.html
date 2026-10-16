@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="mobile-fix-v2" />
+  <meta name="tide-build" content="mobile-plane-v3" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -531,26 +531,33 @@
 
     @media (max-width: 520px) {
       .brand {
+        position: fixed !important;
         top: 12px; left: 12px; padding: 8px 12px 8px 10px;
-        z-index: 2500 !important;
-        pointer-events: auto;
+        z-index: 10000 !important;
+        pointer-events: auto !important;
       }
       .brand-text span { display: none; }
       .btn-mobile-more {
         display: flex;
-        z-index: 2500 !important;
-        pointer-events: auto;
+        z-index: 10000 !important;
+        pointer-events: auto !important;
+        position: fixed !important;
       }
       .mobile-more-panel {
-        z-index: 2500 !important;
-        pointer-events: auto;
+        z-index: 10001 !important;
+        pointer-events: auto !important;
       }
       .mode-switch {
-        left: 12px; right: 12px; transform: none;
+        position: fixed !important;
+        left: 12px; right: 12px; transform: none !important;
         top: 64px; justify-content: stretch;
-        z-index: 2500 !important;
-        pointer-events: auto;
+        z-index: 10000 !important;
+        pointer-events: auto !important;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
       }
+      .sheet:not(.open) { pointer-events: none !important; }
+      .sheet.open { pointer-events: auto !important; }
       .mode-btn {
         flex: 1; text-align: center; padding: 8px 10px; font-size: 12px;
         pointer-events: auto; position: relative; z-index: 1;
@@ -659,7 +666,7 @@
     }
 
 
-    /* Phone-only build proof chip (mobile-fix-v2) */
+    /* Phone-only build proof chip (mobile-plane-v3) */
     .tide-build-chip {
       display: none;
       position: absolute;
@@ -951,7 +958,7 @@
     <div class="roll-note" id="rollNote">Dice sets the next hop radius</div>
   </div>
 
-  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v2</div>
+  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v3</div>
 
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
@@ -1044,7 +1051,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-fix-v2</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-plane-v3</span>
         </div>
       </div>
 
@@ -2695,6 +2702,7 @@
   const rollNote = document.getElementById("rollNote");
   const modeTideBtn = document.getElementById("modeTide");
   const modePlaneBtn = document.getElementById("modePlane");
+  const modeSwitch = document.getElementById("modeSwitch");
   const langEnBtn = document.getElementById("langEn");
   const langZhBtn = document.getElementById("langZh");
   const inputTotalBudget = document.getElementById("inputTotalBudget");
@@ -4820,21 +4828,36 @@
     }
     hint.classList.remove("hide");
   }
-  /* Capture-phase bindings so mode tabs win over map/sheet touch handlers on phone */
+  /* Robust mode taps: WeChat/X5/Safari — touchend+click debounce; also window hooks + onclick */
   function bindModeTap(btn, next) {
     if (!btn) return;
+    let last = 0;
     const go = function (e) {
-      if (e && e.type === "touchend") {
-        try { e.preventDefault(); } catch (_) {}
+      const now = Date.now();
+      if (now - last < 400) {
+        if (e) { try { e.preventDefault(); e.stopPropagation(); } catch (_) {} }
+        return;
       }
-      if (e) { try { e.stopPropagation(); } catch (_) {} }
-      setMode(next);
+      last = now;
+      if (e) {
+        try { e.preventDefault(); } catch (_) {}
+        try { e.stopPropagation(); } catch (_) {}
+        try { e.stopImmediatePropagation(); } catch (_) {}
+      }
+      try { setMode(next); } catch (err) { console.warn("setMode", err); }
     };
-    btn.addEventListener("pointerup", go, true);
-    btn.addEventListener("click", go, true);
+    ["touchstart", "touchend", "pointerup", "click"].forEach(function (ev) {
+      btn.addEventListener(ev, go, true);
+    });
+    btn.onclick = function (e) { go(e); return false; };
   }
   bindModeTap(modeTideBtn, "tide");
   bindModeTap(modePlaneBtn, "plane");
+  window.__tideSetMode = setMode;
+  if (modeSwitch) {
+    modeSwitch.style.zIndex = "10000";
+    modeSwitch.style.pointerEvents = "auto";
+  }
 
   async function onTideMapClick(e) {
     const { lat, lng } = e.latlng;
@@ -6276,8 +6299,19 @@
 
     /* Compat for clearAll / older callers: true→full, false→half */
     function setExpanded(on) {
-      if (on && mq.matches) setSnap(SNAP.full);
-      else setSnap(SNAP.half);
+      if (!mq.matches) {
+        sheet.classList.remove("collapsed", "expanded");
+        return;
+      }
+      if (on) setSnap(SNAP.full);
+      else {
+        /* closing clearAll: fully dismiss sheet, do not leave half-open ghost */
+        sheet.classList.remove("open", "collapsed", "expanded", "dragging");
+        sheet.style.transform = "";
+        sheet.style.height = "";
+        sheet.style.maxHeight = "";
+        if (handle) handle.setAttribute("aria-expanded", "false");
+      }
     }
     window.__tideSheetSetExpanded = setExpanded;
     window.__tideSheetSetSnap = setSnap;
