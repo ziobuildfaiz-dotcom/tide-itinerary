@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tide-build" content="mobile-sheet-3state-v1" />
+  <meta name="tide-build" content="mobile-fix-v2" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -532,15 +532,23 @@
     @media (max-width: 520px) {
       .brand {
         top: 12px; left: 12px; padding: 8px 12px 8px 10px;
-        z-index: 1200;
+        z-index: 2500 !important;
+        pointer-events: auto;
       }
       .brand-text span { display: none; }
-      .btn-mobile-more { display: flex; z-index: 1210; }
-      .mobile-more-panel { z-index: 1220; }
+      .btn-mobile-more {
+        display: flex;
+        z-index: 2500 !important;
+        pointer-events: auto;
+      }
+      .mobile-more-panel {
+        z-index: 2500 !important;
+        pointer-events: auto;
+      }
       .mode-switch {
         left: 12px; right: 12px; transform: none;
         top: 64px; justify-content: stretch;
-        z-index: 1200;
+        z-index: 2500 !important;
         pointer-events: auto;
       }
       .mode-btn {
@@ -581,11 +589,12 @@
       .sheet.dragging {
         transition: none !important;
       }
-      /* Phone scrollport: days/budget scroll away; sticky destination + X only */
+      .sheet { z-index: 900; }
+      /* Phone scrollport: head fixed outside; head fixed outside; ONLY .sheet-scroll scrolls */
       .sheet-scroll {
         display: flex;
         flex-direction: column;
-        flex: 1 1 auto;
+        flex: 1;
         min-height: 0;
         overflow-x: hidden;
         overflow-y: auto;
@@ -593,11 +602,11 @@
         overscroll-behavior: contain;
       }
       .sheet-head {
-        position: sticky;
-        top: 0;
-        z-index: 5;
-        background: linear-gradient(180deg, rgba(26, 58, 82, 0.98), rgba(26, 58, 82, 0.96));
-        backdrop-filter: blur(12px);
+        position: static;
+        flex-shrink: 0;
+        z-index: auto;
+        background: transparent;
+        backdrop-filter: none;
       }
       .sheet-body {
         flex: none;
@@ -647,6 +656,26 @@
         font-size: 12px; word-break: break-word;
       }
       .stop-meta { white-space: normal; word-break: break-word; }
+    }
+
+
+    /* Phone-only build proof chip (mobile-fix-v2) */
+    .tide-build-chip {
+      display: none;
+      position: absolute;
+      left: 10px;
+      bottom: 28px;
+      z-index: 1100;
+      font-size: 10px;
+      line-height: 1;
+      color: var(--sand);
+      opacity: 0.5;
+      pointer-events: none;
+      letter-spacing: 0.04em;
+      font-family: "Noto Sans", system-ui, sans-serif;
+    }
+    @media (max-width: 520px) {
+      .tide-build-chip { display: block; }
     }
 
     .leaflet-control-attribution {
@@ -922,11 +951,12 @@
     <div class="roll-note" id="rollNote">Dice sets the next hop radius</div>
   </div>
 
+  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v2</div>
+
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
       <span class="sheet-handle-bar" aria-hidden="true"></span>
     </div>
-    <div class="sheet-scroll" id="sheetScroll">
     <header class="sheet-head">
       <div class="place-meta">
         <div class="place-label" id="placeLabel">Destination</div>
@@ -942,6 +972,7 @@
       </button>
     </header>
 
+    <div class="sheet-scroll" id="sheetScroll">
     <div class="controls" id="tideControls">
       <div class="days" role="group" aria-label="Trip days" id="dayOptsGroup">
         <div class="step-slider-wrap">
@@ -1013,7 +1044,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-sheet-3state-v1</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-fix-v2</span>
         </div>
       </div>
 
@@ -4775,11 +4806,35 @@
       btnPlaneLabel.textContent = t("confirmStart");
       btnPlane.disabled = true;
       resetPlaneUI();
+      /* Phone: collapse sheet to handle-only so map is free for flying */
+      try {
+        if (window.matchMedia("(max-width: 520px)").matches) {
+          if (!sheet.classList.contains("open")) sheet.classList.add("open");
+          if (typeof window.__tideSheetSetSnap === "function") window.__tideSheetSetSnap(0);
+          else {
+            sheet.classList.add("collapsed");
+            sheet.classList.remove("expanded");
+          }
+        }
+      } catch (_) {}
     }
     hint.classList.remove("hide");
   }
-  modeTideBtn.addEventListener("click", () => setMode("tide"));
-  modePlaneBtn.addEventListener("click", () => setMode("plane"));
+  /* Capture-phase bindings so mode tabs win over map/sheet touch handlers on phone */
+  function bindModeTap(btn, next) {
+    if (!btn) return;
+    const go = function (e) {
+      if (e && e.type === "touchend") {
+        try { e.preventDefault(); } catch (_) {}
+      }
+      if (e) { try { e.stopPropagation(); } catch (_) {} }
+      setMode(next);
+    };
+    btn.addEventListener("pointerup", go, true);
+    btn.addEventListener("click", go, true);
+  }
+  bindModeTap(modeTideBtn, "tide");
+  bindModeTap(modePlaneBtn, "plane");
 
   async function onTideMapClick(e) {
     const { lat, lng } = e.latlng;
