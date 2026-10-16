@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- tide-cdn-bust:2026-10-16T08:33:55Z -->
-  <meta name="tide-build" content="interstellar-mobile-frame-v6" />
+  <!-- tide-cdn-bust:2026-10-16T08:35:16Z -->
+  <meta name="tide-build" content="interstellar-mobile-frame-v7" />
   <!-- tide-interstellar: globe-moon-v1 -->
   <!-- tide-chrome: brand-zoom-stack-v3 -->
 <title>星际旅行 · Interstellar Travel</title>
@@ -66,8 +66,41 @@
       background: rgba(5, 8, 15, 0.55); border: 1px solid rgba(232, 200, 114, 0.22);
       border-radius: 8px; padding: 4px 8px; pointer-events: none;
     }
+    /* Phone-only planet quick-jump rail (desktop/tablet: hidden) */
+    .planet-rail {
+      display: none;
+      position: absolute; left: 0; right: 0; bottom: 56px; z-index: 820;
+      padding: 0 10px 8px;
+      pointer-events: none;
+    }
+    .planet-rail-scroll {
+      display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+      scrollbar-width: none; pointer-events: auto;
+      padding: 6px 4px;
+    }
+    .planet-rail-scroll::-webkit-scrollbar { display: none; }
+    .planet-rail button {
+      flex: 0 0 auto;
+      border: 1px solid rgba(232, 200, 114, 0.28);
+      background: rgba(10, 16, 32, 0.88);
+      color: var(--sand);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px; font-weight: 600;
+      white-space: nowrap;
+      backdrop-filter: blur(10px);
+    }
+    .planet-rail button.active {
+      background: rgba(232, 200, 114, 0.22);
+      border-color: rgba(232, 200, 114, 0.55);
+      color: var(--foam);
+    }
+    .planet-rail button.near {
+      box-shadow: 0 0 0 1px rgba(94, 200, 216, 0.55), 0 0 12px rgba(94, 200, 216, 0.25);
+    }
     @media (max-width: 640px) {
-      .isl-build-chip { display: block; }
+      .isl-build-chip { display: block; bottom: 102px; }
+      .planet-rail.show { display: block; }
     }
     #map { z-index: 1; transition: opacity 1.1s ease, filter 1.1s ease; }
     #map.fade-out { opacity: 0; filter: blur(12px) brightness(0.4); pointer-events: none; }
@@ -305,7 +338,7 @@
 <body>
   <div id="map" aria-label="Earth map"></div>
   <canvas id="webgl"></canvas>
-  <div class="isl-build-chip" id="islBuildChip" aria-hidden="true">isl v6</div>
+  <div class="isl-build-chip" id="islBuildChip" aria-hidden="true">isl v7</div>
   <div id="pageFade" aria-hidden="true"></div>
 
   <!-- tide-chrome: brand-zoom-stack-v3 -->
@@ -342,6 +375,10 @@
   </div>
   <div class="hud-bottom hide" id="hudSystem">
     <button type="button" class="chip accent" id="btnEnterSystem">展开太阳系 · Unfold Solar System</button>
+  </div>
+
+  <div class="planet-rail" id="planetRail" aria-label="Planets">
+    <div class="planet-rail-scroll" id="planetRailScroll"></div>
   </div>
 
   <div class="select-card" id="selectCard">
@@ -647,8 +684,14 @@ function setHintForPhase() {
   hintEl.classList.remove("hide");
 }
 
-document.getElementById("langZh").onclick = () => { lang = "zh"; localStorage.setItem("interstellar-lang", "zh"); applyLangUI(); };
-document.getElementById("langEn").onclick = () => { lang = "en"; localStorage.setItem("interstellar-lang", "en"); applyLangUI(); };
+document.getElementById("langZh").onclick = () => {
+  lang = "zh"; localStorage.setItem("interstellar-lang", "zh"); applyLangUI();
+  try { window.__tideRebuildPlanetRail && window.__tideRebuildPlanetRail(); } catch (_) {}
+};
+document.getElementById("langEn").onclick = () => {
+  lang = "en"; localStorage.setItem("interstellar-lang", "en"); applyLangUI();
+  try { window.__tideRebuildPlanetRail && window.__tideRebuildPlanetRail(); } catch (_) {}
+};
 
 /* ---------- Leaflet map ---------- */
 const map = L.map("map", {
@@ -762,6 +805,7 @@ function syncPhoneCameraOptics() {
       camera.updateProjectionMatrix();
     }
     controls.zoomSpeed = 1.0;
+    controls.enableZoom = true;
     return;
   }
   // Wider FOV → usable horizontal view on tall portrait screens
@@ -771,6 +815,8 @@ function syncPhoneCameraOptics() {
     camera.updateProjectionMatrix();
   }
   controls.zoomSpeed = 1.55;
+  // Default OrbitControls touch-dolly fights anchor-zoom; phone pinch handler owns dolly
+  controls.enableZoom = false;
 }
 /** Distance so a sphere of `radius` fits in the narrower FOV with padding. */
 function viewFitDistance(radius, pad) {
@@ -785,7 +831,10 @@ function viewFitDistance(radius, pad) {
 function globeCamDistance() {
   const r = typeof GLOBE_EARTH_R === "number" ? GLOBE_EARTH_R : 1.6;
   if (!isPhoneViewport()) return 5.68;
-  return Math.max(viewFitDistance(r * 1.02, 1.25), 5.2);
+  // Fit Earth + Moon orbit so both are on-screen when opening
+  const moonOrbit = (typeof GLOBE_SCALE === "number" ? GLOBE_SCALE : (r / 0.9)) * 1.85;
+  const fitR = r + Math.max(moonOrbit * 0.55, 1.2);
+  return Math.max(viewFitDistance(fitR, 1.2), 7.2);
 }
 function globeCamPos() {
   const d = globeCamDistance();
@@ -1172,6 +1221,8 @@ async function enterGlobe() {
   await new Promise((r) => setTimeout(r, 200));
   transitionLock = false;
   document.getElementById("hudSystem").classList.remove("hide");
+  try { window.__tideSetPlanetRailVisible && window.__tideSetPlanetRailVisible(true); } catch (_) {}
+  try { window.__tideRebuildPlanetRail && window.__tideRebuildPlanetRail(); } catch (_) {}
   setHintForPhase();
   setTimeout(() => hintEl.classList.add("hide"), 5000);
 }
@@ -1179,6 +1230,7 @@ async function enterGlobe() {
 async function enterSystem() {
   if (phase !== "globe" || transitionLock) return;
   document.getElementById("hudSystem").classList.add("hide");
+  try { window.__tideSetPlanetRailVisible && window.__tideSetPlanetRailVisible(true); } catch (_) {}
   phase = "system";
   setPhaseDots(phase);
   setHintForPhase();
@@ -1213,6 +1265,8 @@ async function enterSystem() {
   );
   // Re-assert after tween (damping / mid-gesture can leave target off-sun on phones)
   applySystemOverview(true);
+  try { window.__tideRebuildPlanetRail && window.__tideRebuildPlanetRail(); } catch (_) {}
+  try { window.__tideSetPlanetRailVisible && window.__tideSetPlanetRailVisible(true); } catch (_) {}
   setTimeout(() => hintEl.classList.add("hide"), 6000);
 }
 
@@ -1413,6 +1467,7 @@ function selectBody(id) {
   }
   refreshSelectCard();
   selectCard.classList.add("show");
+  try { window.__tideSyncRailActive && window.__tideSyncRailActive(); } catch (_) {}
 }
 
 function refreshSelectCard() {
@@ -1516,6 +1571,7 @@ function goBackToTideMap() {
   if (handingOffToTide) return;
   handingOffToTide = true;
   transitionLock = true;
+  try { window.__tideSetPlanetRailVisible && window.__tideSetPlanetRailVisible(false); } catch (_) {}
   selectCard.classList.remove("show");
   sidePanel.classList.remove("open");
   sidePanel.setAttribute("aria-hidden", "true");
@@ -1732,6 +1788,225 @@ try {
     window.visualViewport.addEventListener("scroll", onViewResize);
   }
 } catch (_) {}
+
+
+
+/* —— Phone: pinch zoom toward finger midpoint + planet quick-jump rail —— */
+(function setupPhoneOrbitUx() {
+  const rail = document.getElementById("planetRail");
+  const railScroll = document.getElementById("planetRailScroll");
+  const RAIL_IDS = ["sun", "mercury", "venus", "earth", "moon", "mars", "jupiter", "saturn", "uranus", "neptune"];
+
+  function setRailVisible(on) {
+    if (!rail) return;
+    if (on && isPhoneViewport()) rail.classList.add("show");
+    else rail.classList.remove("show");
+  }
+
+  function railLabel(id) {
+    const def = BODIES.find((b) => b.id === id);
+    if (!def) return id;
+    return lang === "zh" ? def.zh : def.en;
+  }
+
+  function rebuildPlanetRail() {
+    if (!railScroll) return;
+    railScroll.innerHTML = "";
+    RAIL_IDS.forEach((id) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.dataset.bodyId = id;
+      btn.textContent = railLabel(id);
+      btn.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        jumpToBodyMobile(id);
+      });
+      railScroll.appendChild(btn);
+    });
+    syncRailActive();
+  }
+
+  function syncRailActive() {
+    if (!railScroll) return;
+    const focus = selectedId || (phase === "inspect" ? inspectId : null) || (phase === "globe" ? "earth" : null);
+    railScroll.querySelectorAll("button").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.bodyId === focus);
+    });
+  }
+
+  function frameDistanceForBody(id) {
+    const mesh = bodyMeshes[id];
+    const def = BODIES.find((b) => b.id === id);
+    if (!mesh || !def) return 40;
+    const r = Math.max(def.radius * (mesh.scale?.x || 1), 0.35);
+    return Math.max(viewFitDistance(r * 2.4, 1.35), r * 6);
+  }
+
+  async function jumpToBodyMobile(id) {
+    if (!isPhoneViewport() || transitionLock || handingOffToTide) return;
+    if (phase === "map") {
+      await enterGlobe();
+      if (id === "earth" || id === "moon") {
+        syncRailActive();
+        return;
+      }
+      await enterSystem();
+    } else if (phase === "globe") {
+      if (id === "earth" || id === "moon") {
+        if (id === "moon" && globeMoon) {
+          controls.target.copy(globeMoon.position);
+          const d = Math.max(viewFitDistance(0.55, 1.3), 3.2);
+          const dir = camera.position.clone().sub(controls.target).normalize();
+          await animateCamera(controls.target.clone().add(dir.multiplyScalar(d)), controls.target.clone(), 900);
+        } else {
+          applyGlobeFraming(true);
+        }
+        selectedId = id;
+        syncRailActive();
+        return;
+      }
+      await enterSystem();
+    }
+    if (phase !== "system" && phase !== "fly" && phase !== "inspect") return;
+    const mesh = bodyMeshes[id];
+    if (!mesh) return;
+    selectedId = id;
+    highlightRing.visible = true;
+    const def = BODIES.find((b) => b.id === id);
+    if (def) {
+      const s = def.radius * 1.05;
+      highlightRing.scale.set(s, s, s);
+      highlightRing.position.copy(mesh.position);
+    }
+    applySystemFramingLimits();
+    const dest = mesh.position.clone();
+    const dist = frameDistanceForBody(id);
+    // Approach from current azimuth so motion feels continuous
+    const offset = camera.position.clone().sub(controls.target).normalize().multiplyScalar(dist);
+    if (offset.lengthSq() < 0.01) offset.set(dist * 0.35, dist * 0.55, dist * 0.75);
+    await animateCamera(dest.clone().add(offset), dest, 1100);
+    refreshSelectCard();
+    selectCard.classList.add("show");
+    syncRailActive();
+  }
+
+  window.__tideJumpToBodyMobile = jumpToBodyMobile;
+  window.__tideSetPlanetRailVisible = setRailVisible;
+  window.__tideRebuildPlanetRail = rebuildPlanetRail;
+  window.__tideSyncRailActive = syncRailActive;
+
+  rebuildPlanetRail();
+
+  /* Pinch → zoom toward finger midpoint (map-style anchor zoom) */
+  let pinch = null;
+  const _pinchMid = new THREE.Vector2();
+  const _worldBefore = new THREE.Vector3();
+  const _worldAfter = new THREE.Vector3();
+  const _ndc = new THREE.Vector2();
+  const _ray = new THREE.Raycaster();
+  const _plane = new THREE.Plane();
+  const _viewDir = new THREE.Vector3();
+
+  function pinchMidpoint(t0, t1) {
+    return {
+      x: (t0.clientX + t1.clientX) / 2,
+      y: (t0.clientY + t1.clientY) / 2,
+      dist: Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY) || 1,
+    };
+  }
+
+  function projectToTargetPlane(clientX, clientY, out) {
+    const rect = canvas.getBoundingClientRect();
+    _ndc.x = ((clientX - rect.left) / Math.max(rect.width, 1)) * 2 - 1;
+    _ndc.y = -((clientY - rect.top) / Math.max(rect.height, 1)) * 2 + 1;
+    _ray.setFromCamera(_ndc, camera);
+    camera.getWorldDirection(_viewDir);
+    _plane.setFromNormalAndCoplanarPoint(_viewDir.clone().negate(), controls.target);
+    if (!_ray.ray.intersectPlane(_plane, out)) {
+      out.copy(controls.target);
+    }
+    return out;
+  }
+
+  function onPinchStart(ev) {
+    if (!isPhoneViewport() || !controls.enabled) return;
+    if (phase !== "globe" && phase !== "system" && phase !== "inspect" && phase !== "fly") return;
+    if (ev.touches.length !== 2) return;
+    const m = pinchMidpoint(ev.touches[0], ev.touches[1]);
+    projectToTargetPlane(m.x, m.y, _worldBefore);
+    pinch = {
+      startDist: m.dist,
+      lastDist: m.dist,
+      midX: m.x,
+      midY: m.y,
+      anchor: _worldBefore.clone(),
+    };
+    controls.enableZoom = false; // we drive dolly ourselves toward anchor
+  }
+
+  function onPinchMove(ev) {
+    if (!pinch || ev.touches.length !== 2) return;
+    ev.preventDefault();
+    const m = pinchMidpoint(ev.touches[0], ev.touches[1]);
+    const ratio = pinch.lastDist / m.dist; // >1 zoom out, <1 zoom in
+    pinch.lastDist = m.dist;
+    pinch.midX = m.x;
+    pinch.midY = m.y;
+
+    const offset = camera.position.clone().sub(controls.target);
+    let dist = offset.length() * ratio;
+    dist = Math.min(controls.maxDistance, Math.max(controls.minDistance, dist));
+    offset.setLength(dist);
+    camera.position.copy(controls.target).add(offset);
+
+    // Keep the world anchor under the finger midpoint
+    projectToTargetPlane(m.x, m.y, _worldAfter);
+    const corr = pinch.anchor.clone().sub(_worldAfter);
+    camera.position.add(corr);
+    controls.target.add(corr);
+    controls.update();
+
+    // Soft-highlight nearest body under pinch (system phase)
+    if (phase === "system" && railScroll) {
+      let best = null, bestD = Infinity;
+      RAIL_IDS.forEach((id) => {
+        const mesh = bodyMeshes[id];
+        if (!mesh || !mesh.visible) return;
+        const d = mesh.position.distanceTo(controls.target);
+        if (d < bestD) { bestD = d; best = id; }
+      });
+      railScroll.querySelectorAll("button").forEach((btn) => {
+        const id = btn.dataset.bodyId;
+        const mesh = bodyMeshes[id];
+        const near = mesh && mesh.position.distanceTo(controls.target) < Math.max(mesh.userData?.def?.radius * 8 || 4, 6);
+        btn.classList.toggle("near", !!near && id === best);
+      });
+    }
+  }
+
+  function onPinchEnd(ev) {
+    if (!pinch) return;
+    if (ev.touches.length < 2) {
+      pinch = null;
+      // keep enableZoom false on phone (anchor pinch owns dolly)
+      if (!isPhoneViewport()) controls.enableZoom = true;
+      // Globe: pinch-out near max → solar system
+      if (phase === "globe" && !transitionLock) {
+        const dist = camera.position.distanceTo(controls.target);
+        if (dist >= controls.maxDistance * 0.96) enterSystem();
+      }
+    }
+  }
+
+  canvas.addEventListener("touchstart", onPinchStart, { passive: true });
+  canvas.addEventListener("touchmove", onPinchMove, { passive: false });
+  canvas.addEventListener("touchend", onPinchEnd, { passive: true });
+  canvas.addEventListener("touchcancel", onPinchEnd, { passive: true });
+
+  // Hook language changes to rebuild labels
+  const _applyLang = typeof applyLanguage === "function" ? null : null;
+})();
 
 
 /* Animate loop */
