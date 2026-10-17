@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- tide-cdn-bust:2026-10-16T15:03:25Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v7" />
+  <!-- tide-cdn-bust:2026-10-17T17:20:00Z -->
+  <meta name="tide-build" content="mobile-cn-zh-v8" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -426,6 +426,22 @@
       .sheet.open { transform: translateX(0); }
       .sheet-handle { display: none; }
       .hint { max-width: 240px; top: 80px; }
+      /* Desktop scroll: only .sheet-head (location) stays pinned; days+budget scroll with plan (match phone). */
+      .sheet-scroll {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+      .sheet-body {
+        flex: none;
+        overflow: visible;
+        padding-bottom: 28px;
+      }
     }
 
 
@@ -968,7 +984,7 @@
     <div class="roll-note" id="rollNote">Dice sets the next hop radius</div>
   </div>
 
-  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v6</div>
+  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v8</div>
 
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
@@ -1061,7 +1077,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v7</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v8</span>
         </div>
       </div>
 
@@ -1123,6 +1139,31 @@
   <script>
 (function () {
   "use strict";
+
+  function getSheetScroller() {
+    var port = document.getElementById("sheetScroll");
+    if (port) {
+      var d = window.getComputedStyle(port).display;
+      if (d !== "contents" && d !== "none") return port;
+    }
+    return document.querySelector(".sheet-body");
+  }
+  function scrollSheetToEl(el, pad) {
+    if (!el) return;
+    var scroller = getSheetScroller();
+    if (!scroller) return;
+    var padY = (pad == null) ? 12 : pad;
+    try {
+      var top = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop;
+      scroller.scrollTo({ top: Math.max(0, top - padY), behavior: "smooth" });
+    } catch (_) {
+      try { el.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (__) {}
+    }
+  }
+  function resetSheetScroll() {
+    var scroller = getSheetScroller();
+    if (scroller) scroller.scrollTop = 0;
+  }
 
   const LANG_KEY = "tide-itinerary-lang";
   /* China CDN mirror (jsdmirror): default Chinese. GitHub Pages / others: default English.
@@ -5305,7 +5346,7 @@
       const sheetBody = document.querySelector(".sheet-body");
       if (sheetBody && planeBudgetPanel) {
         requestAnimationFrame(function () {
-          sheetBody.scrollTo({ top: Math.max(0, planeBudgetPanel.offsetTop - 8), behavior: "smooth" });
+          scrollSheetToEl(planeBudgetPanel, 8);
         });
       }
       showStatus("statusAllDone", {
@@ -5522,7 +5563,7 @@
     if (btnPlaneGenLabel) btnPlaneGenLabel.textContent = t("generating");
     sheet.classList.add("open");
     const sheetBody = document.querySelector(".sheet-body");
-    if (sheetBody) sheetBody.scrollTop = 0;
+    resetSheetScroll();
     const planPromise = buildMultiCityPlanAsync();
     await new Promise((r) => setTimeout(r, 120));
     lastPlaneParts = await planPromise;
@@ -5546,7 +5587,7 @@
     requestAnimationFrame(function () {
       if (sheetBody) {
         const top = planeItinerary.offsetTop || 0;
-        sheetBody.scrollTo({ top: Math.max(0, top - 12), behavior: "smooth" });
+        scrollSheetToEl(document.getElementById("planeItinerary") || sheetBody, 12);
       }
       try { planeItinerary.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (_) {}
     });
