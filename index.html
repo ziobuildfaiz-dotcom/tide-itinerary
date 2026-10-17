@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- tide-cdn-bust:2026-10-17T17:20:00Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v8" />
+  <!-- tide-cdn-bust:2026-10-17T18:00:00Z -->
+  <meta name="tide-build" content="mobile-cn-zh-v9" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -984,7 +984,7 @@
     <div class="roll-note" id="rollNote">Dice sets the next hop radius</div>
   </div>
 
-  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v8</div>
+  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v9</div>
 
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
@@ -1077,7 +1077,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v8</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v9</span>
         </div>
       </div>
 
@@ -2503,6 +2503,7 @@
   let nearbyChipActive = false;
   let marker = null;
   let genToken = 0;
+  let tideBusy = false;
   let lastTideSalt = 0;
   let lastTidePlan = null;
   let tideTotalBudget = 3000;
@@ -4964,35 +4965,46 @@
 
   async function generate(salt) {
     if (!currentLatLng) return;
+    if (tideBusy) return;
     updateTideBudgetSummary();
     if (!budgetConfirmed) {
       if (budgetWarn) budgetWarn.classList.add("show");
       showPanelStates("empty");
       return;
     }
+    tideBusy = true;
+    btnGen.disabled = true;
+    if (btnRegen) btnRegen.disabled = true;
     const token = ++genToken;
-    const lat = currentLatLng.lat, lng = currentLatLng.lng;
-    if (!currentPlace) currentPlace = await resolvePlace(lat, lng);
-    if (token !== genToken) return;
-    showPanelStates("loading");
-    const hints = t("loadHints");
-    let hi = 0;
-    loadingHint.textContent = hints[0];
-    const hintTimer = setInterval(() => { hi = (hi + 1) % hints.length; loadingHint.textContent = hints[hi]; }, 450);
-    btnGen.classList.add("spinning");
-    btnGenLabel.textContent = salt ? t("regenerating") : t("generating");
-    lastTideSalt = salt || 0;
-    const planPromise = buildPlan(currentPlace, lat, lng, selectedDays, lastTideSalt, {
-      total: tideTotalBudget, lodge: tideLodgeBudget,
-    });
-    await new Promise((r) => setTimeout(r, 120));
-    lastTidePlan = await planPromise;
-    clearInterval(hintTimer);
-    btnGen.classList.remove("spinning");
-    if (token !== genToken) return;
-    renderPlan(lastTidePlan);
-    showPanelStates("plan");
-    btnGenLabel.textContent = t("regenerate");
+    let hintTimer = null;
+    try {
+      const lat = currentLatLng.lat, lng = currentLatLng.lng;
+      if (!currentPlace) currentPlace = await resolvePlace(lat, lng);
+      if (token !== genToken) return;
+      showPanelStates("loading");
+      const hints = t("loadHints");
+      let hi = 0;
+      loadingHint.textContent = hints[0];
+      hintTimer = setInterval(() => { hi = (hi + 1) % hints.length; loadingHint.textContent = hints[hi]; }, 450);
+      btnGen.classList.add("spinning");
+      btnGenLabel.textContent = salt ? t("regenerating") : t("generating");
+      lastTideSalt = salt || 0;
+      const planPromise = buildPlan(currentPlace, lat, lng, selectedDays, lastTideSalt, {
+        total: tideTotalBudget, lodge: tideLodgeBudget,
+      });
+      await new Promise((r) => setTimeout(r, 120));
+      lastTidePlan = await planPromise;
+      if (token !== genToken) return;
+      renderPlan(lastTidePlan);
+      showPanelStates("plan");
+      btnGenLabel.textContent = t("regenerate");
+    } finally {
+      if (hintTimer) clearInterval(hintTimer);
+      btnGen.classList.remove("spinning");
+      tideBusy = false;
+      btnGen.disabled = false;
+      if (btnRegen) btnRegen.disabled = false;
+    }
   }
   btnGen.addEventListener("click", () => generate(Date.now() % 10000));
   btnRegen.addEventListener("click", () => generate(Date.now() % 10000));
@@ -5553,44 +5565,47 @@
     planeBusy = true;
     btnPlane.disabled = true;
     if (btnPlaneGen) btnPlaneGen.disabled = true;
-    planeEmpty.style.display = "none";
-    planeActive.style.display = "none";
-    planeLoading.classList.add("show");
-    planeItinerary.classList.remove("show");
-    planeItinerary.innerHTML = "";
-    planeFooter.classList.remove("show");
-    btnPlaneLabel.textContent = t("generating");
-    if (btnPlaneGenLabel) btnPlaneGenLabel.textContent = t("generating");
-    sheet.classList.add("open");
-    const sheetBody = document.querySelector(".sheet-body");
-    resetSheetScroll();
-    const planPromise = buildMultiCityPlanAsync();
-    await new Promise((r) => setTimeout(r, 120));
-    lastPlaneParts = await planPromise;
-    renderMultiCityPlan(lastPlaneParts);
-    planeLoading.classList.remove("show");
-    planeEmpty.style.display = "none";
-    planeActive.style.display = "none";
-    planeItinerary.classList.add("show");
-    planeFooter.classList.add("show");
-    planePhase = "plan";
-    btnPlaneLabel.textContent = t("planReady");
-    if (btnPlaneGenLabel) btnPlaneGenLabel.textContent = t("planReady");
-    btnPlane.disabled = true;
-    if (btnPlaneGen) {
-      btnPlaneGen.disabled = true;
-      btnPlaneGen.style.display = "none";
-    }
-    showStatus("statusPlanReady");
-    planeBusy = false;
-    sheet.classList.add("open");
-    requestAnimationFrame(function () {
-      if (sheetBody) {
-        const top = planeItinerary.offsetTop || 0;
-        scrollSheetToEl(document.getElementById("planeItinerary") || sheetBody, 12);
+    try {
+      planeEmpty.style.display = "none";
+      planeActive.style.display = "none";
+      planeLoading.classList.add("show");
+      planeItinerary.classList.remove("show");
+      planeItinerary.innerHTML = "";
+      planeFooter.classList.remove("show");
+      btnPlaneLabel.textContent = t("generating");
+      if (btnPlaneGenLabel) btnPlaneGenLabel.textContent = t("generating");
+      sheet.classList.add("open");
+      const sheetBody = document.querySelector(".sheet-body");
+      resetSheetScroll();
+      const planPromise = buildMultiCityPlanAsync();
+      await new Promise((r) => setTimeout(r, 120));
+      lastPlaneParts = await planPromise;
+      renderMultiCityPlan(lastPlaneParts);
+      planeLoading.classList.remove("show");
+      planeEmpty.style.display = "none";
+      planeActive.style.display = "none";
+      planeItinerary.classList.add("show");
+      planeFooter.classList.add("show");
+      planePhase = "plan";
+      btnPlaneLabel.textContent = t("planReady");
+      if (btnPlaneGenLabel) btnPlaneGenLabel.textContent = t("planReady");
+      btnPlane.disabled = true;
+      if (btnPlaneGen) {
+        btnPlaneGen.disabled = true;
+        btnPlaneGen.style.display = "none";
       }
-      try { planeItinerary.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (_) {}
-    });
+      showStatus("statusPlanReady");
+      sheet.classList.add("open");
+      requestAnimationFrame(function () {
+        if (sheetBody) {
+          const top = planeItinerary.offsetTop || 0;
+          scrollSheetToEl(document.getElementById("planeItinerary") || sheetBody, 12);
+        }
+        try { planeItinerary.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (_) {}
+      });
+    } finally {
+      planeBusy = false;
+    }
   }
 
   btnPlane.addEventListener("click", () => {
@@ -5650,6 +5665,7 @@
 
   function clearAll(silent) {
     genToken++;
+    tideBusy = false;
     clearPlaneLayers();
     if (marker) { map.removeLayer(marker); marker = null; }
     currentLatLng = null; currentPlace = null; lastTidePlan = null;
@@ -5661,6 +5677,9 @@
     showPanelStates("empty");
     itinerary.innerHTML = "";
     placeName.textContent = "—"; placeCoords.textContent = "";
+    btnGen.disabled = false;
+    if (btnRegen) btnRegen.disabled = false;
+    btnGen.classList.remove("spinning");
     btnGenLabel.textContent = t("genPlan");
     resetPlaneUI();
     btnPlaneLabel.textContent = t("confirmStart");
