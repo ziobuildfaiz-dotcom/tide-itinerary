@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- tide-cdn-bust:2026-10-17T18:18:10Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v10" />
+  <!-- tide-cdn-bust:2026-10-18T03:20:00Z -->
+  <meta name="tide-build" content="mobile-cn-zh-v11" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -984,7 +984,7 @@
     <div class="roll-note" id="rollNote">Dice sets the next hop radius</div>
   </div>
 
-  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v10</div>
+  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v11</div>
 
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
@@ -1000,7 +1000,7 @@
           <button type="button" class="nearby-chip" id="nearbyChip"></button>
         </div>
       </div>
-      <button type="button" class="icon-btn" id="btnClear" title="Clear marker" aria-label="Clear marker">
+      <button type="button" class="icon-btn" id="btnClear" title="Close" aria-label="Close">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
       </button>
     </header>
@@ -1077,7 +1077,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v10</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v11</span>
         </div>
       </div>
 
@@ -1206,6 +1206,7 @@
     "startPlace": "Starting point",
     "currentStop": "Current stop",
     "clearMarker": "Clear marker",
+    "closeToMap": "Close",
     "daysAria": "Trip days",
     "dayN": "{n} days",
     "dayN1": "{n} day",
@@ -1358,6 +1359,7 @@
     "startPlace": "出发地",
     "currentStop": "当前站",
     "clearMarker": "清除标记",
+    "closeToMap": "关闭",
     "daysAria": "行程天数",
     "dayN": "{n} 天",
     "dayN1": "{n} 天",
@@ -4734,8 +4736,8 @@
     modePlaneBtn.textContent = t("modePlane");
     document.getElementById("rollLabel").textContent = t("rollLabel");
     rollNote.textContent = t("rollNote");
-    btnClear.title = t("clearMarker");
-    btnClear.setAttribute("aria-label", t("clearMarker"));
+    btnClear.title = t("closeToMap");
+    btnClear.setAttribute("aria-label", t("closeToMap"));
     document.getElementById("dayOptsGroup").setAttribute("aria-label", t("daysAria"));
     document.getElementById("hopOpts").setAttribute("aria-label", t("hopsAria"));
     if (typeof updateDaySliderUI === "function") updateDaySliderUI();
@@ -5070,14 +5072,16 @@
     updateHopLabel();
   }
   function clearPlaneLayers() {
+    /* Null planeMarker FIRST so flyPlaneAlong RAF stops before removeLayer storms */
+    const pm = planeMarker;
+    planeMarker = null;
+    try { if (pm) map.removeLayer(pm); } catch (_) {}
     try { if (radiusCircle) map.removeLayer(radiusCircle); } catch (_) {}
     radiusCircle = null;
-    pathLayers.forEach((l) => { try { map.removeLayer(l); } catch (_) {} });
-    pathLayers = [];
-    stopMarkers.forEach((m) => { try { map.removeLayer(m); } catch (_) {} });
-    stopMarkers = [];
-    try { if (planeMarker) map.removeLayer(planeMarker); } catch (_) {}
-    planeMarker = null;
+    const paths = pathLayers; pathLayers = [];
+    paths.forEach((l) => { try { map.removeLayer(l); } catch (_) {} });
+    const stops = stopMarkers; stopMarkers = [];
+    stops.forEach((m) => { try { map.removeLayer(m); } catch (_) {} });
     try { if (marker) map.removeLayer(marker); } catch (_) {}
     marker = null;
   }
@@ -5745,42 +5749,76 @@
     sheet.classList.add("open");
   });
 
-  function clearPlaneAll() {
+  function cancelInFlightWork() {
+    /* Bump tokens FIRST so RAF/flyPlaneAlong and gen async exit on next check */
     planeHopToken++;
+    genToken++;
+    tideBusy = false;
+    planeBusy = false;
+  }
+
+  function dismissSheetToMap() {
     try {
-      planeBusy = false; planeStart = null; planeStops = [];
+      sheet.classList.remove("open", "expanded", "collapsed", "dragging");
+      sheet.style.transform = "";
+      sheet.style.height = "";
+      sheet.style.maxHeight = "";
+    } catch (_) {}
+    try {
+      if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
+    } catch (_) {}
+  }
+
+  function scheduleMapInvalidateOnce() {
+    /* One soft invalidate after sheet CSS slide finishes — avoid storms during teardown */
+    setTimeout(function () {
+      try {
+        if (map && map.invalidateSize) map.invalidateSize({ animate: false });
+      } catch (_) {}
+    }, 340);
+  }
+
+  function clearPlaneAll() {
+    cancelInFlightWork();
+    dismissSheetToMap();
+    try {
+      planeStart = null; planeStops = [];
       planePhase = "pick-start";
-      clearPlaneLayers(); resetPlaneUI();
       btnPlaneLabel.textContent = t("confirmStart");
       btnPlane.disabled = true;
       setHopSliderEnabled(true);
       placeLabel.textContent = t("startPlace");
       placeName.textContent = "—"; placeCoords.textContent = "";
       localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
-      showStatus(""); sheet.classList.remove("open", "expanded", "collapsed"); if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
+      showStatus("");
+      rollToast.classList.remove("show");
       hint.classList.remove("hide");
       hint.innerHTML = t("hintPlane");
-    } finally {
-      planeBusy = false;
-      btnPlane.disabled = true;
-    }
+      resetPlaneUI();
+    } catch (err) { console.warn("clearPlaneAll ui", err); }
+    const tok = planeHopToken;
+    requestAnimationFrame(function () {
+      if (tok !== planeHopToken) return;
+      try { clearPlaneLayers(); } catch (_) {}
+      scheduleMapInvalidateOnce();
+    });
+    planeBusy = false;
+    btnPlane.disabled = true;
   }
   btnPlaneClear.addEventListener("click", clearPlaneAll);
 
   function clearAll(silent) {
-    genToken++;
-    planeHopToken++;
-    tideBusy = false;
-    clearPlaneLayers();
-    if (marker) { map.removeLayer(marker); marker = null; }
+    /* Full reset used by setMode — keep sync for mode switch correctness */
+    cancelInFlightWork();
+    try { clearPlaneLayers(); } catch (_) {}
     currentLatLng = null; currentPlace = null; lastTidePlan = null;
     localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
     planeStart = null; planeStops = []; planeBusy = false;
     planePhase = mode === "plane" ? "pick-start" : "idle";
-    sheet.classList.remove("open", "expanded", "collapsed"); if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
+    dismissSheetToMap();
     if (!silent) hint.classList.remove("hide");
     showPanelStates("empty");
-    itinerary.innerHTML = "";
+    try { itinerary.innerHTML = ""; } catch (_) {}
     placeName.textContent = "—"; placeCoords.textContent = "";
     btnGen.disabled = false;
     if (btnRegen) btnRegen.disabled = false;
@@ -5793,13 +5831,118 @@
     setHopSliderEnabled(true);
   }
 
-  btnClear.addEventListener("click", () => { if (mode === "plane") clearPlaneAll(); else clearAll(); });
-  btnClear2.addEventListener("click", () => clearAll());
+  /* X (btnClear): BOTH modes — collapse sheet → map mode; cancel hops; no freeze */
+  function closeSheetToMapMode() {
+    cancelInFlightWork();
+    dismissSheetToMap();
+    try {
+      showStatus("");
+      rollToast.classList.remove("show");
+      hint.classList.remove("hide");
+      hint.innerHTML = mode === "plane" ? t("hintPlane") : t("hintTide");
+      placeName.textContent = "—";
+      placeCoords.textContent = "";
+      localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
+      if (mode === "plane") {
+        planeStart = null; planeStops = [];
+        planePhase = "pick-start";
+        placeLabel.textContent = t("startPlace");
+        btnPlaneLabel.textContent = t("confirmStart");
+        btnPlane.disabled = true;
+        setHopSliderEnabled(true);
+        resetPlaneUI();
+      } else {
+        currentLatLng = null; currentPlace = null; lastTidePlan = null;
+        planeStart = null; planeStops = []; planePhase = "idle";
+        placeLabel.textContent = t("destination");
+        showPanelStates("empty");
+        try { itinerary.innerHTML = ""; } catch (_) {}
+        btnGen.disabled = false;
+        if (btnRegen) btnRegen.disabled = false;
+        btnGen.classList.remove("spinning");
+        btnGenLabel.textContent = t("genPlan");
+        resetPlaneUI();
+        btnPlaneLabel.textContent = t("confirmStart");
+        btnPlane.disabled = true;
+        setHopSliderEnabled(true);
+      }
+    } catch (err) { console.warn("closeSheetToMapMode ui", err); }
+    const tok = planeHopToken;
+    requestAnimationFrame(function () {
+      if (tok !== planeHopToken) return;
+      try { clearPlaneLayers(); } catch (_) {}
+      scheduleMapInvalidateOnce();
+    });
+  }
+
+  /* Clear marker (btnClear2): BOTH modes — clear generated recommendations; no freeze */
+  function clearRecommendations() {
+    cancelInFlightWork();
+    const tok = planeHopToken;
+    try {
+      if (mode === "plane") {
+        lastPlaneParts = null;
+        try { planeItinerary.innerHTML = ""; } catch (_) {}
+        planeItinerary.classList.remove("show");
+        planeLoading.classList.remove("show");
+        planeFooter.classList.remove("show");
+        if (planeBudgetPanel) planeBudgetPanel.style.display = "none";
+        if (planeBudgetWarn) planeBudgetWarn.classList.remove("show");
+        if (btnPlaneGen) { btnPlaneGen.disabled = true; btnPlaneGen.style.display = "none"; }
+        if (btnPlaneGenLabel) btnPlaneGenLabel.textContent = t("genFullPlan");
+        /* Drop generated plan; keep map clean — reset hop chain for a fresh pick */
+        planeStart = null; planeStops = [];
+        planePhase = "pick-start";
+        placeLabel.textContent = t("startPlace");
+        placeName.textContent = "—"; placeCoords.textContent = "";
+        localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
+        stopTimeline.innerHTML = "";
+        planeEmpty.style.display = "block";
+        planeActive.style.display = "none";
+        btnPlaneLabel.textContent = t("confirmStart");
+        btnPlane.disabled = true;
+        setHopSliderEnabled(true);
+        showStatus("");
+        rollToast.classList.remove("show");
+        if (sheet.classList.contains("open")) {
+          /* Stay in sheet with empty plane UI so user can re-pick */
+          showStatus("statusPlanePick");
+        }
+      } else {
+        lastTidePlan = null;
+        currentLatLng = null; currentPlace = null;
+        localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
+        try { itinerary.innerHTML = ""; } catch (_) {}
+        showPanelStates("empty");
+        placeName.textContent = "—"; placeCoords.textContent = "";
+        placeLabel.textContent = t("destination");
+        btnGen.disabled = false;
+        if (btnRegen) btnRegen.disabled = false;
+        btnGen.classList.remove("spinning");
+        btnGenLabel.textContent = t("genPlan");
+        showStatus("");
+        rollToast.classList.remove("show");
+      }
+    } catch (err) { console.warn("clearRecommendations ui", err); }
+    requestAnimationFrame(function () {
+      if (tok !== planeHopToken) return;
+      try { clearPlaneLayers(); } catch (_) {}
+    });
+  }
+
+  btnClear.addEventListener("click", function (e) {
+    try { if (e) { e.preventDefault(); e.stopPropagation(); } } catch (_) {}
+    closeSheetToMapMode();
+  });
+  btnClear2.addEventListener("click", function (e) {
+    try { if (e) { e.preventDefault(); e.stopPropagation(); } } catch (_) {}
+    clearRecommendations();
+  });
   if (nearbyChip) nearbyChip.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); applyNearbyPopular(); });
   map.on("click", (e) => { if (mode === "tide") onTideMapClick(e); else onPlaneMapClick(e); });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && sheet.classList.contains("open")) {
-      if (mode === "plane") clearPlaneAll(); else clearAll();
+      closeSheetToMapMode();
     }
   });
 
