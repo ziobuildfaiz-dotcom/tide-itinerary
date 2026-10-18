@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- tide-cdn-bust:2026-10-17T18:15:00Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v9" />
+  <!-- tide-cdn-bust:2026-10-17T18:18:10Z -->
+  <meta name="tide-build" content="mobile-cn-zh-v10" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -984,7 +984,7 @@
     <div class="roll-note" id="rollNote">Dice sets the next hop radius</div>
   </div>
 
-  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v9</div>
+  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v10</div>
 
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
@@ -1077,7 +1077,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v9</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v10</span>
         </div>
       </div>
 
@@ -5117,7 +5117,7 @@
     return pts;
   }
   function drawFlightPath(from, to) {
-    const pts = arcPoints(from, to, 48);
+    const pts = arcPoints(from, to, 24);
     pathLayers.push(L.polyline(pts, { color: "#3D8B9C", weight: 6, opacity: 0.22 }).addTo(map));
     pathLayers.push(L.polyline(pts, { color: "#E07A5F", weight: 2.5, opacity: 0.85, dashArray: "6 8" }).addTo(map));
     return pts;
@@ -5136,33 +5136,45 @@
           zIndexOffset: 1000,
         }).addTo(map);
         planeMarker = localMarker;
-        const dur = 1600 + Math.min(1200, pts.length * 20);
+        /* Cap duration + throttle setLatLng: avoid Leaflet SVG thrash with radius/polylines */
+        const dur = Math.min(1800, 1200 + Math.min(600, pts.length * 16));
         const start = performance.now();
-        function finish() {
+        let rafCount = 0;
+        let lastIdx = -1;
+        function finish(cancelled) {
           try { if (localMarker) map.removeLayer(localMarker); } catch (_) {}
           if (planeMarker === localMarker) planeMarker = null;
+          if (cancelled) {
+            try { if (radiusCircle) map.removeLayer(radiusCircle); } catch (_) {}
+            radiusCircle = null;
+          }
           settle();
         }
         function frame(now) {
           try {
-            if (token !== planeHopToken || planeMarker !== localMarker) { finish(); return; }
+            if (token !== planeHopToken || planeMarker !== localMarker) { finish(true); return; }
             const tt = Math.min(1, (now - start) / dur);
             const ease = tt < 0.5 ? 2 * tt * tt : 1 - Math.pow(-2 * tt + 2, 2) / 2;
             const idx = Math.min(pts.length - 1, Math.floor(ease * (pts.length - 1)));
-            const p = pts[idx];
-            try { localMarker.setLatLng(p); } catch (_) { finish(); return; }
-            if (idx < pts.length - 1) {
-              const n = pts[Math.min(pts.length - 1, idx + 1)];
-              const angle = (Math.atan2(n[1] - p[1], n[0] - p[0]) * 180) / Math.PI;
-              const el = localMarker.getElement();
-              if (el) { const svg = el.querySelector("svg"); if (svg) svg.style.transform = "rotate(" + (angle - 45) + "deg)"; }
+            rafCount++;
+            /* Only setLatLng every 2nd RAF or when idx changes */
+            if (idx !== lastIdx || (rafCount % 2 === 0)) {
+              lastIdx = idx;
+              const p = pts[idx];
+              try { localMarker.setLatLng(p); } catch (_) { finish(true); return; }
+              if (idx < pts.length - 1) {
+                const n = pts[Math.min(pts.length - 1, idx + 1)];
+                const angle = (Math.atan2(n[1] - p[1], n[0] - p[0]) * 180) / Math.PI;
+                const el = localMarker.getElement();
+                if (el) { const svg = el.querySelector("svg"); if (svg) svg.style.transform = "rotate(" + (angle - 45) + "deg)"; }
+              }
             }
             if (tt < 1) requestAnimationFrame(frame);
             else setTimeout(() => {
-              if (token !== planeHopToken || planeMarker !== localMarker) { finish(); return; }
-              finish();
+              if (token !== planeHopToken || planeMarker !== localMarker) { finish(true); return; }
+              finish(false);
             }, 200);
-          } catch (_) { finish(); }
+          } catch (_) { finish(true); }
         }
         requestAnimationFrame(frame);
       } catch (_) { settle(); }
@@ -5171,18 +5183,26 @@
   function drawRadius(lat, lng, km) {
     try { if (radiusCircle) map.removeLayer(radiusCircle); } catch (_) {}
     radiusCircle = null;
-    /* Clamp draw + disable animate: huge world circles + fitBounds({animate:true}) can freeze Leaflet/main thread */
-    const safeKm = Math.max(50, Math.min(Number(km) || 200, 4500));
+    /* Logical km kept for toast/pick; visual circle capped — huge SVG circles freeze Leaflet during flyPlaneAlong */
+    const logicalKm = Math.max(50, Math.min(Number(km) || 200, 4500));
     try {
+      if (logicalKm > 700) {
+        /* Skip L.circle entirely for large hop radii (~2000km) — setView only */
+        const z = logicalKm > 2000 ? 3 : 4;
+        map.setView([lat, lng], z);
+        return;
+      }
+      const drawKm = Math.min(logicalKm, 700);
       radiusCircle = L.circle([lat, lng], {
-        radius: safeKm * 1000, color: "#3D8B9C", weight: 2,
-        fillColor: "#E07A5F", fillOpacity: 0.08, dashArray: "4 6",
+        radius: drawKm * 1000, color: "#3D8B9C", weight: 2,
+        fillColor: "#E07A5F", fillOpacity: 0, dashArray: "4 6",
+        renderer: L.svg({ padding: 0.5 }),
       }).addTo(map);
       const b = radiusCircle.getBounds();
       map.fitBounds(b, { paddingTopLeft: [96, 180], paddingBottomRight: [40, 40], maxZoom: 5, animate: false });
     } catch (_) {
       try {
-        const z = safeKm > 2000 ? 3 : (safeKm > 800 ? 4 : 5);
+        const z = logicalKm > 2000 ? 3 : (logicalKm > 800 ? 4 : 5);
         map.setView([lat, lng], z);
       } catch (__) {}
     }
@@ -5390,6 +5410,9 @@
         foodEn: c.foodEn, foodZh: c.foodZh,
         tagsEn: c.tagsEn, tagsZh: c.tagsZh,
       };
+      /* Remove radius circle before path + RAF flight — huge circle + setLatLng thrash freezes SVG renderer */
+      try { if (radiusCircle) map.removeLayer(radiusCircle); } catch (_) {}
+      radiusCircle = null;
       const pts = drawFlightPath(from, to);
       await flyPlaneAlong(pts, hopToken);
       if (hopToken !== planeHopToken) return;
