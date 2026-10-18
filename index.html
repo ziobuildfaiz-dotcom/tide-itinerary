@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- tide-cdn-bust:2026-10-18T04:10:00Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v14" />
+  <!-- tide-cdn-bust:2026-10-18T04:23:00Z -->
+  <meta name="tide-build" content="mobile-cn-zh-v15" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -157,17 +157,9 @@
       display: flex; flex-direction: column; overflow: hidden;
     }
     .sheet.open { transform: translateY(0); }
-    /* v14: hide sheet via ancestor class — no sheet.classList / style thrash on click */
+    /* v15: hide sheet via ancestor class — display:none only (no star rule / style thrash) */
     html.tide-sheet-gone #sheet {
       display: none !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-      animation: none !important;
-      transition: none !important;
-    }
-    html.tide-sheet-gone #sheet * {
-      animation: none !important;
-      transition: none !important;
     }
     .sheet-handle {
       width: 100%; display: flex; align-items: center; justify-content: center;
@@ -1089,7 +1081,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v14</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v15</span>
         </div>
       </div>
 
@@ -5781,7 +5773,7 @@
   }
 
   function openSheet() {
-    /* v14: clear ancestor hide class, then restore sheet chrome + .open */
+    /* v15: clear ancestor hide class, then restore sheet chrome + .open */
     try {
       document.documentElement.classList.remove("tide-sheet-gone");
       sheet.hidden = false;
@@ -5794,7 +5786,9 @@
   }
 
   function dismissSheetToMap() {
-    /* v14: hide via html.tide-sheet-gone only — no sheet.classList / style on click stack */
+    /* v15: cancel + planeMarker null + html.tide-sheet-gone only — nothing else sync */
+    cancelInFlightWork();
+    planeMarker = null;
     try {
       document.documentElement.classList.add("tide-sheet-gone");
     } catch (_) {}
@@ -5806,7 +5800,7 @@
   }
 
   function clearPlaneAll() {
-    /* v14: click stack = cancel + html.tide-sheet-gone only; defer UI + layers */
+    /* v15: click stack = cancel + html.tide-sheet-gone only; defer ALL cleanup @500ms */
     cancelInFlightWork();
     planeMarker = null;
     try {
@@ -5841,11 +5835,9 @@
         hint.innerHTML = t("hintPlane");
         resetPlaneUI();
       } catch (err) { console.warn("clearPlaneAll ui", err); }
-      setTimeout(function () {
-        if (tok !== planeHopToken) return;
-        try { clearPlaneLayers(); } catch (_) {}
-      }, 150);
-    }, 0);
+      try { if (map && map.stop) map.stop(); } catch (_) {}
+      try { clearPlaneLayers(); } catch (_) {}
+    }, 500);
     planeBusy = false;
     btnPlane.disabled = true;
   }
@@ -5880,7 +5872,7 @@
 
   /* X (btnClear): BOTH modes — collapse sheet → map mode; cancel hops; no freeze */
   function closeSheetToMapMode() {
-    /* v14: click stack = cancel + html.tide-sheet-gone only; defer UI + layers */
+    /* v15: click stack = cancel + html.tide-sheet-gone only; defer ALL cleanup @500ms */
     cancelInFlightWork();
     planeMarker = null;
     try {
@@ -5931,11 +5923,9 @@
           setHopSliderEnabled(true);
         }
       } catch (err) { console.warn("closeSheetToMapMode ui", err); }
-      setTimeout(function () {
-        if (tok !== planeHopToken) return;
-        try { clearPlaneLayers(); } catch (_) {}
-      }, 150);
-    }, 0);
+      try { if (map && map.stop) map.stop(); } catch (_) {}
+      try { clearPlaneLayers(); } catch (_) {}
+    }, 500);
   }
 
   /* Clear marker (btnClear2): BOTH modes — clear generated recommendations; no freeze */
