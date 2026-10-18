@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- tide-cdn-bust:2026-10-18T03:40:00Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v12" />
+  <!-- tide-cdn-bust:2026-10-18T04:00:00Z -->
+  <meta name="tide-build" content="mobile-cn-zh-v13" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -1077,7 +1077,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v12</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v13</span>
         </div>
       </div>
 
@@ -4892,7 +4892,7 @@
       btnPlane.disabled = true;
       resetPlaneUI();
       /* Always open sheet so #planeControls (hop + Confirm) are visible on desktop + phone */
-      sheet.classList.add("open");
+      openSheet();
       try {
         if (window.matchMedia("(max-width: 520px)").matches) {
           /* Phone: half snap so hop slider + Confirm show (not handle-only snap 0) */
@@ -4952,7 +4952,7 @@
     placeLabel.textContent = t("destination");
     placeName.textContent = t("locating");
     placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
-    sheet.classList.add("open");
+    openSheet();
     showPanelStates("empty");
     btnGenLabel.textContent = t("genPlan");
     const place = await resolvePlace(lat, lng);
@@ -5280,7 +5280,7 @@
     placeLabel.textContent = t("startPlace");
     placeName.textContent = t("locating");
     placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
-    sheet.classList.add("open");
+    openSheet();
     planePhase = "pick-start";
     btnPlaneLabel.textContent = t("confirmStart");
 
@@ -5366,7 +5366,7 @@
       planeActive.style.display = "block";
       if (planeBudgetPanel) { planeBudgetPanel.style.display = "block"; updatePlaneBudgetSummary(); }
       else syncPlaneGenerateEnabled();
-      sheet.classList.add("open");
+      openSheet();
       showStatus("statusHopsDone");
       return;
     }
@@ -5444,7 +5444,7 @@
         planeActive.style.display = "block";
         if (planeBudgetPanel) { planeBudgetPanel.style.display = "block"; updatePlaneBudgetSummary(); }
         else { btnPlane.disabled = false; syncPlaneGenerateEnabled(); }
-        sheet.classList.add("open");
+        openSheet();
         const sheetBody = document.querySelector(".sheet-body");
         if (sheetBody && planeBudgetPanel) {
           requestAnimationFrame(function () {
@@ -5669,7 +5669,7 @@
         planeBudgetWarn.classList.add("show");
       }
       showStatus("budgetWarn");
-      sheet.classList.add("open");
+      openSheet();
       return;
     }
     planeBusy = true;
@@ -5684,7 +5684,7 @@
       planeFooter.classList.remove("show");
       btnPlaneLabel.textContent = t("generating");
       if (btnPlaneGenLabel) btnPlaneGenLabel.textContent = t("generating");
-      sheet.classList.add("open");
+      openSheet();
       const sheetBody = document.querySelector(".sheet-body");
       resetSheetScroll();
       const planPromise = buildMultiCityPlanAsync();
@@ -5705,7 +5705,7 @@
         btnPlaneGen.style.display = "none";
       }
       showStatus("statusPlanReady");
-      sheet.classList.add("open");
+      openSheet();
       requestAnimationFrame(function () {
         if (sheetBody) {
           const top = planeItinerary.offsetTop || 0;
@@ -5755,7 +5755,7 @@
     placeLabel.textContent = t("currentStop");
     placeName.textContent = planeStart.name + (planeStart.region ? " · " + planeStart.region : "");
     showStatus("statusResetKeep");
-    sheet.classList.add("open");
+    openSheet();
   });
 
   function cancelInFlightWork() {
@@ -5768,49 +5768,73 @@
     planeBusy = false;
   }
 
-  function dismissSheetToMap() {
+  function openSheet() {
+    /* Restore visibility/pointer/transition before adding .open so reopen paints cleanly */
     try {
+      sheet.hidden = false;
+      sheet.style.visibility = "";
+      sheet.style.pointerEvents = "";
+      sheet.style.transition = "";
+      sheet.style.transform = "";
+      sheet.classList.add("open");
+    } catch (_) {}
+  }
+
+  function dismissSheetToMap() {
+    /* Instant hide — no transition, no __tideSheetSetExpanded (avoids class churn freeze) */
+    try {
+      sheet.style.transition = "none";
       sheet.classList.remove("open", "expanded", "collapsed", "dragging");
       sheet.style.transform = "";
       sheet.style.height = "";
       sheet.style.maxHeight = "";
-    } catch (_) {}
-    try {
-      if (window.__tideSheetSetExpanded) window.__tideSheetSetExpanded(false);
+      sheet.style.visibility = "hidden";
+      sheet.style.pointerEvents = "none";
+      sheet.hidden = true;
     } catch (_) {}
   }
 
   function scheduleMapInvalidateOnce() {
-    /* Intentionally NO-OP on close paths (v12): invalidateSize during sheet slide freezes Leaflet (~110–150% CPU).
+    /* Intentionally NO-OP on close paths (v12+): invalidateSize during sheet slide freezes Leaflet (~110–150% CPU).
        Open/mode-switch paths call map.invalidateSize directly if needed. */
   }
 
   function clearPlaneAll() {
-    /* Freeze-safe Clear route: cancel → dismiss sheet → light UI → deferred layers; NO invalidateSize */
+    /* v13: instant hide only on click stack; defer ALL UI + layers */
     cancelInFlightWork();
     planeMarker = null;
-    dismissSheetToMap();
     try {
-      planeStart = null; planeStops = [];
-      planePhase = "pick-start";
-      btnPlaneLabel.textContent = t("confirmStart");
-      btnPlane.disabled = true;
-      setHopSliderEnabled(true);
-      placeLabel.textContent = t("startPlace");
-      placeName.textContent = "—"; placeCoords.textContent = "";
-      localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
-      showStatus("");
-      rollToast.classList.remove("show");
-      hint.classList.remove("hide");
-      hint.innerHTML = t("hintPlane");
-      resetPlaneUI();
-    } catch (err) { console.warn("clearPlaneAll ui", err); }
+      sheet.style.transition = "none";
+      sheet.classList.remove("open", "expanded", "collapsed", "dragging");
+      sheet.style.transform = "";
+      sheet.style.visibility = "hidden";
+      sheet.style.pointerEvents = "none";
+      sheet.hidden = true;
+    } catch (_) {}
     const tok = planeHopToken;
-    /* Defer layer teardown so sheet can close immediately; no map.invalidateSize on close */
     setTimeout(function () {
       if (tok !== planeHopToken) return;
-      try { clearPlaneLayers(); } catch (_) {}
-    }, 600);
+      try {
+        planeStart = null; planeStops = [];
+        planePhase = "pick-start";
+        btnPlaneLabel.textContent = t("confirmStart");
+        btnPlane.disabled = true;
+        setHopSliderEnabled(true);
+        placeLabel.textContent = t("startPlace");
+        placeName.textContent = "—"; placeCoords.textContent = "";
+        localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
+        showStatus("");
+        rollToast.classList.remove("show");
+        hint.classList.remove("hide");
+        hint.innerHTML = t("hintPlane");
+        resetPlaneUI();
+        try { sheet.style.transition = ""; } catch (_) {}
+      } catch (err) { console.warn("clearPlaneAll ui", err); }
+      setTimeout(function () {
+        if (tok !== planeHopToken) return;
+        try { clearPlaneLayers(); } catch (_) {}
+      }, 200);
+    }, 0);
     planeBusy = false;
     btnPlane.disabled = true;
   }
@@ -5842,48 +5866,58 @@
 
   /* X (btnClear): BOTH modes — collapse sheet → map mode; cancel hops; no freeze */
   function closeSheetToMapMode() {
-    /* Freeze-safe X close: cancel → dismiss sheet → light UI → deferred layers; NO invalidateSize */
+    /* v13: instant hide only on click stack; defer ALL UI + layers */
     cancelInFlightWork();
     planeMarker = null;
-    dismissSheetToMap();
     try {
-      showStatus("");
-      rollToast.classList.remove("show");
-      hint.classList.remove("hide");
-      hint.innerHTML = mode === "plane" ? t("hintPlane") : t("hintTide");
-      placeName.textContent = "—";
-      placeCoords.textContent = "";
-      localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
-      if (mode === "plane") {
-        planeStart = null; planeStops = [];
-        planePhase = "pick-start";
-        placeLabel.textContent = t("startPlace");
-        btnPlaneLabel.textContent = t("confirmStart");
-        btnPlane.disabled = true;
-        setHopSliderEnabled(true);
-        resetPlaneUI();
-      } else {
-        currentLatLng = null; currentPlace = null; lastTidePlan = null;
-        planeStart = null; planeStops = []; planePhase = "idle";
-        placeLabel.textContent = t("destination");
-        showPanelStates("empty");
-        try { itinerary.innerHTML = ""; } catch (_) {}
-        btnGen.disabled = false;
-        if (btnRegen) btnRegen.disabled = false;
-        btnGen.classList.remove("spinning");
-        btnGenLabel.textContent = t("genPlan");
-        resetPlaneUI();
-        btnPlaneLabel.textContent = t("confirmStart");
-        btnPlane.disabled = true;
-        setHopSliderEnabled(true);
-      }
-    } catch (err) { console.warn("closeSheetToMapMode ui", err); }
+      sheet.style.transition = "none";
+      sheet.classList.remove("open", "expanded", "collapsed", "dragging");
+      sheet.style.transform = "";
+      sheet.style.visibility = "hidden";
+      sheet.style.pointerEvents = "none";
+      sheet.hidden = true;
+    } catch (_) {}
     const tok = planeHopToken;
-    /* Defer layer teardown so sheet closes immediately; Leaflet invalidateSize during slide freezes */
     setTimeout(function () {
       if (tok !== planeHopToken) return;
-      try { clearPlaneLayers(); } catch (_) {}
-    }, 600);
+      try {
+        showStatus("");
+        rollToast.classList.remove("show");
+        hint.classList.remove("hide");
+        hint.innerHTML = mode === "plane" ? t("hintPlane") : t("hintTide");
+        placeName.textContent = "—";
+        placeCoords.textContent = "";
+        localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
+        if (mode === "plane") {
+          planeStart = null; planeStops = [];
+          planePhase = "pick-start";
+          placeLabel.textContent = t("startPlace");
+          btnPlaneLabel.textContent = t("confirmStart");
+          btnPlane.disabled = true;
+          setHopSliderEnabled(true);
+          resetPlaneUI();
+        } else {
+          currentLatLng = null; currentPlace = null; lastTidePlan = null;
+          planeStart = null; planeStops = []; planePhase = "idle";
+          placeLabel.textContent = t("destination");
+          showPanelStates("empty");
+          try { itinerary.innerHTML = ""; } catch (_) {}
+          btnGen.disabled = false;
+          if (btnRegen) btnRegen.disabled = false;
+          btnGen.classList.remove("spinning");
+          btnGenLabel.textContent = t("genPlan");
+          resetPlaneUI();
+          btnPlaneLabel.textContent = t("confirmStart");
+          btnPlane.disabled = true;
+          setHopSliderEnabled(true);
+        }
+        try { sheet.style.transition = ""; } catch (_) {}
+      } catch (err) { console.warn("closeSheetToMapMode ui", err); }
+      setTimeout(function () {
+        if (tok !== planeHopToken) return;
+        try { clearPlaneLayers(); } catch (_) {}
+      }, 200);
+    }, 0);
   }
 
   /* Clear marker (btnClear2): BOTH modes — clear generated recommendations; no freeze */
