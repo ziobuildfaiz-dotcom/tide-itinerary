@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- tide-cdn-bust:2026-10-18T04:00:00Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v13" />
+  <!-- tide-cdn-bust:2026-10-18T04:10:00Z -->
+  <meta name="tide-build" content="mobile-cn-zh-v14" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -157,6 +157,18 @@
       display: flex; flex-direction: column; overflow: hidden;
     }
     .sheet.open { transform: translateY(0); }
+    /* v14: hide sheet via ancestor class — no sheet.classList / style thrash on click */
+    html.tide-sheet-gone #sheet {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      animation: none !important;
+      transition: none !important;
+    }
+    html.tide-sheet-gone #sheet * {
+      animation: none !important;
+      transition: none !important;
+    }
     .sheet-handle {
       width: 100%; display: flex; align-items: center; justify-content: center;
       padding: 10px 0 0; flex-shrink: 0; touch-action: none;
@@ -1077,7 +1089,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v13</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v14</span>
         </div>
       </div>
 
@@ -5769,8 +5781,9 @@
   }
 
   function openSheet() {
-    /* Restore visibility/pointer/transition before adding .open so reopen paints cleanly */
+    /* v14: clear ancestor hide class, then restore sheet chrome + .open */
     try {
+      document.documentElement.classList.remove("tide-sheet-gone");
       sheet.hidden = false;
       sheet.style.visibility = "";
       sheet.style.pointerEvents = "";
@@ -5781,16 +5794,9 @@
   }
 
   function dismissSheetToMap() {
-    /* Instant hide — no transition, no __tideSheetSetExpanded (avoids class churn freeze) */
+    /* v14: hide via html.tide-sheet-gone only — no sheet.classList / style on click stack */
     try {
-      sheet.style.transition = "none";
-      sheet.classList.remove("open", "expanded", "collapsed", "dragging");
-      sheet.style.transform = "";
-      sheet.style.height = "";
-      sheet.style.maxHeight = "";
-      sheet.style.visibility = "hidden";
-      sheet.style.pointerEvents = "none";
-      sheet.hidden = true;
+      document.documentElement.classList.add("tide-sheet-gone");
     } catch (_) {}
   }
 
@@ -5800,21 +5806,27 @@
   }
 
   function clearPlaneAll() {
-    /* v13: instant hide only on click stack; defer ALL UI + layers */
+    /* v14: click stack = cancel + html.tide-sheet-gone only; defer UI + layers */
     cancelInFlightWork();
     planeMarker = null;
     try {
-      sheet.style.transition = "none";
-      sheet.classList.remove("open", "expanded", "collapsed", "dragging");
-      sheet.style.transform = "";
-      sheet.style.visibility = "hidden";
-      sheet.style.pointerEvents = "none";
-      sheet.hidden = true;
+      document.documentElement.classList.add("tide-sheet-gone");
     } catch (_) {}
     const tok = planeHopToken;
     setTimeout(function () {
       if (tok !== planeHopToken) return;
       try {
+        /* Safe while display:none — strip .open so reopen via openSheet is clean */
+        try {
+          sheet.classList.remove("open", "expanded", "collapsed", "dragging");
+          sheet.style.transform = "";
+          sheet.style.height = "";
+          sheet.style.maxHeight = "";
+          sheet.style.visibility = "";
+          sheet.style.pointerEvents = "";
+          sheet.style.transition = "";
+          sheet.hidden = false;
+        } catch (_) {}
         planeStart = null; planeStops = [];
         planePhase = "pick-start";
         btnPlaneLabel.textContent = t("confirmStart");
@@ -5828,17 +5840,19 @@
         hint.classList.remove("hide");
         hint.innerHTML = t("hintPlane");
         resetPlaneUI();
-        try { sheet.style.transition = ""; } catch (_) {}
       } catch (err) { console.warn("clearPlaneAll ui", err); }
       setTimeout(function () {
         if (tok !== planeHopToken) return;
         try { clearPlaneLayers(); } catch (_) {}
-      }, 200);
+      }, 150);
     }, 0);
     planeBusy = false;
     btnPlane.disabled = true;
   }
-  btnPlaneClear.addEventListener("click", clearPlaneAll);
+  btnPlaneClear.addEventListener("click", function (e) {
+    try { e.preventDefault(); e.stopImmediatePropagation(); } catch (_) {}
+    clearPlaneAll();
+  }, true);
 
   function clearAll(silent) {
     /* Full reset used by setMode — keep sync for mode switch correctness */
@@ -5866,21 +5880,26 @@
 
   /* X (btnClear): BOTH modes — collapse sheet → map mode; cancel hops; no freeze */
   function closeSheetToMapMode() {
-    /* v13: instant hide only on click stack; defer ALL UI + layers */
+    /* v14: click stack = cancel + html.tide-sheet-gone only; defer UI + layers */
     cancelInFlightWork();
     planeMarker = null;
     try {
-      sheet.style.transition = "none";
-      sheet.classList.remove("open", "expanded", "collapsed", "dragging");
-      sheet.style.transform = "";
-      sheet.style.visibility = "hidden";
-      sheet.style.pointerEvents = "none";
-      sheet.hidden = true;
+      document.documentElement.classList.add("tide-sheet-gone");
     } catch (_) {}
     const tok = planeHopToken;
     setTimeout(function () {
       if (tok !== planeHopToken) return;
       try {
+        try {
+          sheet.classList.remove("open", "expanded", "collapsed", "dragging");
+          sheet.style.transform = "";
+          sheet.style.height = "";
+          sheet.style.maxHeight = "";
+          sheet.style.visibility = "";
+          sheet.style.pointerEvents = "";
+          sheet.style.transition = "";
+          sheet.hidden = false;
+        } catch (_) {}
         showStatus("");
         rollToast.classList.remove("show");
         hint.classList.remove("hide");
@@ -5911,12 +5930,11 @@
           btnPlane.disabled = true;
           setHopSliderEnabled(true);
         }
-        try { sheet.style.transition = ""; } catch (_) {}
       } catch (err) { console.warn("closeSheetToMapMode ui", err); }
       setTimeout(function () {
         if (tok !== planeHopToken) return;
         try { clearPlaneLayers(); } catch (_) {}
-      }, 200);
+      }, 150);
     }, 0);
   }
 
@@ -5949,7 +5967,7 @@
         setHopSliderEnabled(true);
         showStatus("");
         rollToast.classList.remove("show");
-        if (sheet.classList.contains("open")) {
+        if (sheet.classList.contains("open") && !document.documentElement.classList.contains("tide-sheet-gone")) {
           /* Stay in sheet with empty plane UI so user can re-pick */
           showStatus("statusPlanePick");
         }
@@ -5976,17 +5994,18 @@
   }
 
   btnClear.addEventListener("click", function (e) {
-    try { if (e) { e.preventDefault(); e.stopPropagation(); } } catch (_) {}
+    try { e.preventDefault(); e.stopImmediatePropagation(); } catch (_) {}
     closeSheetToMapMode();
-  });
+  }, true);
   btnClear2.addEventListener("click", function (e) {
     try { if (e) { e.preventDefault(); e.stopPropagation(); } } catch (_) {}
     clearRecommendations();
   });
+
   if (nearbyChip) nearbyChip.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); applyNearbyPopular(); });
   map.on("click", (e) => { if (mode === "tide") onTideMapClick(e); else onPlaneMapClick(e); });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && sheet.classList.contains("open")) {
+    if (e.key === "Escape" && sheet.classList.contains("open") && !document.documentElement.classList.contains("tide-sheet-gone")) {
       closeSheetToMapMode();
     }
   });
