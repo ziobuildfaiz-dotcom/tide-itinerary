@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- tide-cdn-bust:2026-10-18T03:20:00Z -->
-  <meta name="tide-build" content="mobile-cn-zh-v11" />
+  <!-- tide-cdn-bust:2026-10-18T03:40:00Z -->
+  <meta name="tide-build" content="mobile-cn-zh-v12" />
   <!-- tide-live-hot: v1 — pin-time live attractions: XHS-primary attractions-db.json within 50km + Wikivoyage See + Wikipedia geosearch + Overpass; LANDMARKS_BY_CITY not used for itinerary -->
   <!-- tide-photos: geo-v4-gz-foshan-live — verified upload.wikimedia.org thumbs for Guangzhou/Foshan PHOTO_FALLBACK -->
   <!-- tide-pin: anchor-v1 -->
@@ -984,7 +984,7 @@
     <div class="roll-note" id="rollNote">Dice sets the next hop radius</div>
   </div>
 
-  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v11</div>
+  <div class="tide-build-chip" id="tideBuildChip" aria-hidden="true">v12</div>
 
   <aside class="sheet" id="sheet" role="dialog" aria-labelledby="placeName">
     <div class="sheet-handle" id="sheetHandle" role="button" tabindex="0" aria-label="Expand or collapse plan sheet" aria-expanded="false">
@@ -1077,7 +1077,7 @@
           <button type="button" class="btn-ghost" id="btnRegen">Regenerate</button>
           <button type="button" class="btn-ghost" id="btnClear2">Clear marker</button>
           <button type="button" class="btn-ghost" id="btnExportPdf">Export PDF</button>
-          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v11</span>
+          <span id="tideBuildLabel" style="margin-left:auto;font-size:10px;opacity:0.45;letter-spacing:0.02em;align-self:center">tide-build mobile-cn-zh-v12</span>
         </div>
       </div>
 
@@ -5072,18 +5072,27 @@
     updateHopLabel();
   }
   function clearPlaneLayers() {
-    /* Null planeMarker FIRST so flyPlaneAlong RAF stops before removeLayer storms */
-    const pm = planeMarker;
-    planeMarker = null;
-    try { if (pm) map.removeLayer(pm); } catch (_) {}
-    try { if (radiusCircle) map.removeLayer(radiusCircle); } catch (_) {}
-    radiusCircle = null;
+    /* Null ALL layer refs FIRST so RAF/async stop before removeLayer storms */
+    const pm = planeMarker; planeMarker = null;
+    const rc = radiusCircle; radiusCircle = null;
     const paths = pathLayers; pathLayers = [];
-    paths.forEach((l) => { try { map.removeLayer(l); } catch (_) {} });
     const stops = stopMarkers; stopMarkers = [];
-    stops.forEach((m) => { try { map.removeLayer(m); } catch (_) {} });
-    try { if (marker) map.removeLayer(marker); } catch (_) {}
-    marker = null;
+    const mk = marker; marker = null;
+    function safeRemove(layer) {
+      try { if (layer) map.removeLayer(layer); } catch (_) {}
+    }
+    /* Stagger batches with 0ms timeouts to avoid main-thread freeze */
+    safeRemove(pm);
+    setTimeout(function () {
+      safeRemove(rc);
+      setTimeout(function () {
+        paths.forEach(safeRemove);
+        setTimeout(function () {
+          stops.forEach(safeRemove);
+          safeRemove(mk);
+        }, 0);
+      }, 0);
+    }, 0);
   }
   function renderTimeline() {
     let html = "";
@@ -5753,6 +5762,8 @@
     /* Bump tokens FIRST so RAF/flyPlaneAlong and gen async exit on next check */
     planeHopToken++;
     genToken++;
+    /* Null planeMarker immediately so flyPlaneAlong RAF exits before any removeLayer */
+    planeMarker = null;
     tideBusy = false;
     planeBusy = false;
   }
@@ -5770,16 +5781,14 @@
   }
 
   function scheduleMapInvalidateOnce() {
-    /* One soft invalidate after sheet CSS slide finishes — avoid storms during teardown */
-    setTimeout(function () {
-      try {
-        if (map && map.invalidateSize) map.invalidateSize({ animate: false });
-      } catch (_) {}
-    }, 340);
+    /* Intentionally NO-OP on close paths (v12): invalidateSize during sheet slide freezes Leaflet (~110–150% CPU).
+       Open/mode-switch paths call map.invalidateSize directly if needed. */
   }
 
   function clearPlaneAll() {
+    /* Freeze-safe Clear route: cancel → dismiss sheet → light UI → deferred layers; NO invalidateSize */
     cancelInFlightWork();
+    planeMarker = null;
     dismissSheetToMap();
     try {
       planeStart = null; planeStops = [];
@@ -5797,11 +5806,11 @@
       resetPlaneUI();
     } catch (err) { console.warn("clearPlaneAll ui", err); }
     const tok = planeHopToken;
-    requestAnimationFrame(function () {
+    /* Defer layer teardown so sheet can close immediately; no map.invalidateSize on close */
+    setTimeout(function () {
       if (tok !== planeHopToken) return;
       try { clearPlaneLayers(); } catch (_) {}
-      scheduleMapInvalidateOnce();
-    });
+    }, 600);
     planeBusy = false;
     btnPlane.disabled = true;
   }
@@ -5833,7 +5842,9 @@
 
   /* X (btnClear): BOTH modes — collapse sheet → map mode; cancel hops; no freeze */
   function closeSheetToMapMode() {
+    /* Freeze-safe X close: cancel → dismiss sheet → light UI → deferred layers; NO invalidateSize */
     cancelInFlightWork();
+    planeMarker = null;
     dismissSheetToMap();
     try {
       showStatus("");
@@ -5868,11 +5879,11 @@
       }
     } catch (err) { console.warn("closeSheetToMapMode ui", err); }
     const tok = planeHopToken;
-    requestAnimationFrame(function () {
+    /* Defer layer teardown so sheet closes immediately; Leaflet invalidateSize during slide freezes */
+    setTimeout(function () {
       if (tok !== planeHopToken) return;
       try { clearPlaneLayers(); } catch (_) {}
-      scheduleMapInvalidateOnce();
-    });
+    }, 600);
   }
 
   /* Clear marker (btnClear2): BOTH modes — clear generated recommendations; no freeze */
