@@ -149,16 +149,14 @@
       position: absolute; left: 0; right: 0; bottom: 0; z-index: 900;
       max-height: var(--sheet-h);
       background: linear-gradient(180deg, rgba(26, 58, 82, 0.97), rgba(11, 31, 51, 0.98));
-      border-radius: 22px 22px 0 0;
+      backdrop-filter: blur(16px); border-radius: 22px 22px 0 0;
       border-top: 1px solid rgba(232, 213, 183, 0.2);
       box-shadow: 0 -12px 40px rgba(5, 18, 32, 0.5);
-      /* v16: show/hide is display-only. The old translateY(110%)/translateX(120%)
-         slide + opacity transition froze the main thread when .open was removed.
-         .sheet is display:none by default; .sheet.open shows it; the ancestor
-         .tide-sheet-gone class force-hides it instantly on close. */
-      display: none; flex-direction: column; overflow: hidden;
+      transform: translateY(110%);
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      display: flex; flex-direction: column; overflow: hidden;
     }
-    .sheet.open { display: flex; }
+    .sheet.open { transform: translateY(0); }
     /* v15: hide sheet via ancestor class — display:none only (no star rule / style thrash) */
     html.tide-sheet-gone #sheet {
       display: none !important;
@@ -426,9 +424,10 @@
       .sheet {
         left: auto; right: 18px; top: 18px; bottom: 18px; width: min(400px, 42vw);
         max-height: none; height: auto; border-radius: 20px;
-        border: 1px solid rgba(232, 213, 183, 0.18);
+        border: 1px solid rgba(232, 213, 183, 0.18); transform: translateX(120%);
         box-shadow: var(--shadow);
       }
+      .sheet.open { transform: translateX(0); }
       .sheet-handle { display: none; }
       .hint { max-width: 240px; top: 80px; }
       /* Desktop scroll: only .sheet-head (location) stays pinned; days+budget scroll with plan (match phone). */
@@ -6830,6 +6829,11 @@
     /* When sheet closes, reset snap. When it opens on phone, default to half. */
     let lastOpen = sheet && sheet.classList.contains("open");
     const openObs = new MutationObserver(function () {
+      /* v16: the snap sync only matters on phone (<=520px). On desktop this
+         callback's own classList.remove() re-mutated the observed `class`
+         attribute and could re-enter as a microtask loop, freezing the main
+         thread when the sheet closed. Skip it entirely on desktop. */
+      if (!mq.matches) return;
       const isOpen = sheet.classList.contains("open");
       if (!isOpen) {
         sheet.classList.remove("collapsed", "expanded", "dragging");
@@ -6837,7 +6841,7 @@
         sheet.style.height = "";
         sheet.style.maxHeight = "";
         if (handle) handle.setAttribute("aria-expanded", "false");
-      } else if (mq.matches && !lastOpen) {
+      } else if (!lastOpen) {
         /* Fresh open → half (map + preview) */
         setSnap(SNAP.half);
       }
