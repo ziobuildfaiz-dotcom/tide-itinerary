@@ -2483,8 +2483,9 @@
         '" alt="" loading="lazy" width="140" height="96"/><div class="photo-credit">' + escapeHtml(t("photoPlaceholder")) + "</div></div>";
     }
     const credit = t("photoAttr", { artist: photo.artist || "Wikimedia", license: photo.license || "CC" });
-    const link = photo.source
-      ? ' · <a href="' + escapeHtml(photo.source) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(t("photoAttrLink")) + "</a>"
+    const sourceHref = safeUrl(photo.source);
+    const link = sourceHref
+      ? ' · <a href="' + escapeHtml(sourceHref) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(t("photoAttrLink")) + "</a>"
       : "";
     const h = compact ? 72 : 96;
     const w = compact ? 110 : 140;
@@ -4628,6 +4629,12 @@
   function escapeHtml(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
+  /* v16: only allow http(s) for user/external URLs — blocks javascript:/data:
+     injection through photo attribution links and image src. */
+  function safeUrl(u) {
+    const s = String(u || "").trim();
+    return /^https?:\/\//i.test(s) ? s : "";
+  }
 
   function renderLodgingFoodBlocks(plan) {
     let html = "";
@@ -5014,6 +5021,18 @@
       renderPlan(lastTidePlan);
       showPanelStates("plan");
       btnGenLabel.textContent = t("regenerate");
+    } catch (err) {
+      /* v16: a rejected plan (network/parse) used to strand the sheet on the
+         loading panel with no error and no way back. Recover to a retryable
+         empty state instead. */
+      console.warn("generate", err);
+      if (token === genToken) {
+        try {
+          showPanelStates("empty");
+          showStatus("statusNoCandidate");
+          btnGenLabel.textContent = t("genPlan");
+        } catch (_) {}
+      }
     } finally {
       if (hintTimer) clearInterval(hintTimer);
       btnGen.classList.remove("spinning");
