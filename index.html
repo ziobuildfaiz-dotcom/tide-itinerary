@@ -1182,8 +1182,17 @@
       return false;
     } catch (_) { return false; }
   }
+  /* v16: localStorage can throw (Safari private mode / storage-blocked iframes).
+     An unguarded read here aborted the whole IIFE, leaving a blank map with no
+     handlers bound. Every access is now wrapped; failures degrade to defaults. */
+  function storageGet(key) {
+    try { return localStorage.getItem(key); } catch (_) { return null; }
+  }
+  function storageSet(key, value) {
+    try { localStorage.setItem(key, value); return true; } catch (_) { return false; }
+  }
   (function initLangDefault() {
-    const stored = localStorage.getItem(LANG_KEY);
+    const stored = storageGet(LANG_KEY);
     if (stored === "zh" || stored === "en") {
       window.__tideLangInit = stored;
       return;
@@ -4798,7 +4807,7 @@
     if (next !== "en" && next !== "zh") return;
     try {
     lang = next;
-    localStorage.setItem(LANG_KEY, lang);
+    storageSet(LANG_KEY, lang);
     setTileForLang(lang);
     applyStaticUI();
 
@@ -5398,6 +5407,7 @@
         showRollToast(radiusKm, t("statusToastNoCandidate"));
         showStatus("statusNoCandidate");
         btnPlane.disabled = false;
+        setHopSliderEnabled(true);
         return;
       }
       if (hopToken !== planeHopToken) return;
@@ -5446,6 +5456,9 @@
         if (btnPlaneGenLabel) btnPlaneGenLabel.textContent = t("genFullPlan");
         planeEmpty.style.display = "none";
         planeActive.style.display = "block";
+        /* v16: re-enable the hop slider at hops-done; it was disabled when the
+           hop started and never restored, staying locked for the rest of the trip. */
+        setHopSliderEnabled(true);
         if (planeBudgetPanel) { planeBudgetPanel.style.display = "block"; updatePlaneBudgetSummary(); }
         else { btnPlane.disabled = false; syncPlaneGenerateEnabled(); }
         openSheet();
@@ -5476,12 +5489,13 @@
         } catch (_) {}
       }
     } finally {
-      if (hopToken === planeHopToken) {
-        planeBusy = false;
-        if (planePhase === "ready" || planePhase === "pick-start") {
-          btnPlane.disabled = false;
-          setHopSliderEnabled(true);
-        }
+      /* v16: always release the busy flag. Previously a cancelled hop (token
+         bumped by a clear/reset) skipped this block, so `planeBusy` stayed true
+         and every later hop/Confirm click was silently ignored. */
+      planeBusy = false;
+      if (hopToken === planeHopToken && (planePhase === "ready" || planePhase === "pick-start")) {
+        btnPlane.disabled = false;
+        setHopSliderEnabled(true);
       }
     }
   }
@@ -5717,6 +5731,23 @@
         }
         try { planeItinerary.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (_) {}
       });
+    } catch (err) {
+      /* v16: a rejected plan used to leave the spinner up and every button
+         disabled forever. Recover to a usable "ready to retry" state. */
+      console.warn("generatePlanePlan", err);
+      try {
+        planeLoading.classList.remove("show");
+        planeEmpty.style.display = "none";
+        planeActive.style.display = "block";
+        planeFooter.classList.remove("show");
+        planePhase = planeStops.length > 1 ? "hops-done" : "ready";
+        btnPlane.disabled = false;
+        btnPlaneLabel.textContent = planePhase === "hops-done" ? t("genFullPlan") : t("launchPlane");
+        if (btnPlaneGen) { btnPlaneGen.disabled = false; btnPlaneGen.style.display = ""; }
+        if (btnPlaneGenLabel) btnPlaneGenLabel.textContent = t("genFullPlan");
+        showStatus("statusNoCandidate");
+        openSheet();
+      } catch (_) {}
     } finally {
       planeBusy = false;
     }
@@ -5772,7 +5803,36 @@
     planeBusy = false;
   }
 
+  /* v16: sheet lifecycle guard.
+     v11–v15 deferred close cleanup by 500ms but nothing cancelled that timer, so a
+     reopen (map tap / mode switch) within the window was smashed by the stale
+     timeout: sheet closed again, plane state wiped, layers removed under a live
+     plan. Every close path now bumps this generation and stores its timer;
+     openSheet() and every later close cancel the pending cleanup first. */
+  let sheetCloseGen = 0;
+  let sheetCloseTimer = 0;
+
+  function cancelPendingSheetClose() {
+    sheetCloseGen++;
+    if (sheetCloseTimer) {
+      try { clearTimeout(sheetCloseTimer); } catch (_) {}
+      sheetCloseTimer = 0;
+    }
+  }
+
+  /* Schedule one deferred close. A newer open/close cancels it via the generation. */
+  function scheduleSheetClose(cleanup) {
+    const gen = sheetCloseGen;
+    sheetCloseTimer = setTimeout(function () {
+      sheetCloseTimer = 0;
+      if (gen !== sheetCloseGen) return;
+      cleanup();
+    }, 500);
+  }
+
   function openSheet() {
+    /* v16: cancel any pending deferred close BEFORE revealing the sheet */
+    cancelPendingSheetClose();
     /* v15: clear ancestor hide class, then restore sheet chrome + .open */
     try {
       document.documentElement.classList.remove("tide-sheet-gone");
@@ -5787,6 +5847,7 @@
 
   function dismissSheetToMap() {
     /* v15: cancel + planeMarker null + html.tide-sheet-gone only — nothing else sync */
+    cancelPendingSheetClose();
     cancelInFlightWork();
     planeMarker = null;
     try {
@@ -5801,14 +5862,14 @@
 
   function clearPlaneAll() {
     /* v15: click stack = cancel + html.tide-sheet-gone only; defer ALL cleanup @500ms */
+    /* v16: the deferred cleanup is cancelled by any reopen or later close */
+    cancelPendingSheetClose();
     cancelInFlightWork();
     planeMarker = null;
     try {
       document.documentElement.classList.add("tide-sheet-gone");
     } catch (_) {}
-    const tok = planeHopToken;
-    setTimeout(function () {
-      if (tok !== planeHopToken) return;
+    scheduleSheetClose(function () {
       try {
         /* Safe while display:none — strip .open so reopen via openSheet is clean */
         try {
@@ -5837,7 +5898,7 @@
       } catch (err) { console.warn("clearPlaneAll ui", err); }
       try { if (map && map.stop) map.stop(); } catch (_) {}
       try { clearPlaneLayers(); } catch (_) {}
-    }, 500);
+    });
     planeBusy = false;
     btnPlane.disabled = true;
   }
@@ -5873,14 +5934,14 @@
   /* X (btnClear): BOTH modes — collapse sheet → map mode; cancel hops; no freeze */
   function closeSheetToMapMode() {
     /* v15: click stack = cancel + html.tide-sheet-gone only; defer ALL cleanup @500ms */
+    /* v16: deferred cleanup is cancelled by any reopen or later close */
+    cancelPendingSheetClose();
     cancelInFlightWork();
     planeMarker = null;
     try {
       document.documentElement.classList.add("tide-sheet-gone");
     } catch (_) {}
-    const tok = planeHopToken;
-    setTimeout(function () {
-      if (tok !== planeHopToken) return;
+    scheduleSheetClose(function () {
       try {
         try {
           sheet.classList.remove("open", "expanded", "collapsed", "dragging");
@@ -5925,7 +5986,7 @@
       } catch (err) { console.warn("closeSheetToMapMode ui", err); }
       try { if (map && map.stop) map.stop(); } catch (_) {}
       try { clearPlaneLayers(); } catch (_) {}
-    }, 500);
+    });
   }
 
   /* Clear marker (btnClear2): BOTH modes — clear generated recommendations; no freeze */
