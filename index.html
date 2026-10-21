@@ -149,14 +149,16 @@
       position: absolute; left: 0; right: 0; bottom: 0; z-index: 900;
       max-height: var(--sheet-h);
       background: linear-gradient(180deg, rgba(26, 58, 82, 0.97), rgba(11, 31, 51, 0.98));
-      backdrop-filter: blur(16px); border-radius: 22px 22px 0 0;
+      border-radius: 22px 22px 0 0;
       border-top: 1px solid rgba(232, 213, 183, 0.2);
       box-shadow: 0 -12px 40px rgba(5, 18, 32, 0.5);
-      transform: translateY(110%);
-      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-      display: flex; flex-direction: column; overflow: hidden;
+      /* v16: show/hide is display-only. The old translateY(110%)/translateX(120%)
+         slide + opacity transition froze the main thread when .open was removed.
+         .sheet is display:none by default; .sheet.open shows it; the ancestor
+         .tide-sheet-gone class force-hides it instantly on close. */
+      display: none; flex-direction: column; overflow: hidden;
     }
-    .sheet.open { transform: translateY(0); }
+    .sheet.open { display: flex; }
     /* v15: hide sheet via ancestor class — display:none only (no star rule / style thrash) */
     html.tide-sheet-gone #sheet {
       display: none !important;
@@ -424,10 +426,9 @@
       .sheet {
         left: auto; right: 18px; top: 18px; bottom: 18px; width: min(400px, 42vw);
         max-height: none; height: auto; border-radius: 20px;
-        border: 1px solid rgba(232, 213, 183, 0.18); transform: translateX(120%);
+        border: 1px solid rgba(232, 213, 183, 0.18);
         box-shadow: var(--shadow);
       }
-      .sheet.open { transform: translateX(0); }
       .sheet-handle { display: none; }
       .hint { max-width: 240px; top: 80px; }
       /* Desktop scroll: only .sheet-head (location) stays pinned; days+budget scroll with plan (match phone). */
@@ -5915,7 +5916,10 @@
         hint.innerHTML = t("hintPlane");
         resetPlaneUI();
       } catch (err) { console.warn("clearPlaneAll ui", err); }
-      try { if (map && map.stop) map.stop(); } catch (_) {}
+      /* v16: map.stop() forces setZoom()->_resetView (full tile/vector re-render)
+         even when zoom is unchanged, freezing the page on close. map._stop() only
+         cancels in-flight pan/fly animations — no re-render. */
+      try { if (map && map._stop) map._stop(); } catch (_) {}
       try { clearPlaneLayers(); } catch (_) {}
     });
     planeBusy = false;
@@ -6003,7 +6007,8 @@
           setHopSliderEnabled(true);
         }
       } catch (err) { console.warn("closeSheetToMapMode ui", err); }
-      try { if (map && map.stop) map.stop(); } catch (_) {}
+      /* v16: avoid map.stop()'s forced _resetView freeze (see clearPlaneAll). */
+      try { if (map && map._stop) map._stop(); } catch (_) {}
       try { clearPlaneLayers(); } catch (_) {}
     });
   }
