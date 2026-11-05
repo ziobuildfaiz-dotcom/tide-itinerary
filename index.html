@@ -11,6 +11,7 @@
   <!-- tide-live-pois: overpass-v3-fast -->
   <!-- tide-attractions-db: xhs-primary-v1 — attractions-db.json (Xiaohongshu-primary seed) + live scrape merge -->
   <!-- tide-plan-speed: parallel-v1 -->
+  <!-- tide-multi: legs-v1 — 多点游 legs[] beside default 单点游 (currentLatLng) -->
   <!-- tide-pinch-handoff: touch-v1 -->
   <!-- tide-chrome: brand-zoom-stack-v3 -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
@@ -413,6 +414,68 @@
       font-size: 10px; padding: 2px 8px; border-radius: 999px; background: var(--teal-soft);
       color: var(--teal); border: 1px solid rgba(61, 139, 156, 0.3);
     }
+    /* tide-multi: legs-v1 — 单点游 / 多点游 inside Map Pick */
+    .trip-style-row {
+      flex: 1 0 100%;
+      display: flex; gap: 4px; padding: 3px;
+      background: rgba(11, 31, 51, 0.45);
+      border: 1px solid rgba(232, 213, 183, 0.14);
+      border-radius: 999px;
+    }
+    .trip-style-btn {
+      flex: 1; border: none; background: transparent; color: var(--sand);
+      font-family: inherit; font-size: 13px; font-weight: 600;
+      padding: 8px 10px; border-radius: 999px; cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .trip-style-btn.active {
+      background: linear-gradient(135deg, var(--teal), #2a6a78);
+      color: var(--foam); box-shadow: 0 2px 10px rgba(61, 139, 156, 0.35);
+    }
+    .trip-style-btn:hover:not(.active) { background: rgba(232, 213, 183, 0.08); color: var(--foam); }
+    .days[hidden], #spotOpts[hidden], #multiPanel[hidden] { display: none !important; }
+    .multi-panel { flex: 1 0 100%; min-width: 0; }
+    .multi-hint {
+      font-size: 12px; line-height: 1.5; color: var(--sand); opacity: 0.82;
+      margin: 2px 0 8px;
+    }
+    #multiLegList { max-height: 280px; overflow-y: auto; padding-right: 2px; }
+    #multiLegList .stop-item { opacity: 1; transform: none; animation: none; cursor: pointer; }
+    #multiLegList .stop-item.active {
+      background: rgba(61, 139, 156, 0.14);
+      border-radius: 12px; padding-left: 8px; padding-right: 8px;
+    }
+    .leg-day-ctrl {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px;
+    }
+    .leg-day-ctrl button {
+      width: 28px; height: 28px; border-radius: 8px;
+      border: 1px solid rgba(232, 213, 183, 0.28);
+      background: rgba(11, 31, 51, 0.45); color: var(--foam);
+      font-size: 16px; line-height: 1; cursor: pointer; font-family: inherit;
+    }
+    .leg-day-ctrl button:hover { border-color: var(--teal); color: var(--foam); }
+    .leg-range {
+      font-size: 12px; font-weight: 600; color: var(--coral);
+      font-variant-numeric: tabular-nums; min-width: 4.5em;
+    }
+    .leg-end-label {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 12px; color: var(--sand); margin-left: auto;
+    }
+    .leg-end-input {
+      width: 46px; background: rgba(11, 31, 51, 0.55);
+      border: 1px solid rgba(232, 213, 183, 0.22); color: var(--foam);
+      border-radius: 8px; padding: 4px 6px; font-size: 13px;
+      font-variant-numeric: tabular-nums; font-family: inherit;
+    }
+    .leg-banner {
+      margin: 16px 0 8px; padding: 10px 12px; border-radius: 12px;
+      background: rgba(61, 139, 156, 0.12);
+      border: 1px solid rgba(61, 139, 156, 0.28);
+    }
+    .leg-banner .stop-name { font-size: 15px; }
+    .leg-banner .stop-meta { margin-top: 2px; }
     .status-note {
       font-size: 12.5px; line-height: 1.5; padding: 10px 12px; margin-bottom: 12px;
       border-radius: 10px; background: rgba(224, 122, 95, 0.12);
@@ -1011,6 +1074,10 @@
 
     <div class="sheet-scroll" id="sheetScroll">
     <div class="controls" id="tideControls">
+      <div class="trip-style-row" id="tripStyleRow" role="tablist" aria-label="行程方式">
+        <button type="button" class="trip-style-btn active" id="styleSingle" role="tab" aria-selected="true">单点游</button>
+        <button type="button" class="trip-style-btn" id="styleMulti" role="tab" aria-selected="false">多点游</button>
+      </div>
       <div class="days" role="group" aria-label="Trip days" id="dayOptsGroup">
         <div class="step-slider-wrap">
           <span class="step-slider-label" id="daySliderLabel">5 days</span>
@@ -1018,10 +1085,21 @@
             aria-valuemin="1" aria-valuemax="14" aria-valuenow="5" aria-labelledby="daySliderLabel" />
         </div>
       </div>
+      <div class="days" role="group" aria-label="景点数量" id="spotOpts" hidden>
+        <div class="step-slider-wrap">
+          <span class="step-slider-label" id="spotSliderLabel">2 个景点</span>
+          <input type="range" class="step-slider" id="spotSlider" min="1" max="8" step="1" value="2"
+            aria-valuemin="1" aria-valuemax="8" aria-valuenow="2" aria-labelledby="spotSliderLabel" />
+        </div>
+      </div>
       <button type="button" class="btn-gen" id="btnGen">
         <svg class="compass" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7l2.5 5H9.5L12 7z" fill="currentColor" stroke="none"/><path d="M12 17l-2.5-5h5L12 17z" fill="currentColor" stroke="none" opacity="0.45"/></svg>
         <span id="btnGenLabel">Generate plan</span>
       </button>
+      <div class="multi-panel" id="multiPanel" hidden>
+        <p class="multi-hint" id="multiHint">点选地图填入当前景点，并为每处指定固定天数。区间首尾相接、不重叠。</p>
+        <div class="stop-timeline" id="multiLegList"></div>
+      </div>
     </div>
 
     <!-- tide-budget-layout: stacked-rows-v1 -->
@@ -1352,6 +1430,30 @@
     "transportBudgetComfort": "Mix metro with taxis; airport transfer prepaid.",
     "transportBudgetLuxury": "Private car / chauffeur for key legs; still walk old towns.",
     "usdHint": "≈ ${usd} USD",
+    "styleAria": "Trip style",
+    "styleSingle": "单点游",
+    "styleMulti": "多点游",
+    "hintMulti": "Multi-stop: choose how many spots, then <em>tap each one</em> on the map and assign a fixed day range.",
+    "emptyMulti": "Set how many spots, tap each one on the map, and assign its days (for example days 1–2 at A, days 3–4 at B), then Generate.<br/>Single-stop stays the default.",
+    "multiHintShort": "Tap the map to fill the highlighted spot. Ranges stay contiguous and do not overlap.",
+    "spotsSliderAria": "Number of spots",
+    "spotN": "{n} spots",
+    "multiDestination": "多点游",
+    "multiPickProgress": "{done} / {n} spots picked",
+    "multiAwaitPick": "Tap the map to choose this spot",
+    "multiPicking": "Picking now",
+    "multiDayRange": "Days {a}–{b}",
+    "multiDaySingle": "Day {n}",
+    "multiDaysStay": "{n} days here",
+    "multiDayDec": "Fewer days at this spot",
+    "multiDayInc": "More days at this spot",
+    "multiEndDay": "through day",
+    "multiEndSuffix": "",
+    "multiSpotCoord": " · spot {n} ({done}/{total})",
+    "multiLegIntro": "Multi-stop: {n} spots, {days} days — {chain}. Each spot keeps its fixed days, in order.",
+    "legBanner": "Spot {i} · {name}",
+    "statusMultiNeedSpots": "Pick every spot on the map before generating.",
+    "clearSpots": "Clear spots",
     "interstellarLabel": "Interstellar",
     "interstellarSub": "星际旅行"
   },
@@ -1505,6 +1607,30 @@
     "transportBudgetComfort": "地铁与出租车搭配；机场接驳可预付。",
     "transportBudgetLuxury": "关键路段专车；古城核心仍建议步行。",
     "usdHint": "约 ${usd} 美元",
+    "styleAria": "行程方式",
+    "styleSingle": "单点游",
+    "styleMulti": "多点游",
+    "hintMulti": "多点游：先选景点个数，再在地图上<em>逐个点选</em>，并为每处指定固定天数。",
+    "emptyMulti": "选择景点数量，在地图上点齐每一处，指定各自的天数（例如第 1–2 天在甲地、第 3–4 天在乙地），再生成行程。<br/>单点游仍是默认方式。",
+    "multiHintShort": "点选地图填入高亮景点。天数区间首尾相接、不重叠。",
+    "spotsSliderAria": "景点数量",
+    "spotN": "{n} 个景点",
+    "multiDestination": "多点游",
+    "multiPickProgress": "已选 {done} / {n} 个景点",
+    "multiAwaitPick": "点击地图选择此景点",
+    "multiPicking": "当前点选",
+    "multiDayRange": "第 {a}–{b} 天",
+    "multiDaySingle": "第 {n} 天",
+    "multiDaysStay": "停留 {n} 天",
+    "multiDayDec": "减少停留天数",
+    "multiDayInc": "增加停留天数",
+    "multiEndDay": "到第",
+    "multiEndSuffix": "天",
+    "multiSpotCoord": " · 景点 {n}（{done}/{total}）",
+    "multiLegIntro": "多点游共 {n} 个景点、{days} 天：{chain}。每一处按固定天数展开，日期连续衔接。",
+    "legBanner": "景点 {i} · {name}",
+    "statusMultiNeedSpots": "请先在地图上点齐全部景点，再生成行程。",
+    "clearSpots": "清除景点",
     "interstellarLabel": "星际旅行",
     "interstellarSub": "Interstellar"
   }
@@ -2513,6 +2639,17 @@
   /* ---------- State ---------- */
   let mode = "tide";
   let selectedDays = 5;
+  /* tide-multi: legs-v1 — 单点游 keeps currentLatLng; 多点游 is legs[] with fixed day ranges */
+  let tripStyle = "single";
+  let singleSelectedDays = 5;
+  const MULTI_MAX_SPOTS = 8;
+  const MULTI_MAX_DAYS = 14;
+  const MULTI_MAX_DAYS_PER_SPOT = 7;
+  let multiSpotCount = 2;
+  let multiLegs = [];
+  let multiActiveIndex = 0;
+  let multiMarkers = [];
+  let multiPaths = [];
   let currentLatLng = null;
   let currentPlace = null;
   let localPlaceBackup = null;
@@ -3195,6 +3332,10 @@
           placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
         } else {
           currentPlace = Object.assign({}, localPlaceBackup);
+          if (tripStyle === "multi" && multiLegs[multiActiveIndex]) {
+            multiLegs[multiActiveIndex].place = currentPlace;
+            renderMultiLegs();
+          }
           const p = localizePlace(currentPlace);
           placeName.textContent = p.name + (p.region ? " · " + p.region : "");
           placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
@@ -3216,6 +3357,10 @@
     } else {
       localPlaceBackup = Object.assign({}, currentPlace);
       currentPlace = curatedFromCity(c, lat, lng, np.distanceKm, np);
+      if (tripStyle === "multi" && multiLegs[multiActiveIndex]) {
+        multiLegs[multiActiveIndex].place = currentPlace;
+        renderMultiLegs();
+      }
       const p = localizePlace(currentPlace);
       placeName.textContent = p.name + (p.region ? " · " + p.region : "");
       placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
@@ -4679,26 +4824,73 @@
     return html;
   }
 
+  function dayCardHtml(d, transport) {
+    const ph = d.photos || {};
+    const title = d.legName
+      ? (t("dayTitle", { n: d.day }) + " · " + d.legName)
+      : t("dayTitle", { n: d.day });
+    let html = '<article class="day-card"><div class="day-ribbon">' +
+      '<div class="day-num">' + d.day + '</div><div><div class="day-title">' + escapeHtml(title) + '</div>' +
+      '<div class="day-theme">' + escapeHtml(d.theme) + '</div></div></div>';
+    if (d.strip && d.strip.length) html += photoStripHtml(d.strip, t("localPhotos"));
+    html += '<div class="slots">' +
+      '<div class="slot"><div class="slot-tag">' + escapeHtml(t("slotMorning")) + '</div><p>' + escapeHtml(d.morning) + '</p>' +
+      slotPhotoHtml(ph.morning) + '</div>' +
+      '<div class="slot"><div class="slot-tag afternoon">' + escapeHtml(t("slotAfternoon")) + '</div><p>' + escapeHtml(d.afternoon) + '</p>' +
+      slotPhotoHtml(ph.afternoon) + '</div>' +
+      '<div class="slot"><div class="slot-tag evening">' + escapeHtml(t("slotEvening")) + '</div><p>' + escapeHtml(d.evening) + '</p>' +
+      slotPhotoHtml(ph.evening) + '</div></div>' +
+      '<div class="extras"><div class="extra"><strong>' + escapeHtml(t("food")) + '</strong>' + escapeHtml(d.foodNote) + '</div>' +
+      '<div class="extra"><strong>' + escapeHtml(t("tip")) + '</strong>' + escapeHtml(d.tip) + '</div>' +
+      '<div class="extra"><strong>' + escapeHtml(t("transport")) + '</strong>' + escapeHtml(transport || "") + '</div></div></article>';
+    return html;
+  }
+
   function renderPlan(plan, targetEl) {
     const el = targetEl || itinerary;
     let html = '<p class="itinerary-intro">' + escapeHtml(plan.intro) + "</p>";
     html += renderLodgingFoodBlocks(plan);
-    plan.days.forEach((d) => {
-      const ph = d.photos || {};
-      html += '<article class="day-card"><div class="day-ribbon">' +
-        '<div class="day-num">' + d.day + '</div><div><div class="day-title">' + escapeHtml(t("dayTitle", { n: d.day })) + '</div>' +
-        '<div class="day-theme">' + escapeHtml(d.theme) + '</div></div></div>';
-      if (d.strip && d.strip.length) html += photoStripHtml(d.strip, t("localPhotos"));
-      html += '<div class="slots">' +
-        '<div class="slot"><div class="slot-tag">' + escapeHtml(t("slotMorning")) + '</div><p>' + escapeHtml(d.morning) + '</p>' +
-        slotPhotoHtml(ph.morning) + '</div>' +
-        '<div class="slot"><div class="slot-tag afternoon">' + escapeHtml(t("slotAfternoon")) + '</div><p>' + escapeHtml(d.afternoon) + '</p>' +
-        slotPhotoHtml(ph.afternoon) + '</div>' +
-        '<div class="slot"><div class="slot-tag evening">' + escapeHtml(t("slotEvening")) + '</div><p>' + escapeHtml(d.evening) + '</p>' +
-        slotPhotoHtml(ph.evening) + '</div></div>' +
-        '<div class="extras"><div class="extra"><strong>' + escapeHtml(t("food")) + '</strong>' + escapeHtml(d.foodNote) + '</div>' +
-        '<div class="extra"><strong>' + escapeHtml(t("tip")) + '</strong>' + escapeHtml(d.tip) + '</div>' +
-        '<div class="extra"><strong>' + escapeHtml(t("transport")) + '</strong>' + escapeHtml(plan.transport) + '</div></div></article>';
+    plan.days.forEach((d) => { html += dayCardHtml(d, plan.transport); });
+    el.innerHTML = html;
+  }
+
+  function legRangeText(leg) {
+    if (!leg) return "";
+    return leg.startDay === leg.endDay
+      ? t("multiDaySingle", { n: leg.startDay })
+      : t("multiDayRange", { a: leg.startDay, b: leg.endDay });
+  }
+
+  function renderStitchedPlan(plan) {
+    const el = itinerary;
+    let html = '<p class="itinerary-intro">' + escapeHtml(plan.intro || "") + "</p>";
+    if (plan.budget) {
+      const b = plan.budget;
+      html += '<div class="budget-badge"><strong>' + escapeHtml(b.nights === 0
+        ? t("budgetBadgeDayTrip", { total: fmtCny(b.total), tier: tierLabel(b.tier) })
+        : t("budgetBadge", { total: fmtCny(b.total), lodge: fmtCny(b.lodge), tier: tierLabel(b.tier) })
+      ) + "</strong></div>";
+    }
+    const daysByLeg = {};
+    (plan.days || []).forEach(function (d) {
+      const k = d.legIndex == null ? 0 : d.legIndex;
+      if (!daysByLeg[k]) daysByLeg[k] = [];
+      daysByLeg[k].push(d);
+    });
+    (plan.legs || []).forEach(function (leg, i) {
+      html += '<section class="leg-banner"><div class="stop-name">' +
+        escapeHtml(t("legBanner", { i: i + 1, name: leg.name || "" })) +
+        '</div><div class="stop-meta">' + escapeHtml(legRangeText(leg) + (leg.region ? " · " + leg.region : "")) +
+        "</div></section>";
+      html += renderLodgingFoodBlocks({
+        budget: null,
+        headerPhotos: leg.headerPhotos,
+        lodgings: leg.lodgings,
+        foods: leg.foods,
+      });
+      (daysByLeg[i] || []).forEach(function (d) {
+        html += dayCardHtml(d, leg.transport || plan.transport);
+      });
     });
     el.innerHTML = html;
   }
@@ -4740,7 +4932,7 @@
   }
 
   function applyStaticUI() {
-    document.documentElement.lang = lang === "zh" ? "zh" : "en";
+    document.documentElement.lang = lang === "zh" ? "zh-Hans" : "en";
     document.title = t("title");
     document.getElementById("brandName").textContent = t("brandName");
     document.getElementById("brandSub").textContent = t("brandSub");
@@ -4790,8 +4982,8 @@
     langZhBtn.setAttribute("aria-pressed", lang === "zh" ? "true" : "false");
 
     if (mode === "tide") {
-      if (!hint.classList.contains("hide")) hint.innerHTML = t("hintTide");
-      if (!currentLatLng) placeLabel.textContent = t("destination");
+      if (!hint.classList.contains("hide")) hint.innerHTML = tripStyle === "multi" ? t("hintMulti") : t("hintTide");
+      if (tripStyle === "multi") syncMultiHeader();
       else placeLabel.textContent = t("destination");
       if (itinerary.classList.contains("show") && lastTidePlan) {
         /* regenerated below */
@@ -4808,6 +5000,7 @@
       syncPlaneButtonLabel();
     }
     updateHopLabel();
+    syncTripStyleUI();
   }
 
   function applyLanguage(next) {
@@ -4819,7 +5012,18 @@
     applyStaticUI();
 
     /* Refresh place header from bilingual data */
-    if (mode === "tide" && currentPlace && currentLatLng) {
+    if (mode === "tide" && tripStyle === "multi") {
+      multiLegs.forEach(function (leg) {
+        if (!leg.place) return;
+        const p = localizePlace(leg.place);
+        leg.place = Object.assign(leg.place, p);
+      });
+      renderMultiLegs();
+      syncMultiHeader();
+      if (itinerary.classList.contains("show") && multiLegs.length && multiLegs.every(function (leg) { return leg.lat != null && leg.place; })) {
+        generateMulti(lastTideSalt);
+      }
+    } else if (mode === "tide" && currentPlace && currentLatLng) {
       const p = localizePlace(currentPlace);
       currentPlace = Object.assign(currentPlace, p);
       placeName.textContent = p.name + (p.region ? " · " + p.region : "");
@@ -4901,9 +5105,16 @@
     tidePanel.style.display = mode === "tide" ? "block" : "none";
     planePanel.classList.toggle("show", mode === "plane");
     if (mode === "tide") {
-      hint.innerHTML = t("hintTide");
-      placeLabel.textContent = t("destination");
+      if (tripStyle === "multi") {
+        hint.innerHTML = t("hintMulti");
+        renderMultiLegs();
+        syncMultiHeader();
+      } else {
+        hint.innerHTML = t("hintTide");
+        placeLabel.textContent = t("destination");
+      }
       planePhase = "idle";
+      syncTripStyleUI();
     } else {
       hint.innerHTML = t("hintPlane");
       placeLabel.textContent = t("startPlace");
@@ -4962,7 +5173,574 @@
     modeSwitch.style.pointerEvents = "auto";
   }
 
+  /* ---------- 多点游 (multi-stop legs) — 单点游 does not enter this block ---------- */
+  function clampSpotCount(n) {
+    n = Math.round(Number(n) || 1);
+    if (n < 1) n = 1;
+    if (n > MULTI_MAX_SPOTS) n = MULTI_MAX_SPOTS;
+    return n;
+  }
+  function clampLegDays(n) {
+    n = Math.round(Number(n) || 1);
+    if (n < 1) n = 1;
+    if (n > MULTI_MAX_DAYS_PER_SPOT) n = MULTI_MAX_DAYS_PER_SPOT;
+    return n;
+  }
+  function blankMultiLeg() {
+    return { lat: null, lng: null, place: null, days: 2, startDay: 1, endDay: 2, _pickToken: 0 };
+  }
+  function multiTotalDays() {
+    return multiLegs.reduce(function (sum, leg) { return sum + (leg.days || 0); }, 0);
+  }
+  function normalizeMultiRanges() {
+    if (!multiLegs.length) return 0;
+    multiLegs.forEach(function (leg) { leg.days = clampLegDays(leg.days); });
+    let sum = multiTotalDays();
+    for (let i = multiLegs.length - 1; i >= 0 && sum > MULTI_MAX_DAYS; i--) {
+      const spare = multiLegs[i].days - 1;
+      if (spare <= 0) continue;
+      const cut = Math.min(spare, sum - MULTI_MAX_DAYS);
+      multiLegs[i].days -= cut;
+      sum -= cut;
+    }
+    let cursor = 1;
+    multiLegs.forEach(function (leg) {
+      leg.startDay = cursor;
+      leg.endDay = cursor + leg.days - 1;
+      cursor = leg.endDay + 1;
+    });
+    return cursor - 1;
+  }
+  function resetMultiPicks() {
+    multiLegs.forEach(function (leg) {
+      leg.lat = null;
+      leg.lng = null;
+      leg.place = null;
+      leg._pickToken = (leg._pickToken || 0) + 1;
+    });
+    multiActiveIndex = 0;
+  }
+  function clearMultiLayers() {
+    const markers = multiMarkers; multiMarkers = [];
+    const paths = multiPaths; multiPaths = [];
+    function safeRemove(layer) {
+      try { if (layer && map) map.removeLayer(layer); } catch (_) {}
+    }
+    markers.forEach(safeRemove);
+    paths.forEach(safeRemove);
+  }
+  function redrawMultiMap() {
+    clearMultiLayers();
+    if (tripStyle !== "multi") return;
+    multiLegs.forEach(function (leg, i) {
+      if (leg.lat == null || leg.lng == null) return;
+      const icon = makePinIcon({ start: i === 0, num: i + 1 });
+      try {
+        multiMarkers.push(L.marker([leg.lat, leg.lng], { icon: icon }).addTo(map));
+      } catch (_) {}
+    });
+    for (let i = 1; i < multiLegs.length; i++) {
+      const a = multiLegs[i - 1];
+      const b = multiLegs[i];
+      if (a.lat == null || b.lat == null) continue;
+      try {
+        const pts = arcPoints(a, b, 24);
+        multiPaths.push(L.polyline(pts, { color: "#3D8B9C", weight: 6, opacity: 0.22 }).addTo(map));
+        multiPaths.push(L.polyline(pts, { color: "#E07A5F", weight: 2.5, opacity: 0.85, dashArray: "6 8" }).addTo(map));
+      } catch (_) {}
+    }
+  }
+  function fitMultiBounds() {
+    const pts = [];
+    multiLegs.forEach(function (leg) {
+      if (leg.lat != null && leg.lng != null) pts.push([leg.lat, leg.lng]);
+    });
+    if (!pts.length) return;
+    try {
+      if (pts.length === 1) { map.panTo(pts[0]); return; }
+      const wide = window.innerWidth >= 820;
+      map.fitBounds(L.latLngBounds(pts), {
+        paddingTopLeft: [40, 80],
+        paddingBottomRight: wide ? [440, 48] : [40, 200],
+        maxZoom: 8,
+        animate: false,
+      });
+    } catch (_) {}
+  }
+  function legDisplayName(leg) {
+    if (!leg || leg.lat == null) return "";
+    if (!leg.place) return t("locating");
+    const p = localizePlace(leg.place);
+    return p.name + (p.region ? " · " + p.region : "");
+  }
+  function syncMultiHeader() {
+    if (tripStyle !== "multi") return;
+    const done = multiLegs.filter(function (leg) { return leg.lat != null; }).length;
+    const total = multiLegs.length || multiSpotCount;
+    placeLabel.textContent = t("multiDestination");
+    const active = multiLegs[multiActiveIndex];
+    const activeName = legDisplayName(active);
+    if (active && active.lat != null && activeName) {
+      placeName.textContent = activeName;
+      placeCoords.textContent = fmtCoord(active.lat) + "°, " + fmtCoord(active.lng) + "°" +
+        t("multiSpotCoord", { n: multiActiveIndex + 1, done: done, total: total });
+    } else {
+      placeName.textContent = t("multiPickProgress", { done: done, n: total });
+      placeCoords.textContent = "";
+    }
+  }
+  function renderMultiLegs() {
+    const list = document.getElementById("multiLegList");
+    if (!list) return;
+    let html = "";
+    multiLegs.forEach(function (leg, i) {
+      const name = leg.lat == null ? t("multiAwaitPick") : legDisplayName(leg);
+      const active = i === multiActiveIndex ? " active" : "";
+      const startCls = i === 0 ? " start" : "";
+      html += '<div class="stop-item' + startCls + active + '" data-leg="' + i + '">' +
+        '<div class="stop-dot">' + (i + 1) + "</div>" +
+        '<div class="stop-body">' +
+          '<div class="stop-name">' + escapeHtml(name) + "</div>" +
+          '<div class="stop-meta">' + escapeHtml(legRangeText(leg)) +
+            (i === multiActiveIndex ? " · " + escapeHtml(t("multiPicking")) : "") +
+          "</div>" +
+          '<div class="leg-day-ctrl">' +
+            '<button type="button" data-day-dec="' + i + '" aria-label="' + escapeHtml(t("multiDayDec")) + '">−</button>' +
+            '<span class="leg-range">' + escapeHtml(t("multiDaysStay", { n: leg.days })) + "</span>" +
+            '<button type="button" data-day-inc="' + i + '" aria-label="' + escapeHtml(t("multiDayInc")) + '">+</button>' +
+            '<label class="leg-end-label">' + escapeHtml(t("multiEndDay")) +
+              '<input class="leg-end-input" type="number" min="' + leg.startDay + '" max="' + MULTI_MAX_DAYS +
+              '" step="1" value="' + leg.endDay + '" data-leg-end="' + i + '" inputmode="numeric" aria-label="' +
+              escapeHtml(t("multiEndDay")) + '" />' +
+              escapeHtml(t("multiEndSuffix")) +
+            "</label>" +
+          "</div>" +
+        "</div></div>";
+    });
+    list.innerHTML = html;
+  }
+  function syncTripStyleUI() {
+    const singleBtn = document.getElementById("styleSingle");
+    const multiBtn = document.getElementById("styleMulti");
+    const panel = document.getElementById("multiPanel");
+    const spotOpts = document.getElementById("spotOpts");
+    const dayGroup = document.getElementById("dayOptsGroup");
+    const hintEl = document.getElementById("multiHint");
+    const isMulti = tripStyle === "multi";
+    if (singleBtn) {
+      singleBtn.classList.toggle("active", !isMulti);
+      singleBtn.setAttribute("aria-selected", !isMulti ? "true" : "false");
+      singleBtn.textContent = t("styleSingle");
+    }
+    if (multiBtn) {
+      multiBtn.classList.toggle("active", isMulti);
+      multiBtn.setAttribute("aria-selected", isMulti ? "true" : "false");
+      multiBtn.textContent = t("styleMulti");
+    }
+    if (panel) panel.hidden = !isMulti;
+    if (spotOpts) spotOpts.hidden = !isMulti;
+    if (dayGroup) dayGroup.hidden = isMulti;
+    if (hintEl) hintEl.textContent = t("multiHintShort");
+    const empty = document.getElementById("emptyTideText");
+    if (empty) empty.innerHTML = (mode === "tide" && isMulti) ? t("emptyMulti") : t("emptyTide");
+    const spotSlider = document.getElementById("spotSlider");
+    const spotLab = document.getElementById("spotSliderLabel");
+    if (spotSlider) {
+      spotSlider.value = String(multiSpotCount);
+      spotSlider.setAttribute("aria-label", t("spotsSliderAria"));
+      if (typeof syncStepSliderFill === "function") syncStepSliderFill(spotSlider);
+    }
+    if (spotLab) spotLab.textContent = t("spotN", { n: multiSpotCount });
+    if (btnClear2) btnClear2.textContent = (mode === "tide" && isMulti) ? t("clearSpots") : t("clearMarker");
+    const row = document.getElementById("tripStyleRow");
+    if (row) row.setAttribute("aria-label", t("styleAria"));
+    const spotGroup = document.getElementById("spotOpts");
+    if (spotGroup) spotGroup.setAttribute("aria-label", t("spotsSliderAria"));
+  }
+  function ensureMultiLegs(count) {
+    const n = clampSpotCount(count);
+    multiSpotCount = n;
+    const next = [];
+    for (let i = 0; i < n; i++) next.push(multiLegs[i] || blankMultiLeg());
+    multiLegs = next;
+    if (multiActiveIndex >= n) multiActiveIndex = n - 1;
+    if (multiActiveIndex < 0) multiActiveIndex = 0;
+    const total = normalizeMultiRanges();
+    if (tripStyle === "multi") {
+      selectedDays = Math.max(1, total);
+      updateTideBudgetSummary();
+    }
+    redrawMultiMap();
+    renderMultiLegs();
+    syncMultiHeader();
+    syncTripStyleUI();
+  }
+  function setLegDays(index, days) {
+    if (!multiLegs[index]) return;
+    multiLegs[index].days = days;
+    const total = normalizeMultiRanges();
+    if (tripStyle === "multi") {
+      selectedDays = Math.max(1, total);
+      updateTideBudgetSummary();
+    }
+    renderMultiLegs();
+    syncMultiHeader();
+  }
+  function setLegEndDay(index, endDay) {
+    const leg = multiLegs[index];
+    if (!leg) return;
+    let end = Math.round(Number(endDay));
+    if (!isFinite(end)) end = leg.endDay;
+    if (end < leg.startDay) end = leg.startDay;
+    if (end > MULTI_MAX_DAYS) end = MULTI_MAX_DAYS;
+    setLegDays(index, end - leg.startDay + 1);
+  }
+  function focusLeg(idx) {
+    if (!multiLegs[idx]) return;
+    multiActiveIndex = idx;
+    const leg = multiLegs[idx];
+    nearbyChipActive = false;
+    if (leg.lat != null) {
+      currentLatLng = { lat: leg.lat, lng: leg.lng };
+      currentPlace = leg.place || null;
+      localPlaceBackup = leg.place ? Object.assign({}, leg.place) : null;
+      if (leg.place) updateNearbySuggest(leg.place);
+      else hideNearbySuggest();
+      try { map.panTo([leg.lat, leg.lng]); } catch (_) {}
+    } else {
+      currentLatLng = null;
+      currentPlace = null;
+      localPlaceBackup = null;
+      hideNearbySuggest();
+    }
+    renderMultiLegs();
+    syncMultiHeader();
+  }
+  function setTripStyle(next) {
+    if (next !== "single" && next !== "multi") return;
+    if (next === tripStyle) return;
+    if (next === "multi") {
+      singleSelectedDays = selectedDays;
+      tripStyle = "multi";
+      if (marker) {
+        try { map.removeLayer(marker); } catch (_) {}
+        marker = null;
+      }
+      currentLatLng = null;
+      currentPlace = null;
+      lastTidePlan = null;
+      localPlaceBackup = null;
+      nearbyChipActive = false;
+      hideNearbySuggest();
+      showPanelStates("empty");
+      try { itinerary.innerHTML = ""; } catch (_) {}
+      btnGen.classList.remove("spinning");
+      btnGenLabel.textContent = t("genPlan");
+      showStatus("");
+      ensureMultiLegs(multiSpotCount || multiLegs.length || 2);
+      openSheet();
+      try {
+        if (window.matchMedia("(max-width: 520px)").matches && typeof window.__tideSheetSetSnap === "function") {
+          /* Sheet open observer snaps to half on the next microtask; restore full after that. */
+          const snapFull = function () { window.__tideSheetSetSnap(2); };
+          snapFull();
+          requestAnimationFrame(snapFull);
+        }
+      } catch (_) {}
+      hint.classList.remove("hide");
+      hint.innerHTML = t("hintMulti");
+    } else {
+      tripStyle = "single";
+      resetMultiPicks();
+      clearMultiLayers();
+      selectedDays = Math.max(1, Math.min(14, singleSelectedDays || 5));
+      updateDaySliderUI();
+      updateTideBudgetSummary();
+      currentLatLng = null;
+      currentPlace = null;
+      lastTidePlan = null;
+      localPlaceBackup = null;
+      nearbyChipActive = false;
+      hideNearbySuggest();
+      showPanelStates("empty");
+      try { itinerary.innerHTML = ""; } catch (_) {}
+      placeLabel.textContent = t("destination");
+      placeName.textContent = "—";
+      placeCoords.textContent = "";
+      btnGen.classList.remove("spinning");
+      btnGenLabel.textContent = t("genPlan");
+      hint.classList.remove("hide");
+      hint.innerHTML = t("hintTide");
+      showStatus("");
+      renderMultiLegs();
+      syncTripStyleUI();
+    }
+  }
+  function onMultiLegClick(e) {
+    const dec = e.target.closest("[data-day-dec]");
+    const inc = e.target.closest("[data-day-inc]");
+    if (dec) {
+      e.preventDefault();
+      const idx = Number(dec.getAttribute("data-day-dec"));
+      if (multiLegs[idx]) setLegDays(idx, multiLegs[idx].days - 1);
+      return;
+    }
+    if (inc) {
+      e.preventDefault();
+      const idx = Number(inc.getAttribute("data-day-inc"));
+      if (multiLegs[idx]) setLegDays(idx, multiLegs[idx].days + 1);
+      return;
+    }
+    if (e.target.closest("input, label")) return;
+    const row = e.target.closest("[data-leg]");
+    if (!row) return;
+    focusLeg(Number(row.getAttribute("data-leg")));
+  }
+  function onMultiLegChange(e) {
+    const input = e.target.closest("[data-leg-end]");
+    if (!input) return;
+    setLegEndDay(Number(input.getAttribute("data-leg-end")), Number(input.value));
+  }
+  async function onMultiMapClick(e) {
+    if (!multiLegs.length) ensureMultiLegs(multiSpotCount || 2);
+    let idx = multiActiveIndex;
+    if (!multiLegs[idx]) idx = 0;
+    const lat = e.latlng.lat;
+    const lng = e.latlng.lng;
+    const leg = multiLegs[idx];
+    const token = (leg._pickToken || 0) + 1;
+    leg._pickToken = token;
+    leg.lat = lat;
+    leg.lng = lng;
+    leg.place = null;
+    currentLatLng = { lat: lat, lng: lng };
+    currentPlace = null;
+    localPlaceBackup = null;
+    nearbyChipActive = false;
+    hideNearbySuggest();
+    lastTidePlan = null;
+    hint.classList.add("hide");
+    redrawMultiMap();
+    placeLabel.textContent = t("multiDestination");
+    placeName.textContent = t("locating");
+    placeCoords.textContent = fmtCoord(lat) + "°, " + fmtCoord(lng) + "°";
+    openSheet();
+    showPanelStates("empty");
+    btnGenLabel.textContent = t("genPlan");
+    renderMultiLegs();
+    const place = await resolvePlace(lat, lng);
+    const current = multiLegs[idx];
+    if (!current || current._pickToken !== token) return;
+    if (current.lat !== lat || current.lng !== lng) return;
+    current.place = place;
+    currentPlace = place;
+    localPlaceBackup = Object.assign({}, place);
+    nearbyChipActive = false;
+    updateNearbySuggest(place);
+    const nextEmpty = multiLegs.findIndex(function (item, i) { return i > idx && item.lat == null; });
+    const anyEmpty = multiLegs.findIndex(function (item) { return item.lat == null; });
+    multiActiveIndex = nextEmpty >= 0 ? nextEmpty : (anyEmpty >= 0 ? anyEmpty : idx);
+    renderMultiLegs();
+    syncMultiHeader();
+    fitMultiBounds();
+  }
+  function stitchMultiPlans(plans) {
+    const chainParts = [];
+    const days = [];
+    const legMeta = [];
+    const allLodgings = [];
+    const allFoods = [];
+    plans.forEach(function (plan, i) {
+      const leg = multiLegs[i];
+      const p = localizePlace(leg.place || {});
+      const range = legRangeText(leg);
+      chainParts.push(range + " " + (p.name || ""));
+      (plan.days || []).forEach(function (d, di) {
+        days.push(Object.assign({}, d, {
+          day: leg.startDay + di,
+          legIndex: i,
+          legName: p.name || "",
+        }));
+      });
+      const lodgings = (plan.lodgings || []).map(function (h) {
+        return Object.assign({}, h, { area: (p.name ? p.name + " · " : "") + (h.area || "") });
+      });
+      const foods = (plan.foods || []).map(function (f) {
+        return Object.assign({}, f, { area: (p.name ? p.name + " · " : "") + (f.area || "") });
+      });
+      allLodgings.push.apply(allLodgings, lodgings);
+      allFoods.push.apply(allFoods, foods);
+      legMeta.push({
+        name: p.name || "",
+        region: p.region || "",
+        startDay: leg.startDay,
+        endDay: leg.endDay,
+        days: leg.days,
+        lat: leg.lat,
+        lng: leg.lng,
+        lodgings: plan.lodgings || [],
+        foods: plan.foods || [],
+        headerPhotos: plan.headerPhotos || [],
+        transport: plan.transport || "",
+      });
+    });
+    const totalDays = Math.max(1, days.length || multiTotalDays());
+    const nights = nightsForDays(totalDays);
+    const lodgeTotal = nights === 0 ? 0 : tideLodgeBudget * nights;
+    const remain = Math.max(0, tideTotalBudget - lodgeTotal);
+    const daily = Math.round(tideTotalBudget / totalDays);
+    const tier = inferTierFromDaily(daily);
+    const chain = chainParts.join(" → ");
+    return {
+      multi: true,
+      intro: t("multiLegIntro", { n: legMeta.length, days: totalDays, chain: chain }),
+      transport: legMeta.map(function (leg) { return (leg.name ? leg.name + "：" : "") + leg.transport; }).join(" "),
+      days: days,
+      legs: legMeta,
+      budget: {
+        total: tideTotalBudget,
+        lodge: tideLodgeBudget,
+        nights: nights,
+        lodgeTotal: lodgeTotal,
+        remain: remain,
+        daily: daily,
+        tier: tier,
+        mealPerDay: Math.round(remain * 0.45 / totalDays),
+      },
+      lodgings: allLodgings,
+      foods: allFoods,
+      headerPhotos: (legMeta[0] && legMeta[0].headerPhotos) || [],
+      cityKey: legMeta.map(function (leg) { return leg.name; }).filter(Boolean).join(" → ") || t("styleMulti"),
+      livePois: true,
+    };
+  }
+  async function generateMulti(salt) {
+    if (tideBusy) return;
+    if (!multiLegs.length) ensureMultiLegs(multiSpotCount || 2);
+    const total = normalizeMultiRanges();
+    selectedDays = Math.max(1, total);
+    updateTideBudgetSummary();
+    if (multiLegs.some(function (leg) { return leg.lat == null || leg.lng == null; })) {
+      showStatus("statusMultiNeedSpots");
+      showPanelStates("empty");
+      openSheet();
+      return;
+    }
+    if (!budgetConfirmed) {
+      if (budgetWarn) budgetWarn.classList.add("show");
+      showPanelStates("empty");
+      openSheet();
+      return;
+    }
+    tideBusy = true;
+    btnGen.disabled = true;
+    if (btnRegen) btnRegen.disabled = true;
+    const token = ++genToken;
+    let hintTimer = null;
+    try {
+      for (let i = 0; i < multiLegs.length; i++) {
+        const leg = multiLegs[i];
+        if (!leg.place) leg.place = await resolvePlace(leg.lat, leg.lng);
+        if (token !== genToken) return;
+      }
+      showPanelStates("loading");
+      const hints = t("loadHints");
+      let hi = 0;
+      loadingHint.textContent = hints[0];
+      hintTimer = setInterval(function () {
+        hi = (hi + 1) % hints.length;
+        loadingHint.textContent = hints[hi];
+      }, 450);
+      btnGen.classList.add("spinning");
+      btnGenLabel.textContent = salt ? t("regenerating") : t("generating");
+      lastTideSalt = salt || 0;
+      const totalDays = Math.max(1, multiTotalDays());
+      const planPromise = Promise.all(multiLegs.map(function (leg, i) {
+        const share = Math.max(1, Math.round(tideTotalBudget * leg.days / totalDays));
+        return buildPlan(leg.place, leg.lat, leg.lng, leg.days, (lastTideSalt || 0) + i * 97, {
+          total: share,
+          lodge: tideLodgeBudget,
+        });
+      }));
+      await new Promise(function (r) { setTimeout(r, 120); });
+      const plans = await planPromise;
+      if (token !== genToken) return;
+      lastTidePlan = stitchMultiPlans(plans);
+      renderStitchedPlan(lastTidePlan);
+      showPanelStates("plan");
+      showStatus("");
+      btnGenLabel.textContent = t("regenerate");
+      openSheet();
+      requestAnimationFrame(function () {
+        try { scrollSheetToEl(itinerary, 12); } catch (_) {}
+      });
+    } catch (err) {
+      console.warn("generateMulti", err);
+      if (token === genToken) {
+        try {
+          showPanelStates("empty");
+          showStatus("statusNoCandidate");
+          btnGenLabel.textContent = t("genPlan");
+        } catch (_) {}
+      }
+    } finally {
+      if (hintTimer) clearInterval(hintTimer);
+      btnGen.classList.remove("spinning");
+      tideBusy = false;
+      btnGen.disabled = false;
+      if (btnRegen) btnRegen.disabled = false;
+    }
+  }
+  window.__tideMultiDebug = {
+    setTripStyle: setTripStyle,
+    ensureMultiLegs: ensureMultiLegs,
+    setLegDays: setLegDays,
+    setLegEndDay: setLegEndDay,
+    normalizeMultiRanges: normalizeMultiRanges,
+    stitchMultiPlans: stitchMultiPlans,
+    focusLeg: focusLeg,
+    getStyle: function () { return tripStyle; },
+    getLegs: function () {
+      return multiLegs.map(function (leg) {
+        const p = leg.place ? localizePlace(leg.place) : null;
+        return {
+          lat: leg.lat, lng: leg.lng, days: leg.days,
+          startDay: leg.startDay, endDay: leg.endDay,
+          name: p ? p.name : null,
+        };
+      });
+    },
+    getSingle: function () {
+      return {
+        style: tripStyle,
+        days: selectedDays,
+        singleDays: singleSelectedDays,
+        lat: currentLatLng && currentLatLng.lat,
+        lng: currentLatLng && currentLatLng.lng,
+        place: currentPlace && (currentPlace.name || currentPlace.nameZh || currentPlace.nameEn) || null,
+      };
+    },
+    assignLeg: function (i, partial) {
+      if (!multiLegs[i]) return;
+      Object.assign(multiLegs[i], partial || {});
+      const summed = normalizeMultiRanges();
+      if (tripStyle === "multi") selectedDays = Math.max(1, summed);
+    },
+    showStitched: function (plan) {
+      lastTidePlan = plan;
+      renderStitchedPlan(plan);
+      showPanelStates("plan");
+    },
+    pickAt: function (lat, lng) {
+      const e = { latlng: { lat: Number(lat), lng: Number(lng) } };
+      if (mode !== "tide") return null;
+      if (tripStyle === "multi") return onMultiMapClick(e);
+      return onTideMapClick(e);
+    },
+  };
+
   async function onTideMapClick(e) {
+    if (tripStyle === "multi") return onMultiMapClick(e);
     const { lat, lng } = e.latlng;
     currentLatLng = { lat, lng };
     lastTidePlan = null;
@@ -4987,6 +5765,7 @@
   }
 
   async function generate(salt) {
+    if (tripStyle === "multi") return generateMulti(salt);
     if (!currentLatLng) return;
     if (tideBusy) return;
     updateTideBudgetSummary();
@@ -5933,6 +6712,7 @@
     /* Full reset used by setMode — keep sync for mode switch correctness */
     cancelInFlightWork();
     try { clearPlaneLayers(); } catch (_) {}
+    try { resetMultiPicks(); clearMultiLayers(); } catch (_) {}
     currentLatLng = null; currentPlace = null; lastTidePlan = null;
     localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
     planeStart = null; planeStops = []; planeBusy = false;
@@ -5978,7 +6758,7 @@
         showStatus("");
         rollToast.classList.remove("show");
         hint.classList.remove("hide");
-        hint.innerHTML = mode === "plane" ? t("hintPlane") : t("hintTide");
+        hint.innerHTML = mode === "plane" ? t("hintPlane") : (tripStyle === "multi" ? t("hintMulti") : t("hintTide"));
         placeName.textContent = "—";
         placeCoords.textContent = "";
         localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
@@ -5993,7 +6773,13 @@
         } else {
           currentLatLng = null; currentPlace = null; lastTidePlan = null;
           planeStart = null; planeStops = []; planePhase = "idle";
-          placeLabel.textContent = t("destination");
+          if (tripStyle === "multi") {
+            resetMultiPicks();
+            placeLabel.textContent = t("multiDestination");
+            try { renderMultiLegs(); syncMultiHeader(); } catch (_) {}
+          } else {
+            placeLabel.textContent = t("destination");
+          }
           showPanelStates("empty");
           try { itinerary.innerHTML = ""; } catch (_) {}
           btnGen.disabled = false;
@@ -6009,6 +6795,7 @@
       /* v16: avoid map.stop()'s forced _resetView freeze (see clearPlaneAll). */
       try { if (map && map._stop) map._stop(); } catch (_) {}
       try { clearPlaneLayers(); } catch (_) {}
+      try { clearMultiLayers(); } catch (_) {}
     });
   }
 
@@ -6051,19 +6838,26 @@
         localPlaceBackup = null; nearbyChipActive = false; hideNearbySuggest();
         try { itinerary.innerHTML = ""; } catch (_) {}
         showPanelStates("empty");
-        placeName.textContent = "—"; placeCoords.textContent = "";
-        placeLabel.textContent = t("destination");
+        placeCoords.textContent = "";
         btnGen.disabled = false;
         if (btnRegen) btnRegen.disabled = false;
         btnGen.classList.remove("spinning");
         btnGenLabel.textContent = t("genPlan");
         showStatus("");
         rollToast.classList.remove("show");
+        if (tripStyle === "multi") {
+          resetMultiPicks();
+          try { renderMultiLegs(); syncMultiHeader(); } catch (_) {}
+        } else {
+          placeName.textContent = "—";
+          placeLabel.textContent = t("destination");
+        }
       }
     } catch (err) { console.warn("clearRecommendations ui", err); }
     requestAnimationFrame(function () {
       if (tok !== planeHopToken) return;
       try { clearPlaneLayers(); } catch (_) {}
+      try { clearMultiLayers(); } catch (_) {}
     });
   }
 
@@ -6510,7 +7304,7 @@
     (plan.days || []).forEach(function (d) {
       html += '<div style="margin:14px 0;padding:12px;border:1px solid #e5dfd3;border-radius:10px;page-break-inside:avoid;">';
       html += '<h3 style="font-size:14px;margin:0 0 8px;color:#0B1F33;">' +
-        escapeHtml(t("dayTitle", { n: d.day }) + (d.theme ? " — " + d.theme : "")) + "</h3>";
+        escapeHtml(t("dayTitle", { n: d.day }) + (d.legName ? " · " + d.legName : "") + (d.theme ? " — " + d.theme : "")) + "</h3>";
       if (d.strip && d.strip.length) {
         html += '<div style="font-size:11px;color:#3D8B9C;margin:0 0 2px;">' + escapeHtml(t("localPhotos")) + "</div>";
         html += pdfPhotoImgTags(d.strip, 3);
@@ -6654,7 +7448,8 @@
           hintEl.classList.remove("hide");
           hintEl.textContent = t("exportPdfEmpty");
           setTimeout(function () {
-            if (!currentLatLng) hintEl.innerHTML = t("hintTide");
+            if (tripStyle === "multi") hintEl.innerHTML = t("hintMulti");
+            else if (!currentLatLng) hintEl.innerHTML = t("hintTide");
             else hintEl.classList.add("hide");
           }, 2600);
         } else alert(t("exportPdfEmpty"));
@@ -6665,8 +7460,11 @@
     const prev = btn ? btn.textContent : "";
     try {
       if (btn) { btn.disabled = true; btn.textContent = t("exportPdfWorking"); }
-      var built = { html: "", city: (currentPlace && (currentPlace.name || currentPlace.nameEn)) || "Tide" };
-      try { built = buildTidePlanHtml(lastTidePlan, currentPlace); } catch (be) { console.warn("buildTidePlanHtml", be); }
+      var pdfPlace = (lastTidePlan && lastTidePlan.multi)
+        ? { name: lastTidePlan.cityKey || t("styleMulti") }
+        : currentPlace;
+      var built = { html: "", city: (pdfPlace && (pdfPlace.name || pdfPlace.nameEn)) || "Tide" };
+      try { built = buildTidePlanHtml(lastTidePlan, pdfPlace); } catch (be) { console.warn("buildTidePlanHtml", be); }
       await downloadPlanPdf(built, "tide-itinerary", document.getElementById("itinerary"));
     } catch (err) {
       console.error("exportTidePdf", err);
@@ -6952,6 +7750,29 @@
     else if (mq.addListener) mq.addListener(onMq);
   })();
 
+
+  (function wireMultiStopUi() {
+    const singleBtn = document.getElementById("styleSingle");
+    const multiBtn = document.getElementById("styleMulti");
+    const spotSlider = document.getElementById("spotSlider");
+    const list = document.getElementById("multiLegList");
+    if (singleBtn) singleBtn.addEventListener("click", function () { setTripStyle("single"); });
+    if (multiBtn) multiBtn.addEventListener("click", function () { setTripStyle("multi"); });
+    if (spotSlider) {
+      const onSpot = function () {
+        if (tripStyle !== "multi") return;
+        const n = clampSpotCount(spotSlider.value);
+        if (n === multiSpotCount && n === multiLegs.length) return;
+        ensureMultiLegs(n);
+      };
+      spotSlider.addEventListener("input", onSpot);
+      spotSlider.addEventListener("change", onSpot);
+    }
+    if (list) {
+      list.addEventListener("click", onMultiLegClick);
+      list.addEventListener("change", onMultiLegChange);
+    }
+  })();
 
   /* Initial language paint */
   applyStaticUI();
