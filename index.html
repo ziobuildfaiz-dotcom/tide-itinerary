@@ -114,12 +114,17 @@
     }
     .roll-toast .roll-note { font-size: 12px; color: var(--sand); opacity: 0.75; margin-top: 4px; }
     /* tide-pin: anchor-v1 — no CSS margin offset; Leaflet iconAnchor=[14,28] is the tip */
+    /* tide-pin: num-center-v1 — digit is a flex child of the rotated drop.
+       The circle is centered on the drop's border box; flex centers the glyph there.
+       Do not absolutely offset .pin-num (left:3px was the drop's offset in .tide-pin
+       and, once the number moved inside .drop, shifted the digit off the circle). */
     .tide-pin { width: 28px; height: 28px; margin: 0; position: relative; }
     .tide-pin .drop {
       width: 22px; height: 22px; background: var(--coral); border: 2.5px solid var(--foam);
       border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
       box-shadow: 0 4px 14px rgba(224, 122, 95, 0.55); position: absolute; left: 3px; top: 0;
       animation: pin-drop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+      display: flex; align-items: center; justify-content: center;
     }
     .tide-pin.start .drop { background: var(--teal); box-shadow: 0 4px 14px rgba(61, 139, 156, 0.55); }
     .tide-pin .ripple {
@@ -129,9 +134,11 @@
     }
     .tide-pin.start .ripple { background: rgba(61, 139, 156, 0.35); }
     .tide-pin .pin-num {
-      position: absolute; left: 3px; top: 0; width: 22px; height: 22px;
-      display: grid; place-items: center; font-size: 10px; font-weight: 700;
+      display: block; margin: 0; padding: 0;
+      font-size: 10px; font-weight: 700; line-height: 1;
+      font-variant-numeric: tabular-nums;
       color: var(--foam); z-index: 1; pointer-events: none;
+      transform: rotate(45deg); transform-origin: center center;
     }
     @keyframes pin-drop {
       from { transform: rotate(-45deg) translateY(-40px) scale(0.6); opacity: 0; }
@@ -2878,7 +2885,7 @@
     const isStart = opts && opts.start;
     const num = opts && opts.num != null ? opts.num : null;
     const numHtml = num != null
-      ? '<span class="pin-num" style="transform:rotate(45deg)">' + num + "</span>"
+      ? '<span class="pin-num">' + num + "</span>"
       : "";
     return L.divIcon({
       className: "",
